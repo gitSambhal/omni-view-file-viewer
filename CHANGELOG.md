@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.5.0] - 2026-09-01
+
+### Added
+- **100% In-Memory Real-Time SQL Query Execution Engine**:
+  - Integrated full client-side relational SQL execution engine (`alasql`) supporting `SELECT`, `JOIN`, `GROUP BY`, `INSERT`, `UPDATE`, `CREATE TABLE`, and DDL/DML statements.
+  - Real-time SQL console with keyboard shortcut (`Ctrl + Enter`), query execution timer in milliseconds, success/error feedback badges, and query history carousel.
+  - Interactive table browser with record filtering, row numbers, NULL value formatting, and table switching.
+  - 1-Click CSV and JSON query results exporter.
+- **HTML Live Preview Studio (`.html`, `.htm`, `.xhtml`)**:
+  - Interactive live sandbox iframe with client-side JavaScript execution and embedded console log capturing (`console.log`, `console.warn`, `console.error`, and uncaught runtime errors).
+  - View modes: **Live Preview**, **Split View** (Source code on left, Live rendering on right), **Source Code**, and **DOM Tree Hierarchy** inspector with element tag, ID, and class filtering.
+  - Responsive viewport controls with device presets: Responsive Desktop, Tablet (768px), and Mobile (375px).
+  - Quick action toolbar to reload iframe, open in external browser tab, copy source, or download file.
+  - Seamless 1-click **Live Preview** button in Code Viewer and Reader Switcher for all HTML, SVG, and web files.
+
+---
+
+## [1.4.0] - 2026-09-01
+
+### Added
+- **Localhost & Private Network Permission Gateway**:
+  - Interactive popup modal triggered whenever an HTTP/REST request targets `localhost`, `127.0.0.1`, or local private network endpoints.
+  - Transparent Private Network Access (PNA) & CORS security rationale explanation.
+  - "Allow & Execute Request" with session preference retention.
+  - 1-Click "Copy cURL Command" for terminal execution without browser sandbox restrictions.
+  - Interactive Local CORS Configuration Guide with copyable snippets for Node.js Express, Python FastAPI, and Go.
+- **Comprehensive Supported Formats & Capabilities Directory (`SupportedFormatsModal`)**:
+  - Searchable directory of 60+ supported file extensions across 15 format categories with capability badges.
+  - Fast search by extension, category, or feature keywords.
+  - Direct trigger from Header and Landing Page.
+- **Redesigned Landing Page & Format Showcase**:
+  - Category showcase cards (HTTP/REST, PE/DLL Binaries, Fonts, SQL Databases, Documents, Spreadsheets, Code & Config, Media & Archives).
+  - Quick action to explore full directory and load interactive demos.
+
+---
+
 ## [1.3.0] - 2026-09-01
 
 ### Added

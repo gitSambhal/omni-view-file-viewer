@@ -273,6 +273,154 @@ MIIEowIBAAKCAQEAvMrz2ldD46a5X50...OmniView2048BitPrivateKeyPayload
 cKqP+8L0xXW3r19P3Hk9d9XbMwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEB
 -----END RSA PRIVATE KEY-----`;
 
+export const SAMPLE_HTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniView Live HTML Studio</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #f8fafc;
+      --accent: #10b981;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid #334155;
+      border-radius: 1rem;
+      padding: 2.5rem;
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+    }
+    h1 {
+      font-size: 1.85rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.025em;
+    }
+    p {
+      color: #94a3b8;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+    .counter-box {
+      background: #090d16;
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      border: 1px solid #1e293b;
+    }
+    .count-value {
+      font-size: 2.25rem;
+      font-weight: 800;
+      color: #38bdf8;
+      font-variant-numeric: tabular-nums;
+    }
+    .btn-group {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+    }
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+    }
+    button:hover { background: #1d4ed8; transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+    button.secondary {
+      background: #334155;
+      box-shadow: none;
+    }
+    button.secondary:hover { background: #475569; }
+    footer {
+      margin-top: 1.5rem;
+      font-size: 0.8rem;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge">🌐 Interactive HTML Live Sandbox</div>
+    <h1>Live HTML Preview</h1>
+    <p>Render static HTML, CSS animations, responsive layouts, and interactive client-side JavaScript in an isolated safe sandbox.</p>
+    
+    <div class="counter-box">
+      <div>
+        <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase;">Interactive Clicks</div>
+        <div class="count-value" id="counter">0</div>
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button id="btnIncrement">Increment (+1)</button>
+      <button class="secondary" id="btnLog">Log to Console</button>
+    </div>
+
+    <footer>100% Client-Side In-Memory Execution</footer>
+  </div>
+
+  <script>
+    let count = 0;
+    const counterEl = document.getElementById('counter');
+    const btnInc = document.getElementById('btnIncrement');
+    const btnLog = document.getElementById('btnLog');
+
+    btnInc.addEventListener('click', () => {
+      count++;
+      counterEl.textContent = count;
+      console.log('User incremented counter to:', count);
+    });
+
+    btnLog.addEventListener('click', () => {
+      console.info('Live HTML Studio running at:', new Date().toISOString());
+      console.warn('Sandbox status: OK and fully responsive');
+    });
+
+    console.log('OmniView HTML Live Preview initialized successfully.');
+  </script>
+</body>
+</html>`;
+
 export function getSampleTabFiles(): TabFile[] {
   const now = Date.now();
 
@@ -457,6 +605,21 @@ export function getSampleTabFiles(): TabFile[] {
     zoomLevel: 100
   };
 
+  const sampleHtml: TabFile = {
+    id: 'sample-html',
+    name: 'landing_preview.html',
+    size: SAMPLE_HTML.length,
+    type: 'text/html',
+    lastModified: now - 900000,
+    extension: 'html',
+    category: 'html',
+    textContent: SAMPLE_HTML,
+    liveSyncActive: false,
+    syncStatus: 'synced',
+    viewMode: 'preview',
+    zoomLevel: 100
+  };
+
   const sampleJson: TabFile = {
     id: 'sample-json',
     name: 'manifest_config.json',
@@ -472,5 +635,5 @@ export function getSampleTabFiles(): TabFile[] {
     zoomLevel: 100
   };
 
-  return [sampleMd, sampleHttp, sampleDll, sampleCode, sampleLog, sampleCsv, sampleSql, sampleGeoJson, sampleCert, sampleJson];
+  return [sampleMd, sampleHtml, sampleHttp, sampleDll, sampleCode, sampleLog, sampleCsv, sampleSql, sampleGeoJson, sampleCert, sampleJson];
 }

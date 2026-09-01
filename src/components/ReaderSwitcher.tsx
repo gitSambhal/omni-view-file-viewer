@@ -45,6 +45,14 @@ interface ReaderOption {
 
 export const READER_OPTIONS: ReaderOption[] = [
   {
+    id: 'html',
+    label: 'Live HTML & Web Preview',
+    description: 'Interactive sandbox iframe with DOM tree inspector & live console',
+    icon: Globe,
+    color: 'text-blue-400',
+    isTextCompatible: true
+  },
+  {
     id: 'code',
     label: 'Code / Syntax Highlighter',
     description: 'Syntax coloring for TS, JS, YAML, ENV, Python, C++, HTML, etc.',
@@ -205,14 +213,31 @@ export const ReaderSwitcher: React.FC<ReaderSwitcherProps> = ({ activeTab, onSel
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
-  // Common quick toggles for text-compatible files (e.g. .env, .json, .yaml, .md)
-  const isTextual = activeTab.textContent !== undefined || ['code', 'json', 'markdown', 'text', 'log', 'subtitle', 'geojson', 'ebook', 'database'].includes(activeTab.category);
+  // Common quick toggles for text-compatible files (e.g. .env, .json, .yaml, .md, .html)
+  const isTextual = activeTab.textContent !== undefined || ['html', 'code', 'json', 'markdown', 'text', 'log', 'subtitle', 'geojson', 'ebook', 'database'].includes(activeTab.category);
+  const isHtmlCapable = ['html', 'htm', 'xhtml', 'svg', 'xml'].includes(activeTab.extension?.toLowerCase() || '') ||
+                        activeTab.category === 'html' ||
+                        Boolean(activeTab.textContent && (activeTab.textContent.includes('<html') || activeTab.textContent.includes('<!DOCTYPE') || activeTab.textContent.includes('<svg') || activeTab.textContent.includes('<div')));
 
   return (
     <div className="flex items-center gap-2 relative" ref={dropdownRef}>
       {/* Quick Switcher Chips for fast 1-click toggles */}
       {isTextual && (
         <div className="hidden sm:flex items-center bg-slate-200/80 dark:bg-slate-800/80 p-0.5 rounded-md text-[11px] border border-slate-300/80 dark:border-slate-700/80">
+          {isHtmlCapable && (
+            <button
+              onClick={() => onSelectReader('html')}
+              title="Live HTML & Web Sandbox Preview"
+              className={`px-2 py-0.5 rounded font-medium transition-colors cursor-pointer flex items-center gap-1 ${
+                currentCategory === 'html'
+                  ? 'bg-blue-600 text-white shadow-xs font-semibold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Globe className="w-3 h-3 text-blue-300" />
+              <span>Live Preview</span>
+            </button>
+          )}
           <button
             onClick={() => onSelectReader('code')}
             title="View as Syntax Highlighted Code"

@@ -19,6 +19,7 @@ import { DropZone } from './components/DropZone';
 import { Footer } from './components/Footer';
 import { ChangelogModal } from './components/ChangelogModal';
 import { LiveSyncModal } from './components/LiveSyncModal';
+import { SupportedFormatsModal } from './components/SupportedFormatsModal';
 import { ToastContainer } from './components/Toast';
 import { HexViewer } from './components/HexViewer';
 import { ReaderSwitcher } from './components/ReaderSwitcher';
@@ -43,6 +44,7 @@ import { HttpRestViewer } from './components/viewers/HttpRestViewer';
 import { BinaryInspectorViewer } from './components/viewers/BinaryInspectorViewer';
 import { FontViewer } from './components/viewers/FontViewer';
 import { CertificateViewer } from './components/viewers/CertificateViewer';
+import { HtmlPreviewViewer } from './components/viewers/HtmlPreviewViewer';
 
 export default function App() {
   const { theme, toggleTheme } = useTheme();
@@ -52,6 +54,7 @@ export default function App() {
   const [activeTabId, setActiveTabId] = useState<string | null>('sample-md');
   const [isChangelogOpen, setIsChangelogOpen] = useState<boolean>(false);
   const [isLiveSyncDashboardOpen, setIsLiveSyncDashboardOpen] = useState<boolean>(false);
+  const [isSupportedFormatsModalOpen, setIsSupportedFormatsModalOpen] = useState<boolean>(false);
   const [isDraggingOverApp, setIsDraggingOverApp] = useState<boolean>(false);
   const dragCounter = useRef<number>(0);
 
@@ -457,6 +460,7 @@ export default function App() {
         onOpenChangelog={() => setIsChangelogOpen(true)}
         onOpenHexForCurrentTab={handleToggleHexView}
         onOpenLiveSyncDashboard={() => setIsLiveSyncDashboardOpen(true)}
+        onOpenSupportedFormats={() => setIsSupportedFormatsModalOpen(true)}
         liveSyncCount={liveSyncCount}
         isSyncing={isSyncing}
       />
@@ -490,6 +494,7 @@ export default function App() {
               setTabs(getSampleTabFiles());
               setActiveTabId('sample-md');
             }}
+            onOpenSupportedFormats={() => setIsSupportedFormatsModalOpen(true)}
           />
         ) : activeTab.viewMode === 'hex' ? (
           <div className="w-full flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden">
@@ -573,11 +578,22 @@ export default function App() {
                   />
                 );
               }
+              if (currentCategory === 'html') {
+                return (
+                  <HtmlPreviewViewer
+                    textContent={activeTab.textContent}
+                    filename={activeTab.name}
+                    onSwitchToCode={() => handleSetTabReader(activeTab.id, 'code')}
+                  />
+                );
+              }
               if (currentCategory === 'code') {
                 return (
                   <CodeViewer
                     textContent={activeTab.textContent}
                     filename={activeTab.name}
+                    onSwitchToLivePreview={() => handleSetTabReader(activeTab.id, 'html')}
+                    onSwitchToDatabase={() => handleSetTabReader(activeTab.id, 'database')}
                   />
                 );
               }
@@ -751,6 +767,17 @@ export default function App() {
       <ChangelogModal
         isOpen={isChangelogOpen}
         onClose={() => setIsChangelogOpen(false)}
+      />
+
+      {/* Supported Formats Directory Modal */}
+      <SupportedFormatsModal
+        isOpen={isSupportedFormatsModalOpen}
+        onClose={() => setIsSupportedFormatsModalOpen(false)}
+        onLoadSamples={() => {
+          setTabs(getSampleTabFiles());
+          setActiveTabId('sample-md');
+          addToast('info', 'Demos Loaded', 'Loaded interactive sample files.');
+        }}
       />
 
       {/* Non-blocking Toasts */}

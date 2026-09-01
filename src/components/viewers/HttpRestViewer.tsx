@@ -24,8 +24,12 @@ import {
   Layers,
   ChevronDown,
   ChevronRight,
-  Filter
+  Filter,
+  ShieldAlert,
+  ShieldCheck,
+  Server
 } from 'lucide-react';
+import { LocalhostPermissionModal } from '../LocalhostPermissionModal';
 
 interface HttpRestViewerProps {
   textContent?: string;
@@ -56,6 +60,28 @@ interface ResponseState {
   error?: string;
 }
 
+export function isLocalhostUrl(urlStr: string): boolean {
+  if (!urlStr) return false;
+  try {
+    const formatted = urlStr.startsWith('http://') || urlStr.startsWith('https://') ? urlStr : `http://${urlStr}`;
+    const parsed = new URL(formatted);
+    const host = parsed.hostname.toLowerCase();
+    return (
+      host === 'localhost' ||
+      host === '127.0.0.1' ||
+      host === '0.0.0.0' ||
+      host === '::1' ||
+      host === '[::1]' ||
+      host.endsWith('.local') ||
+      host.startsWith('192.168.') ||
+      host.startsWith('10.') ||
+      /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(host)
+    );
+  } catch (_) {
+    return urlStr.toLowerCase().includes('localhost') || urlStr.includes('127.0.0.1');
+  }
+}
+
 export const HttpRestViewer: React.FC<HttpRestViewerProps> = ({
   textContent = '',
   filename = 'request.http'
@@ -69,6 +95,17 @@ export const HttpRestViewer: React.FC<HttpRestViewerProps> = ({
   const [copiedCurl, setCopiedCurl] = useState<boolean>(false);
   const [copiedResponse, setCopiedResponse] = useState<boolean>(false);
   const [responses, setResponses] = useState<Record<string, ResponseState>>({});
+
+  // Localhost permission state
+  const [isLocalhostPermissionGranted, setIsLocalhostPermissionGranted] = useState<boolean>(() => {
+    try {
+      return sessionStorage.getItem('omniview_localhost_permission') === 'granted';
+    } catch (_) {
+      return false;
+    }
+  });
+  const [isLocalhostModalOpen, setIsLocalhostModalOpen] = useState<boolean>(false);
+  const [pendingReqToExecute, setPendingReqToExecute] = useState<ParsedRequest | null>(null);
 
   // 1. Parse .http / .rest file contents
   const { variables, requests } = useMemo(() => {
@@ -224,9 +261,8 @@ export const HttpRestViewer: React.FC<HttpRestViewerProps> = ({
     return curl;
   }, [activeRequest]);
 
-  // Execute request
-  const handleExecuteRequest = async () => {
-    if (!activeRequest) return;
+  // Actual execution routine
+  const executeRequestActual = async (reqToRun: ParsedRequest) => {
     setIsLoading(true);
     const startTime = performance.now();
 
@@ -234,13 +270,19 @@ export const HttpRestViewer: React.FC<HttpRestViewerProps> = ({
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-      const fetchHeaders: HeadersInit = { ...activeRequest.headers };
+      const fetchHeaders: Record<string, string> = { ...reqToRun.headers };
 
-      const response = await fetch(activeRequest.url, {
-        method: activeRequest.method,
+      // If localhost, hint private network access
+      if (isLocalhostUrl(reqToRun.url)) {
+        // Safe hint
+        fetchHeaders['X-Requested-With'] = 'OmniView-Studio';
+      }
+
+      const response = await fetch(reqToRun.url, {
+        method: reqToRun.method,
         headers: fetchHeaders,
-        body: ['POST', 'PUT', 'PATCH', 'DELETE'].includes(activeRequest.method) && activeRequest.body
-          ? activeRequest.body
+        body: ['POST', 'PUT', 'PATCH', 'DELETE'].includes(reqToRun.method) && reqToRun.body
+          ? reqToRun.body
           : undefined,
         signal: controller.signal,
         mode: 'cors'
@@ -265,7 +307,7 @@ export const HttpRestViewer: React.FC<HttpRestViewerProps> = ({
 
       setResponses(prev => ({
         ...prev,
-        [activeRequest.id]: {
+        [reqToRun.id]: {
           status: response.status,
           statusText: response.statusText || 'OK',
           durationMs,
@@ -277,14 +319,19 @@ export const HttpRestViewer: React.FC<HttpRestViewerProps> = ({
       }));
     } catch (err: any) {
       const durationMs = Math.round(performance.now() - startTime);
+      const isLocal = isLocalhostUrl(reqToRun.url);
       setResponses(prev => ({
         ...prev,
-        [activeRequest.id]: {
+        [reqToRun.id]: {
           status: 0,
           statusText: 'Client / Network Timeout or CORS',
           durationMs,
           headers: {},
-          body: `Request Execution Note:\n${err.message || 'Network error / CORS restriction'}\n\nTips:\n- Target API must permit CORS headers for in-browser requests.\n- You can copy the generated cURL command to run directly in terminal.`,
+          body: `Request Execution Note:\n${err.message || 'Network error / CORS restriction'}\n\n${
+            isLocal
+              ? 'Localhost Connection Tips:\n1. Verify your local backend service is running and listening on the specified port.\n2. Ensure CORS is enabled on your local server (Access-Control-Allow-Origin: *).\n3. If your browser blocks HTTPS-to-HTTP mixed content, you can copy the generated cURL command to run directly in terminal without any restrictions.'
+              : 'Tips:\n- Target API must permit CORS headers for in-browser requests.\n- You can copy the generated cURL command to run directly in terminal.'
+          }`,
           isJson: false,
           sizeBytes: 0,
           error: err.message
@@ -293,6 +340,33 @@ export const HttpRestViewer: React.FC<HttpRestViewerProps> = ({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Execute request trigger with Localhost Interceptor
+  const handleExecuteRequest = () => {
+    if (!activeRequest) return;
+
+    if (isLocalhostUrl(activeRequest.url) && !isLocalhostPermissionGranted) {
+      setPendingReqToExecute(activeRequest);
+      setIsLocalhostModalOpen(true);
+      return;
+    }
+
+    executeRequestActual(activeRequest);
+  };
+
+  const handleGrantLocalhostPermission = (rememberSession: boolean) => {
+    if (rememberSession) {
+      try {
+        sessionStorage.setItem('omniview_localhost_permission', 'granted');
+      } catch (_) {}
+    }
+    setIsLocalhostPermissionGranted(true);
+    const target = pendingReqToExecute || activeRequest;
+    if (target) {
+      executeRequestActual(target);
+    }
+    setPendingReqToExecute(null);
   };
 
   const handleCopyCurl = () => {
@@ -501,9 +575,36 @@ export const HttpRestViewer: React.FC<HttpRestViewerProps> = ({
                   </div>
                 </div>
 
-                {/* Query Parameters / Headers Chips */}
+                {/* Query Parameters / Headers Chips & Localhost Status */}
                 <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
                   <span className="font-semibold text-slate-300">Request Specs:</span>
+                  
+                  {isLocalhostUrl(activeRequest.url) && (
+                    <button
+                      onClick={() => {
+                        setPendingReqToExecute(activeRequest);
+                        setIsLocalhostModalOpen(true);
+                      }}
+                      className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-xs font-medium cursor-pointer transition-all ${
+                        isLocalhostPermissionGranted
+                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+                          : 'bg-amber-500/10 text-amber-300 border-amber-500/40 hover:bg-amber-500/20 animate-pulse'
+                      }`}
+                    >
+                      {isLocalhostPermissionGranted ? (
+                        <>
+                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Localhost: Permission Granted</span>
+                        </>
+                      ) : (
+                        <>
+                          <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+                          <span>Localhost Target (Click for Permission Gateway)</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+
                   <span className="bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700 font-mono">
                     {Object.keys(activeRequest.headers).length} Headers
                   </span>
@@ -664,6 +765,21 @@ export const HttpRestViewer: React.FC<HttpRestViewerProps> = ({
             </div>
           )}
         </div>
+      )}
+
+      {/* Localhost Permission Gateway Modal */}
+      {activeRequest && (
+        <LocalhostPermissionModal
+          isOpen={isLocalhostModalOpen}
+          onClose={() => {
+            setIsLocalhostModalOpen(false);
+            setPendingReqToExecute(null);
+          }}
+          onGrantPermission={handleGrantLocalhostPermission}
+          targetUrl={activeRequest.url}
+          method={activeRequest.method}
+          curlCommand={generatedCurl}
+        />
       )}
     </div>
   );

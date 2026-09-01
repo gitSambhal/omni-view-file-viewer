@@ -74,6 +74,11 @@ export function detectFileCategory(filename: string, mimeType: string = ''): Fil
     return 'log';
   }
 
+  // HTML & Web Documents (.html, .htm, .xhtml)
+  if (['html', 'htm', 'xhtml'].includes(ext) || mimeType === 'text/html') {
+    return 'html';
+  }
+
   // Word (.docx, .doc)
   if (['docx', 'doc'].includes(ext) || mimeType.includes('wordprocessingml') || mimeType.includes('msword')) {
     return 'docx';

@@ -27,6 +27,7 @@ interface HeaderProps {
   onOpenChangelog: () => void;
   onOpenHexForCurrentTab: () => void;
   onOpenLiveSyncDashboard?: () => void;
+  onOpenSupportedFormats?: () => void;
   liveSyncCount: number;
   isSyncing?: boolean;
 }
@@ -39,6 +40,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenChangelog,
   onOpenHexForCurrentTab,
   onOpenLiveSyncDashboard,
+  onOpenSupportedFormats,
   liveSyncCount,
   isSyncing = false
 }) => {
@@ -127,6 +129,18 @@ export const Header: React.FC<HeaderProps> = ({
           <Code className="w-3.5 h-3.5" />
           <span>Hex View</span>
         </button>
+
+        {/* Supported Formats Info Directory */}
+        {onOpenSupportedFormats && (
+          <button
+            onClick={onOpenSupportedFormats}
+            className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-blue-700 dark:text-blue-300 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-slate-300 dark:border-slate-700 transition-colors cursor-pointer"
+            title="Browse all 60+ supported file extensions and reader capabilities"
+          >
+            <Layers className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+            <span className="hidden sm:inline">Formats</span>
+          </button>
+        )}
 
         <div className="h-5 w-px bg-slate-300 dark:bg-slate-800 mx-1"></div>
 

@@ -6,12 +6,14 @@
 import React, { useState, useMemo } from 'react';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/atom-one-dark.css';
-import { Code, Copy, Check, Search, WrapText, ZoomIn, ZoomOut } from 'lucide-react';
+import { Code, Copy, Check, Search, WrapText, ZoomIn, ZoomOut, Globe, Eye, Database, Play } from 'lucide-react';
 import { getFileExtension } from '../../services/fileDetector';
 
 interface CodeViewerProps {
   textContent?: string;
   filename: string;
+  onSwitchToLivePreview?: () => void;
+  onSwitchToDatabase?: () => void;
 }
 
 const EXT_LANG_MAP: Record<string, string> = {
@@ -24,9 +26,17 @@ const EXT_LANG_MAP: Record<string, string> = {
   properties: 'ini', conf: 'ini', config: 'ini', prisma: 'graphql'
 };
 
-export const CodeViewer: React.FC<CodeViewerProps> = ({ textContent = '', filename }) => {
+export const CodeViewer: React.FC<CodeViewerProps> = ({
+  textContent = '',
+  filename,
+  onSwitchToLivePreview,
+  onSwitchToDatabase
+}) => {
   const ext = getFileExtension(filename);
   const defaultLang = EXT_LANG_MAP[ext] || 'plaintext';
+  const isHtmlCapable = ['html', 'htm', 'xhtml', 'svg', 'xml'].includes(ext) ||
+                        Boolean(textContent && (textContent.includes('<html') || textContent.includes('<!DOCTYPE') || textContent.includes('<svg')));
+  const isSqlCapable = ext === 'sql' || defaultLang === 'sql' || Boolean(textContent && textContent.includes('CREATE TABLE'));
 
   const [language, setLanguage] = useState<string>(defaultLang);
   const [wordWrap, setWordWrap] = useState<boolean>(true);
@@ -66,6 +76,28 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({ textContent = '', filena
             <Code className="w-3.5 h-3.5" />
             Code Viewer ({lines.length.toLocaleString()} lines)
           </div>
+
+          {isHtmlCapable && onSwitchToLivePreview && (
+            <button
+              onClick={onSwitchToLivePreview}
+              className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-xs font-semibold shadow-sm transition-all cursor-pointer"
+              title="Open in Live HTML Sandbox Preview"
+            >
+              <Globe className="w-3.5 h-3.5 text-blue-200" />
+              <span>Live Preview</span>
+            </button>
+          )}
+
+          {isSqlCapable && onSwitchToDatabase && (
+            <button
+              onClick={onSwitchToDatabase}
+              className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 rounded text-xs font-semibold shadow-sm transition-all cursor-pointer"
+              title="Execute SQL queries in interactive Database Studio"
+            >
+              <Database className="w-3.5 h-3.5 text-emerald-200" />
+              <span>Run SQL Studio</span>
+            </button>
+          )}
 
           <select
             value={language}

@@ -9,6 +9,7 @@ export type FileCategory =
   | 'excel'
   | 'pptx'
   | 'code'
+  | 'html'
   | 'markdown'
   | 'database'
   | 'image'
