@@ -27,6 +27,7 @@ interface HeaderProps {
   onOpenChangelog: () => void;
   onOpenHexForCurrentTab: () => void;
   liveSyncCount: number;
+  isSyncing?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -36,7 +37,8 @@ export const Header: React.FC<HeaderProps> = ({
   onLoadSampleFiles,
   onOpenChangelog,
   onOpenHexForCurrentTab,
-  liveSyncCount
+  liveSyncCount,
+  isSyncing = false
 }) => {
   return (
     <header className="flex flex-wrap items-center justify-between px-4 py-2.5 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 select-none shadow-sm dark:shadow-md gap-3 transition-colors">
@@ -88,10 +90,11 @@ export const Header: React.FC<HeaderProps> = ({
           className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-300 dark:border-slate-700 transition-all active:scale-95 cursor-pointer"
           title="Open local files with automatic real-time file live syncing"
         >
-          <RefreshCw className={`w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400 ${liveSyncCount > 0 ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'text-emerald-500 animate-spin' : liveSyncCount > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-slate-400'}`} />
           <span>Live Sync File</span>
           {liveSyncCount > 0 && (
-            <span className="bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[10px] font-mono px-1.5 py-0.5 rounded-full border border-emerald-500/30 font-bold">
+            <span className="bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[10px] font-mono px-1.5 py-0.5 rounded-full border border-emerald-500/30 font-bold flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               {liveSyncCount} Active
             </span>
           )}

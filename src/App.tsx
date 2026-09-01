@@ -55,7 +55,7 @@ export default function App() {
   }, [addToast]);
 
   // Connect Live Sync hook to all active tabs
-  useLiveSync({
+  const { isSyncing } = useLiveSync({
     tabs,
     onFileUpdated: handleFileUpdated,
     onNotify: handleNotify
@@ -360,6 +360,7 @@ export default function App() {
         onOpenChangelog={() => setIsChangelogOpen(true)}
         onOpenHexForCurrentTab={handleToggleHexView}
         liveSyncCount={liveSyncCount}
+        isSyncing={isSyncing}
       />
 
       {/* Tab Bar */}

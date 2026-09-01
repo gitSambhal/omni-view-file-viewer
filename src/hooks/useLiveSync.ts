@@ -3,7 +3,7 @@
  * Developer: Suhail Akhtar (https://suhail.top)
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { TabFile } from '../types/file';
 
 interface UseLiveSyncOptions {
@@ -23,6 +23,8 @@ export function useLiveSync({
 }: UseLiveSyncOptions) {
   const tabsRef = useRef(tabs);
   tabsRef.current = tabs;
+  const [isSyncing, setIsSyncing] = useState(false);
+  const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!enabled) return;
@@ -41,6 +43,13 @@ export function useLiveSync({
         try {
           const newFile = await tab.fileHandle.getFile();
           if (newFile.lastModified > tab.lastModified) {
+            // Trigger temporary spinning indicator when disk changes are found
+            setIsSyncing(true);
+            if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+            syncTimeoutRef.current = setTimeout(() => {
+              setIsSyncing(false);
+            }, 1800);
+
             let textContent: string | undefined;
             let arrayBuffer: ArrayBuffer | undefined;
             let objectUrl: string | undefined;
@@ -98,6 +107,9 @@ export function useLiveSync({
       isCancelled = true;
       clearInterval(intervalId);
       window.removeEventListener('focus', handleFocus);
+      if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
     };
   }, [enabled, pollIntervalMs, onFileUpdated, onNotify]);
+
+  return { isSyncing };
 }

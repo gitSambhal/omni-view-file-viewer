@@ -167,7 +167,7 @@ export const TabBar: React.FC<TabBarProps> = ({
               {/* Live sync badge indicator */}
               {tab.liveSyncActive && (
                 <span
-                  className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse shrink-0"
+                  className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 shrink-0"
                   title="Live Sync Active: Watching file on local disk"
                 />
               )}
