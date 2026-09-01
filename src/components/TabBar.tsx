@@ -65,6 +65,18 @@ export const TabBar: React.FC<TabBarProps> = ({
 }) => {
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const activeTabRef = useRef<HTMLDivElement | null>(null);
+
+  // Scroll active tab to center whenever activeTabId changes or tabs update
+  useEffect(() => {
+    if (activeTabRef.current) {
+      activeTabRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center'
+      });
+    }
+  }, [activeTabId, tabs.length]);
 
   // Close context menu on click outside or escape key
   useEffect(() => {
@@ -140,6 +152,7 @@ export const TabBar: React.FC<TabBarProps> = ({
           return (
             <div
               key={tab.id}
+              ref={isActive ? activeTabRef : null}
               onClick={() => onSelectTab(tab.id)}
               onContextMenu={e => handleContextMenu(e, tab.id)}
               className={`group flex items-center gap-2 px-3 py-1.5 rounded-t-lg border-t-2 text-xs font-mono cursor-pointer transition-all max-w-[220px] shrink-0 ${
