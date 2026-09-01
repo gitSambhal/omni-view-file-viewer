@@ -92,7 +92,7 @@ export const ZipViewer: React.FC<ZipViewerProps> = ({ arrayBuffer, filename, onP
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-900 text-slate-100 overflow-hidden">
+    <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 bg-slate-900 text-slate-100 overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between p-3 bg-slate-800 border-b border-slate-700">
         <div className="flex items-center gap-2 text-xs font-semibold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded border border-amber-500/20">
@@ -113,9 +113,9 @@ export const ZipViewer: React.FC<ZipViewerProps> = ({ arrayBuffer, filename, onP
       </div>
 
       {/* Main Container */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 min-h-0 min-w-0 flex overflow-hidden">
         {/* Zip Files Table */}
-        <div className="flex-1 overflow-auto p-3">
+        <div className="flex-1 min-h-0 min-w-0 overflow-auto p-3">
           {loading ? (
             <div className="flex items-center justify-center h-full text-slate-400 text-sm">
               <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mr-2"></div>

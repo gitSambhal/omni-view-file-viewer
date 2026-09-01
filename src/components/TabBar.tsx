@@ -40,6 +40,7 @@ interface TabBarProps {
   onToggleLiveSyncTab?: (id: string) => void;
   onToggleHexViewTab?: (id: string) => void;
   onDownloadTabFile?: (id: string) => void;
+  onOpenLiveSyncDashboard?: () => void;
   onNewTab: () => void;
 }
 
@@ -61,6 +62,7 @@ export const TabBar: React.FC<TabBarProps> = ({
   onToggleLiveSyncTab,
   onToggleHexViewTab,
   onDownloadTabFile,
+  onOpenLiveSyncDashboard,
   onNewTab
 }) => {
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
@@ -164,12 +166,27 @@ export const TabBar: React.FC<TabBarProps> = ({
               {getCategoryIcon(tab.category)}
               <span className="truncate flex-1">{tab.name}</span>
 
-              {/* Live sync badge indicator */}
+              {/* Live sync badge & icon indicator */}
               {tab.liveSyncActive && (
-                <span
-                  className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 shrink-0"
-                  title="Live Sync Active: Watching file on local disk"
-                />
+                <div
+                  className="relative flex items-center justify-center shrink-0 cursor-pointer p-0.5 rounded hover:bg-emerald-500/10 transition-colors"
+                  onClick={e => {
+                    e.stopPropagation();
+                    if (onToggleLiveSyncTab) onToggleLiveSyncTab(tab.id);
+                  }}
+                  title={`Live Sync Active: ${tab.name}\n• Status: ${tab.syncStatus === 'syncing' ? 'Syncing changes...' : 'Watching disk'}\n• Last Synced: ${tab.lastSyncedAt ? new Date(tab.lastSyncedAt).toLocaleTimeString() : 'Just now'}\n• Reloads: ${tab.syncCount || 0} auto-reloads\n• Mode: ${tab.fileHandle ? 'Native Disk Handle' : 'Polling Interval'}`}
+                >
+                  {tab.syncStatus === 'syncing' ? (
+                    <span className="relative flex h-3 w-3 items-center justify-center">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <RefreshCw className="w-3 h-3 text-emerald-500 animate-spin relative z-10 font-bold animate-pulse" />
+                    </span>
+                  ) : (
+                    <span className="relative flex items-center justify-center">
+                      <RefreshCw className="w-3 h-3 text-emerald-500 dark:text-emerald-400 opacity-80 group-hover:opacity-100 transition-opacity" />
+                    </span>
+                  )}
+                </div>
               )}
 
               {/* Close button */}
@@ -283,6 +300,19 @@ export const TabBar: React.FC<TabBarProps> = ({
               >
                 <RefreshCw className="w-3.5 h-3.5 text-emerald-500" />
                 <span>{targetTab.liveSyncActive ? 'Disable Live Sync' : 'Enable Live Sync'}</span>
+              </button>
+            )}
+
+            {onOpenLiveSyncDashboard && (
+              <button
+                onClick={() => {
+                  onOpenLiveSyncDashboard();
+                  setContextMenu(null);
+                }}
+                className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+              >
+                <RefreshCw className="w-3.5 h-3.5 text-blue-500" />
+                <span>Live Sync Metadata & Log</span>
               </button>
             )}
 

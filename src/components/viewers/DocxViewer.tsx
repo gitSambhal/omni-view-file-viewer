@@ -125,7 +125,7 @@ export const DocxViewer: React.FC<DocxViewerProps> = ({ arrayBuffer, textContent
   const charCount = rawText ? rawText.length : 0;
 
   return (
-    <div className="flex flex-col h-full bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 overflow-hidden transition-colors">
+    <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 overflow-hidden transition-colors">
       {/* Header Bar */}
       <div className="flex flex-wrap items-center justify-between p-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 gap-2 shadow-sm">
         <div className="flex items-center gap-3">
@@ -225,7 +225,7 @@ export const DocxViewer: React.FC<DocxViewerProps> = ({ arrayBuffer, textContent
       </div>
 
       {/* Main Document View Stage */}
-      <div className="flex-1 overflow-auto p-4 md:p-8 bg-slate-200 dark:bg-slate-950 flex justify-center items-start">
+      <div className="flex-1 min-h-0 min-w-0 overflow-auto p-4 md:p-8 bg-slate-200 dark:bg-slate-950 flex justify-center items-start">
         {loading ? (
           <div className="flex flex-col items-center justify-center p-12 text-slate-500 dark:text-slate-400">
             <div className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin mb-3"></div>

@@ -205,7 +205,7 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
   return (
     <div
       ref={containerRef}
-      className="flex flex-col h-full bg-slate-900 dark:bg-slate-950 text-slate-100 overflow-hidden select-none transition-colors"
+      className="flex flex-col flex-1 h-full min-h-0 min-w-0 bg-slate-900 dark:bg-slate-950 text-slate-100 overflow-hidden select-none transition-colors"
     >
       {/* Header Bar */}
       <div className="flex flex-wrap items-center justify-between p-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 gap-2">
@@ -247,7 +247,7 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
       </div>
 
       {/* Main Player Display Stage */}
-      <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 relative overflow-hidden bg-slate-950">
+      <div className="flex-1 min-h-0 min-w-0 flex flex-col items-center justify-center p-4 md:p-8 relative overflow-hidden bg-slate-950">
         {hasError ? (
           <div className="max-w-md p-6 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-center space-y-4">
             <AlertCircle className="w-10 h-10 text-amber-400 mx-auto" />

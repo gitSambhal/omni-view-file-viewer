@@ -137,7 +137,7 @@ export const ExcelViewer: React.FC<ExcelViewerProps> = ({ arrayBuffer, textConte
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 overflow-hidden transition-colors">
+    <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 overflow-hidden transition-colors">
       {/* Top Toolbar */}
       <div className="flex flex-wrap items-center justify-between p-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 gap-2 shadow-sm">
         <div className="flex items-center gap-3">
@@ -219,7 +219,7 @@ export const ExcelViewer: React.FC<ExcelViewerProps> = ({ arrayBuffer, textConte
       )}
 
       {/* Table Content */}
-      <div className="flex-1 overflow-auto bg-slate-100 dark:bg-slate-950 p-2">
+      <div className="flex-1 min-h-0 min-w-0 overflow-auto bg-slate-100 dark:bg-slate-950 p-2">
         {loading ? (
           <div className="flex items-center justify-center h-full text-slate-500 dark:text-slate-400">
             <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mr-2"></div>

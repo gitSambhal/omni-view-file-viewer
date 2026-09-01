@@ -96,7 +96,7 @@ export const HexViewer: React.FC<HexViewerProps> = ({ arrayBuffer, textContent, 
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-900 text-slate-100 font-mono text-sm overflow-hidden select-text">
+    <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 bg-slate-900 text-slate-100 font-mono text-sm overflow-hidden select-text">
       {/* Hex Toolbar */}
       <div className="flex flex-wrap items-center justify-between p-3 bg-slate-800/80 border-b border-slate-700 gap-2">
         <div className="flex items-center gap-3">
@@ -147,7 +147,7 @@ export const HexViewer: React.FC<HexViewerProps> = ({ arrayBuffer, textContent, 
       </div>
 
       {/* Hex Grid Content */}
-      <div className="flex-1 overflow-auto p-4 space-y-1">
+      <div className="flex-1 min-h-0 min-w-0 overflow-auto p-4 space-y-1">
         <div className="grid grid-cols-[100px_1fr_200px] gap-4 font-bold border-b border-slate-800 pb-2 text-xs text-slate-400">
           <div>OFFSET</div>
           <div className="grid grid-cols-16 gap-1 text-center">

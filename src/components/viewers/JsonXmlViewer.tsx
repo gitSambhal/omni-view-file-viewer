@@ -98,7 +98,7 @@ export const JsonXmlViewer: React.FC<JsonXmlViewerProps> = ({ textContent = '', 
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-mono overflow-hidden transition-colors">
+    <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-mono overflow-hidden transition-colors">
       {/* Header Bar */}
       <div className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm">
         <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded border border-blue-500/20">
@@ -137,7 +137,7 @@ export const JsonXmlViewer: React.FC<JsonXmlViewerProps> = ({ textContent = '', 
       </div>
 
       {/* Main Tree / Formatted Body */}
-      <div className="flex-1 overflow-auto bg-white dark:bg-slate-950 p-4">
+      <div className="flex-1 min-h-0 min-w-0 overflow-auto bg-white dark:bg-slate-950 p-4">
         {parsedJson ? (
           viewMode === 'tree' ? (
             <JsonNode value={parsedJson} />

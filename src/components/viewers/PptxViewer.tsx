@@ -93,7 +93,7 @@ export const PptxViewer: React.FC<PptxViewerProps> = ({ arrayBuffer, filename })
   const currentSlide = slides[currentSlideIndex] || slides[0];
 
   return (
-    <div className="flex flex-col h-full bg-slate-900 text-slate-100 overflow-hidden">
+    <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 bg-slate-900 text-slate-100 overflow-hidden">
       {/* PPTX Header Toolbar */}
       <div className="flex items-center justify-between p-3 bg-slate-800 border-b border-slate-700 gap-2">
         <div className="flex items-center gap-2 text-xs font-semibold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded border border-amber-500/20">
@@ -124,7 +124,7 @@ export const PptxViewer: React.FC<PptxViewerProps> = ({ arrayBuffer, filename })
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-auto bg-slate-950 p-6 flex flex-col items-center justify-center">
+      <div className="flex-1 min-h-0 min-w-0 overflow-auto bg-slate-950 p-6 flex flex-col items-center justify-center">
         {loading ? (
           <div className="flex flex-col items-center justify-center text-slate-400">
             <div className="w-8 h-8 border-3 border-amber-500 border-t-transparent rounded-full animate-spin mb-3"></div>

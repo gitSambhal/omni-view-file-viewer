@@ -25,7 +25,7 @@ export const TextViewer: React.FC<TextViewerProps> = ({ textContent = '', filena
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-mono overflow-hidden transition-colors">
+    <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-mono overflow-hidden transition-colors">
       {/* Header Bar */}
       <div className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm">
         <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700/50 px-2.5 py-1 rounded border border-slate-300 dark:border-slate-600/40">
@@ -66,7 +66,7 @@ export const TextViewer: React.FC<TextViewerProps> = ({ textContent = '', filena
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto bg-white dark:bg-slate-950 p-4">
+      <div className="flex-1 min-h-0 min-w-0 overflow-auto bg-white dark:bg-slate-950 p-4">
         <pre className={`text-xs font-mono text-slate-800 dark:text-slate-200 leading-relaxed ${wordWrap ? 'whitespace-pre-wrap break-all' : 'whitespace-pre'}`}>
           {textContent}
         </pre>

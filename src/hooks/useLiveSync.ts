@@ -68,6 +68,9 @@ export function useLiveSync({
               }
             }
 
+            const now = Date.now();
+            const nextSyncCount = (tab.syncCount || 0) + 1;
+
             onFileUpdated({
               id: tab.id,
               lastModified: newFile.lastModified,
@@ -76,9 +79,18 @@ export function useLiveSync({
               textContent,
               arrayBuffer,
               objectUrl: objectUrl || tab.objectUrl,
-              lastSyncedAt: Date.now(),
-              syncStatus: 'synced'
+              lastSyncedAt: now,
+              syncCount: nextSyncCount,
+              syncStatus: 'syncing'
             });
+
+            // Revert tab syncStatus back to 'synced' after 2.2s so tab pulse stops cleanly
+            setTimeout(() => {
+              onFileUpdated({
+                id: tab.id,
+                syncStatus: 'synced'
+              });
+            }, 2200);
 
             onNotify(
               'info',

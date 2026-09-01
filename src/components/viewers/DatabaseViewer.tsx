@@ -101,7 +101,7 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = ({ arrayBuffer, tex
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 overflow-hidden transition-colors">
+    <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 overflow-hidden transition-colors">
       {/* Top Header */}
       <div className="flex items-center justify-between p-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 gap-2 shadow-sm">
         <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded border border-emerald-500/20">
@@ -149,7 +149,7 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = ({ arrayBuffer, tex
       )}
 
       {/* Main Content View */}
-      <div className="flex-1 overflow-hidden bg-slate-100 dark:bg-slate-950 flex">
+      <div className="flex-1 min-h-0 min-w-0 overflow-hidden bg-slate-100 dark:bg-slate-950 flex">
         {/* Table Browser View */}
         {activeTab === 'tables' && (
           <div className="flex w-full h-full">

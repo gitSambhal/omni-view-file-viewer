@@ -110,7 +110,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-900 dark:bg-slate-950 text-slate-100 overflow-hidden select-none transition-colors">
+    <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 bg-slate-900 dark:bg-slate-950 text-slate-100 overflow-hidden select-none transition-colors">
       {/* Image Header Controls */}
       <div className="flex flex-wrap items-center justify-between p-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 gap-2 shadow-sm">
         <div className="flex items-center gap-3">
@@ -213,7 +213,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
       </div>
 
       {/* Main Image Interactive Stage */}
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className="flex-1 min-h-0 min-w-0 flex overflow-hidden relative">
         <div
           ref={stageRef}
           onWheel={handleWheel}

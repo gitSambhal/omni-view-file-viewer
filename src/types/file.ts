@@ -52,6 +52,7 @@ export interface TabFile {
   // Live Sync state
   liveSyncActive: boolean;
   lastSyncedAt?: number;
+  syncCount?: number;
   hasUnsavedChanges?: boolean;
   syncStatus: 'synced' | 'syncing' | 'modified_external' | 'paused' | 'error';
   

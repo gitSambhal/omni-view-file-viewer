@@ -26,6 +26,7 @@ interface HeaderProps {
   onLoadSampleFiles: () => void;
   onOpenChangelog: () => void;
   onOpenHexForCurrentTab: () => void;
+  onOpenLiveSyncDashboard?: () => void;
   liveSyncCount: number;
   isSyncing?: boolean;
 }
@@ -37,6 +38,7 @@ export const Header: React.FC<HeaderProps> = ({
   onLoadSampleFiles,
   onOpenChangelog,
   onOpenHexForCurrentTab,
+  onOpenLiveSyncDashboard,
   liveSyncCount,
   isSyncing = false
 }) => {
@@ -84,21 +86,27 @@ export const Header: React.FC<HeaderProps> = ({
           <span>Open Local File</span>
         </button>
 
-        {/* Live Sync File Picker */}
-        <button
-          onClick={onOpenFilePicker}
-          className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-300 dark:border-slate-700 transition-all active:scale-95 cursor-pointer"
-          title="Open local files with automatic real-time file live syncing"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'text-emerald-500 animate-spin' : liveSyncCount > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-slate-400'}`} />
-          <span>Live Sync File</span>
+        {/* Live Sync File Picker & Dashboard Button */}
+        <div className="flex items-center">
+          <button
+            onClick={onOpenFilePicker}
+            className={`flex items-center gap-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-3 py-1.5 ${liveSyncCount > 0 ? 'rounded-l-lg border-r-0' : 'rounded-lg'} text-xs font-medium border border-slate-300 dark:border-slate-700 transition-all active:scale-95 cursor-pointer`}
+            title="Open local files with automatic real-time file live syncing"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'text-emerald-500 animate-spin' : liveSyncCount > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-slate-400'}`} />
+            <span>Live Sync File</span>
+          </button>
           {liveSyncCount > 0 && (
-            <span className="bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[10px] font-mono px-1.5 py-0.5 rounded-full border border-emerald-500/30 font-bold flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <button
+              onClick={onOpenLiveSyncDashboard}
+              className="bg-emerald-500/10 dark:bg-emerald-500/20 hover:bg-emerald-500/20 dark:hover:bg-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-[10px] font-mono px-2 py-1.5 rounded-r-lg border border-slate-300 dark:border-slate-700 border-l border-l-emerald-500/30 font-bold flex items-center gap-1 cursor-pointer transition-colors"
+              title="Click to open Live Sync Dashboard & Metadata Telemetry"
+            >
+              <span className={`w-1.5 h-1.5 rounded-full bg-emerald-500 ${isSyncing ? 'animate-ping' : ''}`} />
               {liveSyncCount} Active
-            </span>
+            </button>
           )}
-        </button>
+        </div>
 
         {/* Load Demos */}
         <button

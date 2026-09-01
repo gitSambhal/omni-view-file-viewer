@@ -12,12 +12,14 @@ interface FooterProps {
   activeTab: TabFile | null;
   onOpenChangelog: () => void;
   onToggleViewMode: () => void;
+  onOpenLiveSyncDashboard?: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({
   activeTab,
   onOpenChangelog,
-  onToggleViewMode
+  onToggleViewMode,
+  onOpenLiveSyncDashboard
 }) => {
   return (
     <footer className="flex flex-wrap items-center justify-between px-4 py-2 bg-slate-100 dark:bg-slate-950 border-t border-slate-300 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 font-mono select-none gap-2 transition-colors">
@@ -41,9 +43,17 @@ export const Footer: React.FC<FooterProps> = ({
             {activeTab.liveSyncActive && (
               <>
                 <span className="text-slate-400 dark:text-slate-600">|</span>
-                <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
-                  <RefreshCw className="w-3 h-3 animate-spin" /> Live Syncing
-                </span>
+                <button
+                  onClick={onOpenLiveSyncDashboard}
+                  className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 font-semibold border border-emerald-500/20 transition-colors cursor-pointer"
+                  title="Click to view Live Sync metadata telemetry dashboard"
+                >
+                  <RefreshCw className={`w-3 h-3 ${activeTab.syncStatus === 'syncing' ? 'animate-spin text-emerald-400' : ''}`} />
+                  <span>{activeTab.syncStatus === 'syncing' ? 'Syncing Disk...' : 'Live Sync Active'}</span>
+                  <span className="text-[10px] opacity-80 font-normal">
+                    ({activeTab.lastSyncedAt ? new Date(activeTab.lastSyncedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'Now'} • {activeTab.syncCount || 0} syncs)
+                  </span>
+                </button>
               </>
             )}
           </>

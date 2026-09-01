@@ -17,6 +17,7 @@ import { TabBar } from './components/TabBar';
 import { DropZone } from './components/DropZone';
 import { Footer } from './components/Footer';
 import { ChangelogModal } from './components/ChangelogModal';
+import { LiveSyncModal } from './components/LiveSyncModal';
 import { ToastContainer } from './components/Toast';
 import { HexViewer } from './components/HexViewer';
 
@@ -40,6 +41,7 @@ export default function App() {
   const [tabs, setTabs] = useState<TabFile[]>(() => getSampleTabFiles());
   const [activeTabId, setActiveTabId] = useState<string | null>('sample-md');
   const [isChangelogOpen, setIsChangelogOpen] = useState<boolean>(false);
+  const [isLiveSyncDashboardOpen, setIsLiveSyncDashboardOpen] = useState<boolean>(false);
 
   const activeTab = tabs.find(t => t.id === activeTabId) || null;
 
@@ -359,6 +361,7 @@ export default function App() {
         }}
         onOpenChangelog={() => setIsChangelogOpen(true)}
         onOpenHexForCurrentTab={handleToggleHexView}
+        onOpenLiveSyncDashboard={() => setIsLiveSyncDashboardOpen(true)}
         liveSyncCount={liveSyncCount}
         isSyncing={isSyncing}
       />
@@ -377,12 +380,13 @@ export default function App() {
           onToggleLiveSyncTab={handleToggleLiveSyncTab}
           onToggleHexViewTab={handleToggleHexViewTab}
           onDownloadTabFile={handleDownloadTabFile}
+          onOpenLiveSyncDashboard={() => setIsLiveSyncDashboardOpen(true)}
           onNewTab={handleOpenFilePicker}
         />
       )}
 
       {/* Main Workspace Stage */}
-      <main className="flex-1 flex overflow-hidden relative">
+      <main className="flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden relative">
         {tabs.length === 0 || !activeTab ? (
           <DropZone
             onFilesSelected={handleFilesSelected}
@@ -400,7 +404,7 @@ export default function App() {
           />
         ) : (
           /* Render category specific viewer */
-          <div className="w-full h-full flex flex-col overflow-hidden">
+          <div className="w-full flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden">
             {activeTab.category === 'pdf' && (
               <PdfViewer
                 objectUrl={activeTab.objectUrl}
@@ -512,6 +516,16 @@ export default function App() {
         activeTab={activeTab}
         onOpenChangelog={() => setIsChangelogOpen(true)}
         onToggleViewMode={handleToggleHexView}
+        onOpenLiveSyncDashboard={() => setIsLiveSyncDashboardOpen(true)}
+      />
+
+      {/* Live Sync Dashboard Modal */}
+      <LiveSyncModal
+        isOpen={isLiveSyncDashboardOpen}
+        onClose={() => setIsLiveSyncDashboardOpen(false)}
+        tabs={tabs}
+        onToggleLiveSyncTab={handleToggleLiveSyncTab}
+        isSyncing={isSyncing}
       />
 
       {/* Changelog Modal */}

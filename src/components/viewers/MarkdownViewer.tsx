@@ -25,7 +25,7 @@ export const MarkdownViewer: React.FC<MarkdownViewerProps> = ({ textContent = ''
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-900 text-slate-100 overflow-hidden">
+    <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 bg-slate-900 text-slate-100 overflow-hidden">
       {/* Markdown Header Bar */}
       <div className="flex items-center justify-between p-3 bg-slate-800 border-b border-slate-700 gap-2">
         <div className="flex items-center gap-2 text-xs font-semibold text-purple-400 bg-purple-500/10 px-2.5 py-1 rounded border border-purple-500/20">
@@ -75,10 +75,10 @@ export const MarkdownViewer: React.FC<MarkdownViewerProps> = ({ textContent = ''
       </div>
 
       {/* Main Markdown Body */}
-      <div className="flex-1 overflow-hidden bg-slate-950 flex">
+      <div className="flex-1 min-h-0 min-w-0 overflow-hidden bg-slate-950 flex">
         {/* Raw Editor Column */}
         {(mode === 'raw' || mode === 'split') && (
-          <div className={`${mode === 'split' ? 'w-1/2 border-r border-slate-800' : 'w-full'} flex flex-col h-full bg-slate-900`}>
+          <div className={`${mode === 'split' ? 'w-1/2 border-r border-slate-800' : 'w-full'} flex flex-col h-full min-h-0 min-w-0 bg-slate-900`}>
             <div className="px-3 py-1.5 bg-slate-950 border-b border-slate-800 text-xs text-slate-400 font-mono">
               Raw Source Editor
             </div>
@@ -93,9 +93,9 @@ export const MarkdownViewer: React.FC<MarkdownViewerProps> = ({ textContent = ''
 
         {/* Rendered Markdown Column */}
         {(mode === 'preview' || mode === 'split') && (
-          <div className={`${mode === 'split' ? 'w-1/2' : 'w-full'} h-full overflow-auto p-6 md:p-10 bg-slate-950 flex justify-center`}>
-            <div className="w-full max-w-4xl bg-slate-900 border border-slate-800 p-8 rounded-xl shadow-xl text-slate-100">
-              <div className="markdown-body prose prose-invert max-w-none text-slate-200">
+          <div className={`${mode === 'split' ? 'w-1/2' : 'w-full'} h-full min-h-0 min-w-0 overflow-auto p-6 md:p-10 bg-slate-950 flex justify-center`}>
+            <div className="w-full max-w-4xl bg-slate-900 border border-slate-800 p-8 rounded-xl shadow-xl text-slate-100 min-w-0">
+              <div className="markdown-body prose prose-invert max-w-none text-slate-200 break-words overflow-x-auto">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {content}
                 </ReactMarkdown>

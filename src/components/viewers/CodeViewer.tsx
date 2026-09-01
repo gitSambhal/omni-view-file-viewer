@@ -56,7 +56,7 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({ textContent = '', filena
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-50 dark:bg-[#282c34] text-slate-800 dark:text-slate-100 font-mono overflow-hidden transition-colors">
+    <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 bg-slate-50 dark:bg-[#282c34] text-slate-800 dark:text-slate-100 font-mono overflow-hidden transition-colors">
       {/* Code Header Bar */}
       <div className="flex flex-wrap items-center justify-between p-3 bg-white dark:bg-[#21252b] border-b border-slate-200 dark:border-slate-700/60 gap-2 shadow-sm">
         <div className="flex items-center gap-3">
@@ -138,7 +138,7 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({ textContent = '', filena
       </div>
 
       {/* Code Editor Body */}
-      <div className="flex-1 overflow-auto bg-slate-900 dark:bg-[#282c34] text-slate-100 p-4 flex">
+      <div className="flex-1 overflow-auto bg-slate-900 dark:bg-[#282c34] text-slate-100 p-4 flex min-h-0 min-w-0">
         <div className="table w-full" style={{ fontSize: `${fontSize}px`, lineHeight: 1.6 }}>
           {highlightedLines.map((lineHtml, idx) => {
             const lineNumber = idx + 1;
