@@ -93,8 +93,8 @@ export const MarkdownViewer: React.FC<MarkdownViewerProps> = ({ textContent = ''
 
         {/* Rendered Markdown Column */}
         {(mode === 'preview' || mode === 'split') && (
-          <div className={`${mode === 'split' ? 'w-1/2' : 'w-full'} h-full min-h-0 min-w-0 overflow-auto p-6 md:p-10 bg-slate-950 flex justify-center`}>
-            <div className="w-full max-w-4xl bg-slate-900 border border-slate-800 p-8 rounded-xl shadow-xl text-slate-100 min-w-0">
+          <div className={`${mode === 'split' ? 'w-1/2' : 'w-full'} h-full min-h-0 min-w-0 overflow-auto p-6 md:p-10 bg-slate-950 flex justify-center items-start`}>
+            <div className="w-full max-w-4xl bg-slate-900 border border-slate-800 p-8 rounded-xl shadow-xl text-slate-100 min-w-0 my-auto sm:my-0">
               <div className="markdown-body prose prose-invert max-w-none text-slate-200 break-words overflow-x-auto">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {content}
