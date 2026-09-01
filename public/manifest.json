@@ -1,16 +1,24 @@
 {
   "name": "OmniView File Studio",
   "short_name": "OmniView",
-  "description": "100% offline local browser file previewer with live sync & multi-tab workspace.",
+  "description": "100% offline & local file preview studio with multi-tab workspace, live file sync, dark mode, and support for PDFs, Office docs, code, databases, media & archives.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f172a",
-  "theme_color": "#3b82f6",
+  "theme_color": "#0f172a",
   "icons": [
     {
-      "src": "/assets/aistudio/.gitignore",
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-192.svg",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ]
 }
+
