@@ -1,0 +1,6 @@
+{
+  "name": "OmniView File Studio",
+  "description": "100% offline & local file preview studio with multi-tab workspace, live file sync, dark mode, and support for PDFs, Office docs, code, databases, media & archives.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
