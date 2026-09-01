@@ -25,13 +25,13 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, onClose 
             </div>
             <div>
               <h3 className="font-bold text-slate-100 text-base">What's New in OmniView Studio</h3>
-              <p className="text-xs text-slate-400">Release Version v1.0.0</p>
+              <p className="text-xs text-slate-400">Release Version v1.3.0</p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-700 transition-colors"
+            className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-700 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -39,15 +39,18 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, onClose 
 
         {/* Modal Content */}
         <div className="p-6 space-y-6 overflow-y-auto text-sm text-slate-300 leading-relaxed font-sans">
-          {/* Release Highlights */}
-          <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 space-y-2">
-            <div className="flex items-center gap-2 font-semibold text-blue-300">
-              <Sparkles className="w-4 h-4 text-blue-400" />
-              <span>Version 1.0.0 - Production Launch</span>
+          {/* v1.3.0 Highlights */}
+          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 space-y-2">
+            <div className="flex items-center gap-2 font-semibold text-emerald-300">
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+              <span>Version 1.3.0 - HTTP/REST Client & Binary PE/DLL Inspector</span>
             </div>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              OmniView Studio is designed from the ground up to provide seamless offline file previewing for any file type directly within your browser interface.
-            </p>
+            <ul className="space-y-1.5 text-xs text-slate-300 list-disc list-inside">
+              <li><strong>HTTP & REST Client Studio (.http, .rest):</strong> Live request execution, headers inspector, environment variables (<code>@var = val</code>, <code>{`{{var}}`}</code>), cURL generator, and responsive response body viewer.</li>
+              <li><strong>Binary & DLL PE Inspector (.dll, .exe, .so, .dylib, .wasm, .class):</strong> Parse PE/COFF headers, architecture (x86/x64/ARM), subsystem, entry point, section table (<code>.text</code>, <code>.data</code>, <code>.rdata</code>), and extracted symbols/strings with URL & API filtering.</li>
+              <li><strong>Font & Glyph Specimen Studio (.ttf, .otf, .woff, .woff2):</strong> Dynamic browser font registration, waterfall size tests (12px-72px), character glyph grid with 1-click clipboard copy, and custom specimen canvas.</li>
+              <li><strong>Certificate & Key Inspector (.pem, .crt, .cer, .key, .pub, .csr):</strong> Parse X.509 certificates and RSA/ECC key structures, PEM object detection, bit length estimation, and raw security inspection.</li>
+            </ul>
           </div>
 
           <div className="space-y-4">

@@ -18,8 +18,10 @@ const EXT_LANG_MAP: Record<string, string> = {
   js: 'javascript', jsx: 'javascript', ts: 'typescript', tsx: 'typescript',
   html: 'xml', css: 'css', scss: 'scss', py: 'python', java: 'java',
   cpp: 'cpp', c: 'c', cs: 'csharp', php: 'php', rb: 'ruby', rs: 'rust',
-  go: 'go', sql: 'sql', sh: 'bash', bash: 'bash', json: 'json', xml: 'xml',
-  yaml: 'yaml', yml: 'yaml', md: 'markdown', dockerfile: 'dockerfile'
+  go: 'go', sql: 'sql', sh: 'bash', bash: 'bash', zsh: 'bash', env: 'bash',
+  json: 'json', xml: 'xml', yaml: 'yaml', yml: 'yaml', md: 'markdown',
+  dockerfile: 'dockerfile', makefile: 'makefile', toml: 'ini', ini: 'ini',
+  properties: 'ini', conf: 'ini', config: 'ini', prisma: 'graphql'
 };
 
 export const CodeViewer: React.FC<CodeViewerProps> = ({ textContent = '', filename }) => {

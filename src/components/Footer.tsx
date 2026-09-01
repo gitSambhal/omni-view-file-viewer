@@ -83,7 +83,7 @@ export const Footer: React.FC<FooterProps> = ({
           className="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded text-[11px] border border-slate-300 dark:border-slate-700 font-semibold transition-colors cursor-pointer"
           title="View Changelog & Release Notes"
         >
-          v1.0.0
+          v1.3.0
         </button>
       </div>
     </footer>

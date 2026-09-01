@@ -84,9 +84,38 @@ export const JsonXmlViewer: React.FC<JsonXmlViewerProps> = ({ textContent = '', 
   const [viewMode, setViewMode] = useState<'tree' | 'formatted'>('tree');
 
   const parsedJson = useMemo(() => {
+    if (!textContent) return null;
     try {
       return JSON.parse(textContent);
     } catch (e) {
+      // Try parsing key=value (.env / ini / properties) format into object
+      try {
+        const lines = textContent.split('\n');
+        const kvObj: Record<string, any> = {};
+        let hasKv = false;
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('//') || trimmed.startsWith(';')) continue;
+          const eqIdx = trimmed.indexOf('=');
+          const colonIdx = trimmed.indexOf(':');
+          const splitIdx = eqIdx !== -1 ? eqIdx : colonIdx;
+          if (splitIdx > 0) {
+            const key = trimmed.slice(0, splitIdx).trim();
+            let val: any = trimmed.slice(splitIdx + 1).trim();
+            // remove surrounding quotes
+            if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+              val = val.slice(1, -1);
+            } else if (val === 'true') val = true;
+            else if (val === 'false') val = false;
+            else if (!isNaN(Number(val)) && val !== '') val = Number(val);
+            kvObj[key] = val;
+            hasKv = true;
+          }
+        }
+        if (hasKv && Object.keys(kvObj).length > 0) {
+          return kvObj;
+        }
+      } catch (_) {}
       return null;
     }
   }, [textContent]);

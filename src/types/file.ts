@@ -17,6 +17,14 @@ export type FileCategory =
   | 'archive'
   | 'json'
   | 'text'
+  | 'log'
+  | 'subtitle'
+  | 'geojson'
+  | 'ebook'
+  | 'http'
+  | 'binary'
+  | 'font'
+  | 'certificate'
   | 'hex';
 
 export interface FileMetadata {
@@ -40,6 +48,7 @@ export interface TabFile {
   lastModified: number;
   extension: string;
   category: FileCategory;
+  activeReader?: FileCategory; // Dynamic reader mode override
   
   // Data representations
   fileRaw?: File;

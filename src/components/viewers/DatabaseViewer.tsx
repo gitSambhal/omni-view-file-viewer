@@ -18,7 +18,7 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = ({ arrayBuffer, tex
   const isSqlScript = ext === 'sql';
   const isAccessDb = ext === 'accdb' || ext === 'mdb';
 
-  const [activeTab, setActiveTab] = useState<'tables' | 'query' | 'schema' | 'raw'>('tables');
+  const [activeTab, setActiveTab] = useState<'tables' | 'query' | 'schema' | 'raw'>(isSqlScript ? 'query' : 'tables');
   const [sqlQuery, setSqlQuery] = useState<string>(
     isSqlScript
       ? textContent
@@ -126,8 +126,19 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = ({ arrayBuffer, tex
             }`}
           >
             <Play className="w-3.5 h-3.5" />
-            SQL Console
+            SQL Console (Run Query)
           </button>
+          {textContent && (
+            <button
+              onClick={() => setActiveTab('raw')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs transition-colors ${
+                activeTab === 'raw' ? 'bg-emerald-600 text-white font-medium shadow-sm' : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
+              }`}
+            >
+              <Code className="w-3.5 h-3.5" />
+              Raw SQL Script
+            </button>
+          )}
           <button
             onClick={() => setActiveTab('schema')}
             className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs transition-colors ${
@@ -222,12 +233,23 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = ({ arrayBuffer, tex
 
         {/* SQL Console Tab */}
         {activeTab === 'query' && (
-          <div className="w-full flex flex-col h-full p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-mono text-slate-300 font-semibold">SQL Query Runner</span>
+          <div className="w-full flex flex-col h-full p-4 space-y-3 overflow-auto">
+            {/* Explanatory Banner for SQL Query Runner */}
+            <div className="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-lg text-xs text-emerald-800 dark:text-emerald-300 flex items-start gap-2.5 shadow-sm">
+              <Info className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+              <div>
+                <strong className="font-semibold block text-emerald-900 dark:text-emerald-200">Why Run Query for SQL files?</strong>
+                <span>
+                  A .sql file defines database tables and records. OmniView's client-side SQL console automatically parses your schema statements and runs test SQL queries directly in the browser — no database server required!
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-xs font-mono text-slate-700 dark:text-slate-300 font-semibold">Interactive SQL Query Runner</span>
               <button
                 onClick={handleRunQuery}
-                className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-1.5 rounded text-xs font-medium transition-colors shadow"
+                className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-1.5 rounded text-xs font-medium transition-colors shadow cursor-pointer"
               >
                 <Play className="w-3.5 h-3.5 fill-white" />
                 Run Query
@@ -237,7 +259,7 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = ({ arrayBuffer, tex
             <textarea
               value={sqlQuery}
               onChange={e => setSqlQuery(e.target.value)}
-              className="w-full h-36 bg-slate-900 p-3 rounded-lg border border-slate-700 font-mono text-xs text-emerald-300 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="w-full h-32 bg-slate-900 p-3 rounded-lg border border-slate-700 font-mono text-xs text-emerald-300 focus:outline-none focus:ring-1 focus:ring-emerald-500"
               placeholder="Enter SQL statement..."
             />
 
@@ -248,8 +270,8 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = ({ arrayBuffer, tex
               </div>
             )}
 
-            <div className="flex-1 bg-slate-900 rounded-lg border border-slate-800 overflow-auto p-3">
-              <span className="text-xs text-slate-400 font-mono block mb-2">Query Output:</span>
+            <div className="flex-1 min-h-[160px] bg-slate-900 rounded-lg border border-slate-800 overflow-auto p-3">
+              <span className="text-xs text-slate-400 font-mono block mb-2">Query Output Grid:</span>
               <table className="w-full text-left text-xs font-mono border-collapse">
                 <thead>
                   <tr className="bg-slate-800 text-slate-200">
@@ -268,6 +290,21 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = ({ arrayBuffer, tex
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {/* Raw SQL Code Tab */}
+        {activeTab === 'raw' && (
+          <div className="w-full flex-1 h-full min-h-0 overflow-auto p-4 bg-slate-950 font-mono text-xs">
+            <div className="max-w-4xl mx-auto bg-slate-900 p-4 rounded-lg border border-slate-800 text-slate-200">
+              <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-800 text-slate-400 text-xs">
+                <span>SQL Script File View ({textContent.split('\n').length} lines)</span>
+                <span className="text-emerald-400 font-semibold">{filename}</span>
+              </div>
+              <pre className="whitespace-pre-wrap text-emerald-300 leading-relaxed font-mono">
+                {textContent}
+              </pre>
             </div>
           </div>
         )}

@@ -4,7 +4,8 @@
  * OmniView File Studio - 100% Offline & Local File Previewer
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Upload } from 'lucide-react';
 import { useTheme } from './hooks/useTheme';
 import { useToast } from './hooks/useToast';
 import { useLiveSync } from './hooks/useLiveSync';
@@ -20,6 +21,7 @@ import { ChangelogModal } from './components/ChangelogModal';
 import { LiveSyncModal } from './components/LiveSyncModal';
 import { ToastContainer } from './components/Toast';
 import { HexViewer } from './components/HexViewer';
+import { ReaderSwitcher } from './components/ReaderSwitcher';
 
 import { PdfViewer } from './components/viewers/PdfViewer';
 import { DocxViewer } from './components/viewers/DocxViewer';
@@ -33,6 +35,14 @@ import { MediaViewer } from './components/viewers/MediaViewer';
 import { ZipViewer } from './components/viewers/ZipViewer';
 import { JsonXmlViewer } from './components/viewers/JsonXmlViewer';
 import { TextViewer } from './components/viewers/TextViewer';
+import { LogViewer } from './components/viewers/LogViewer';
+import { SubtitleViewer } from './components/viewers/SubtitleViewer';
+import { GeoJsonViewer } from './components/viewers/GeoJsonViewer';
+import { EbookViewer } from './components/viewers/EbookViewer';
+import { HttpRestViewer } from './components/viewers/HttpRestViewer';
+import { BinaryInspectorViewer } from './components/viewers/BinaryInspectorViewer';
+import { FontViewer } from './components/viewers/FontViewer';
+import { CertificateViewer } from './components/viewers/CertificateViewer';
 
 export default function App() {
   const { theme, toggleTheme } = useTheme();
@@ -42,6 +52,8 @@ export default function App() {
   const [activeTabId, setActiveTabId] = useState<string | null>('sample-md');
   const [isChangelogOpen, setIsChangelogOpen] = useState<boolean>(false);
   const [isLiveSyncDashboardOpen, setIsLiveSyncDashboardOpen] = useState<boolean>(false);
+  const [isDraggingOverApp, setIsDraggingOverApp] = useState<boolean>(false);
+  const dragCounter = useRef<number>(0);
 
   const activeTab = tabs.find(t => t.id === activeTabId) || null;
 
@@ -73,18 +85,32 @@ export default function App() {
     let arrayBuffer: ArrayBuffer | undefined;
     let objectUrl: string | undefined;
 
-    if (category === 'code' || category === 'markdown' || category === 'text' || category === 'json') {
-      textContent = await file.text();
-    } else if (category === 'image' || category === 'pdf' || category === 'video' || category === 'audio') {
-      arrayBuffer = await file.arrayBuffer();
+    // 1. Instant zero-copy streaming object URL for media / documents / preview
+    try {
       objectUrl = URL.createObjectURL(file);
-    } else {
-      arrayBuffer = await file.arrayBuffer();
-      if (category === 'excel' || category === 'docx') {
-        try {
-          textContent = await file.text();
-        } catch (_) {}
-      }
+    } catch (_) {}
+
+    // 2. Read text content for text-based formats (safe buffer size up to 15MB)
+    const isTextFormat = [
+      'code', 'markdown', 'text', 'json', 'log', 'subtitle', 'geojson', 'ebook', 'database', 'http', 'certificate'
+    ].includes(category) || file.type.startsWith('text/') || ['sql', 'csv', 'tsv', 'json', 'xml', 'yaml', 'yml', 'env', 'ini', 'toml', 'log', 'srt', 'vtt', 'properties', 'http', 'rest', 'pem', 'crt', 'cer', 'key', 'pub', 'csr'].includes(ext);
+
+    if (isTextFormat && file.size < 15 * 1024 * 1024) {
+      try {
+        textContent = await file.text();
+      } catch (_) {}
+    }
+
+    // 3. Read ArrayBuffer only when needed for binary parsing (DLL, Binary, Font, Excel, Docx, Zip, PDF, small files < 35MB)
+    // NOTE: Avoid reading huge contiguous ArrayBuffer for video/audio (> 30MB) since they stream directly from objectUrl
+    if (category !== 'video' && category !== 'audio' && file.size < 35 * 1024 * 1024) {
+      try {
+        arrayBuffer = await file.arrayBuffer();
+      } catch (_) {}
+    } else if (file.size < 5 * 1024 * 1024) {
+      try {
+        arrayBuffer = await file.arrayBuffer();
+      } catch (_) {}
     }
 
     return {
@@ -125,6 +151,42 @@ export default function App() {
       setTabs(prev => [...prev, ...newTabs]);
       setActiveTabId(newTabs[0].id);
       addToast('success', 'File Opened', `Successfully loaded ${newTabs.length} file(s) locally.`);
+    }
+  };
+
+  // Global App-Level Drag and Drop Handlers
+  const handleAppDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current += 1;
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      setIsDraggingOverApp(true);
+    }
+  };
+
+  const handleAppDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current -= 1;
+    if (dragCounter.current <= 0) {
+      dragCounter.current = 0;
+      setIsDraggingOverApp(false);
+    }
+  };
+
+  const handleAppDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleAppDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current = 0;
+    setIsDraggingOverApp(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFilesSelected(e.dataTransfer.files);
     }
   };
 
@@ -321,6 +383,13 @@ export default function App() {
     handleToggleHexViewTab(activeTabId);
   };
 
+  const handleSetTabReader = (id: string, reader: FileCategory) => {
+    setTabs(prev =>
+      prev.map(t => (t.id === id ? { ...t, activeReader: reader, viewMode: reader === 'hex' ? 'hex' : 'preview' } : t))
+    );
+    addToast('info', 'Reader Mode Changed', `Switched reader mode for active file.`);
+  };
+
   // Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -348,7 +417,33 @@ export default function App() {
   const liveSyncCount = tabs.filter(t => t.liveSyncActive).length;
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-hidden font-sans transition-colors duration-200">
+    <div
+      onDragEnter={handleAppDragEnter}
+      onDragOver={handleAppDragOver}
+      onDragLeave={handleAppDragLeave}
+      onDrop={handleAppDrop}
+      className="flex flex-col h-screen w-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-hidden font-sans transition-colors duration-200 relative"
+    >
+      {/* App-Level Fullscreen Drag & Drop Overlay */}
+      {isDraggingOverApp && (
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex flex-col items-center justify-center p-6 border-4 border-dashed border-blue-500 animate-in fade-in duration-150 pointer-events-none">
+          <div className="bg-slate-900/95 border border-blue-500/40 p-8 rounded-3xl shadow-2xl flex flex-col items-center text-center max-w-md space-y-4">
+            <div className="w-16 h-16 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center animate-bounce">
+              <Upload className="w-8 h-8" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-xl font-bold text-white">Drop files to open in OmniView</h3>
+              <p className="text-xs text-slate-300">
+                Release anywhere to open in dedicated tabs with 100% offline privacy.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 text-[11px] font-mono text-blue-400 bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20">
+              <span>MP4, MKV, Code, ENV, YAML, Logs, PDF & 50+ formats</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <Header
         theme={theme}
@@ -397,116 +492,240 @@ export default function App() {
             }}
           />
         ) : activeTab.viewMode === 'hex' ? (
-          <HexViewer
-            arrayBuffer={activeTab.arrayBuffer}
-            textContent={activeTab.textContent}
-            filename={activeTab.name}
-          />
-        ) : (
-          /* Render category specific viewer */
           <div className="w-full flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden">
-            {activeTab.category === 'pdf' && (
-              <PdfViewer
-                objectUrl={activeTab.objectUrl}
-                arrayBuffer={activeTab.arrayBuffer}
-                filename={activeTab.name}
+            {/* Top Reader Subheader Bar */}
+            <div className="flex items-center justify-between px-3 py-1.5 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 select-none shrink-0">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-xs">{activeTab.name}</span>
+                <span className="text-[11px] font-mono opacity-70">({(activeTab.size / 1024).toFixed(1)} KB)</span>
+              </div>
+              <ReaderSwitcher
+                activeTab={activeTab}
+                onSelectReader={(reader) => handleSetTabReader(activeTab.id, reader)}
               />
-            )}
+            </div>
+            <HexViewer
+              arrayBuffer={activeTab.arrayBuffer}
+              textContent={activeTab.textContent}
+              filename={activeTab.name}
+            />
+          </div>
+        ) : (
+          /* Render category specific viewer with dynamic Reader Switcher */
+          <div className="w-full flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden">
+            {/* Top Reader Subheader Bar */}
+            <div className="flex items-center justify-between px-3 py-1.5 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 select-none shrink-0">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-xs">{activeTab.name}</span>
+                <span className="text-[11px] font-mono opacity-70">
+                  {activeTab.size > 1024 * 1024
+                    ? `${(activeTab.size / (1024 * 1024)).toFixed(2)} MB`
+                    : `${(activeTab.size / 1024).toFixed(1)} KB`}
+                </span>
+                {activeTab.liveSyncActive && (
+                  <span className="hidden sm:inline-flex items-center gap-1 text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-1.5 py-0.2 rounded font-mono">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live Sync
+                  </span>
+                )}
+              </div>
+              <ReaderSwitcher
+                activeTab={activeTab}
+                onSelectReader={(reader) => handleSetTabReader(activeTab.id, reader)}
+              />
+            </div>
 
-            {activeTab.category === 'docx' && (
-              <DocxViewer
-                arrayBuffer={activeTab.arrayBuffer}
-                textContent={activeTab.textContent}
-                filename={activeTab.name}
-              />
-            )}
+            {/* Dynamic Viewer Render */}
+            {(() => {
+              const currentCategory = activeTab.activeReader || activeTab.category;
 
-            {activeTab.category === 'excel' && (
-              <ExcelViewer
-                arrayBuffer={activeTab.arrayBuffer}
-                textContent={activeTab.textContent}
-                filename={activeTab.name}
-              />
-            )}
-
-            {activeTab.category === 'pptx' && (
-              <PptxViewer
-                arrayBuffer={activeTab.arrayBuffer}
-                filename={activeTab.name}
-              />
-            )}
-
-            {activeTab.category === 'code' && (
-              <CodeViewer
-                textContent={activeTab.textContent}
-                filename={activeTab.name}
-              />
-            )}
-
-            {activeTab.category === 'markdown' && (
-              <MarkdownViewer
-                textContent={activeTab.textContent}
-                filename={activeTab.name}
-              />
-            )}
-
-            {activeTab.category === 'database' && (
-              <DatabaseViewer
-                arrayBuffer={activeTab.arrayBuffer}
-                textContent={activeTab.textContent}
-                filename={activeTab.name}
-              />
-            )}
-
-            {activeTab.category === 'image' && (
-              <ImageViewer
-                objectUrl={activeTab.objectUrl}
-                dataUrl={activeTab.dataUrl}
-                arrayBuffer={activeTab.arrayBuffer}
-                textContent={activeTab.textContent}
-                filename={activeTab.name}
-                size={activeTab.size}
-              />
-            )}
-
-            {(activeTab.category === 'video' || activeTab.category === 'audio') && (
-              <MediaViewer
-                objectUrl={activeTab.objectUrl}
-                dataUrl={activeTab.dataUrl}
-                arrayBuffer={activeTab.arrayBuffer}
-                filename={activeTab.name}
-                isAudio={activeTab.category === 'audio'}
-              />
-            )}
-
-            {activeTab.category === 'archive' && (
-              <ZipViewer
-                arrayBuffer={activeTab.arrayBuffer}
-                filename={activeTab.name}
-              />
-            )}
-
-            {activeTab.category === 'json' && (
-              <JsonXmlViewer
-                textContent={activeTab.textContent}
-                filename={activeTab.name}
-              />
-            )}
-
-            {activeTab.category === 'text' && (
-              <TextViewer
-                textContent={activeTab.textContent}
-                filename={activeTab.name}
-              />
-            )}
-
-            {activeTab.category === 'hex' && (
-              <HexViewer
-                arrayBuffer={activeTab.arrayBuffer}
-                textContent={activeTab.textContent}
-                filename={activeTab.name}
-              />
-            )}
+              if (currentCategory === 'pdf') {
+                return (
+                  <PdfViewer
+                    objectUrl={activeTab.objectUrl}
+                    arrayBuffer={activeTab.arrayBuffer}
+                    filename={activeTab.name}
+                  />
+                );
+              }
+              if (currentCategory === 'docx') {
+                return (
+                  <DocxViewer
+                    arrayBuffer={activeTab.arrayBuffer}
+                    textContent={activeTab.textContent}
+                    filename={activeTab.name}
+                  />
+                );
+              }
+              if (currentCategory === 'excel') {
+                return (
+                  <ExcelViewer
+                    arrayBuffer={activeTab.arrayBuffer}
+                    textContent={activeTab.textContent}
+                    filename={activeTab.name}
+                  />
+                );
+              }
+              if (currentCategory === 'pptx') {
+                return (
+                  <PptxViewer
+                    arrayBuffer={activeTab.arrayBuffer}
+                    filename={activeTab.name}
+                  />
+                );
+              }
+              if (currentCategory === 'code') {
+                return (
+                  <CodeViewer
+                    textContent={activeTab.textContent}
+                    filename={activeTab.name}
+                  />
+                );
+              }
+              if (currentCategory === 'markdown') {
+                return (
+                  <MarkdownViewer
+                    textContent={activeTab.textContent}
+                    filename={activeTab.name}
+                  />
+                );
+              }
+              if (currentCategory === 'database') {
+                return (
+                  <DatabaseViewer
+                    arrayBuffer={activeTab.arrayBuffer}
+                    textContent={activeTab.textContent}
+                    filename={activeTab.name}
+                  />
+                );
+              }
+              if (currentCategory === 'image') {
+                return (
+                  <ImageViewer
+                    objectUrl={activeTab.objectUrl}
+                    dataUrl={activeTab.dataUrl}
+                    arrayBuffer={activeTab.arrayBuffer}
+                    textContent={activeTab.textContent}
+                    filename={activeTab.name}
+                    size={activeTab.size}
+                  />
+                );
+              }
+              if (currentCategory === 'video' || currentCategory === 'audio') {
+                return (
+                  <MediaViewer
+                    objectUrl={activeTab.objectUrl}
+                    dataUrl={activeTab.dataUrl}
+                    arrayBuffer={activeTab.arrayBuffer}
+                    filename={activeTab.name}
+                    isAudio={currentCategory === 'audio'}
+                  />
+                );
+              }
+              if (currentCategory === 'archive') {
+                return (
+                  <ZipViewer
+                    arrayBuffer={activeTab.arrayBuffer}
+                    filename={activeTab.name}
+                  />
+                );
+              }
+              if (currentCategory === 'json') {
+                return (
+                  <JsonXmlViewer
+                    textContent={activeTab.textContent}
+                    filename={activeTab.name}
+                  />
+                );
+              }
+              if (currentCategory === 'text') {
+                return (
+                  <TextViewer
+                    textContent={activeTab.textContent}
+                    filename={activeTab.name}
+                  />
+                );
+              }
+              if (currentCategory === 'log') {
+                return (
+                  <LogViewer
+                    textContent={activeTab.textContent}
+                    filename={activeTab.name}
+                  />
+                );
+              }
+              if (currentCategory === 'subtitle') {
+                return (
+                  <SubtitleViewer
+                    textContent={activeTab.textContent}
+                    filename={activeTab.name}
+                  />
+                );
+              }
+              if (currentCategory === 'geojson') {
+                return (
+                  <GeoJsonViewer
+                    textContent={activeTab.textContent}
+                    filename={activeTab.name}
+                  />
+                );
+              }
+              if (currentCategory === 'http') {
+                return (
+                  <HttpRestViewer
+                    textContent={activeTab.textContent}
+                    filename={activeTab.name}
+                  />
+                );
+              }
+              if (currentCategory === 'binary') {
+                return (
+                  <BinaryInspectorViewer
+                    arrayBuffer={activeTab.arrayBuffer}
+                    filename={activeTab.name}
+                  />
+                );
+              }
+              if (currentCategory === 'font') {
+                return (
+                  <FontViewer
+                    arrayBuffer={activeTab.arrayBuffer}
+                    filename={activeTab.name}
+                  />
+                );
+              }
+              if (currentCategory === 'certificate') {
+                return (
+                  <CertificateViewer
+                    textContent={activeTab.textContent}
+                    arrayBuffer={activeTab.arrayBuffer}
+                    filename={activeTab.name}
+                  />
+                );
+              }
+              if (currentCategory === 'ebook') {
+                return (
+                  <EbookViewer
+                    textContent={activeTab.textContent}
+                    filename={activeTab.name}
+                  />
+                );
+              }
+              if (currentCategory === 'hex') {
+                return (
+                  <HexViewer
+                    arrayBuffer={activeTab.arrayBuffer}
+                    textContent={activeTab.textContent}
+                    filename={activeTab.name}
+                  />
+                );
+              }
+              return (
+                <TextViewer
+                  textContent={activeTab.textContent}
+                  filename={activeTab.name}
+                />
+              );
+            })()}
           </div>
         )}
       </main>

@@ -24,7 +24,11 @@ import {
   Binary,
   ArrowRightCircle,
   XCircle,
-  Layers
+  Layers,
+  Terminal,
+  Captions,
+  MapPin,
+  BookOpen
 } from 'lucide-react';
 import { TabFile, FileCategory } from '../types/file';
 
@@ -138,6 +142,14 @@ export const TabBar: React.FC<TabBarProps> = ({
         return <Archive className="w-3.5 h-3.5 text-amber-500 shrink-0" />;
       case 'json':
         return <Code className="w-3.5 h-3.5 text-blue-500 shrink-0" />;
+      case 'log':
+        return <Terminal className="w-3.5 h-3.5 text-amber-500 shrink-0" />;
+      case 'subtitle':
+        return <Captions className="w-3.5 h-3.5 text-cyan-500 shrink-0" />;
+      case 'geojson':
+        return <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />;
+      case 'ebook':
+        return <BookOpen className="w-3.5 h-3.5 text-indigo-500 shrink-0" />;
       default:
         return <Eye className="w-3.5 h-3.5 text-slate-400 shrink-0" />;
     }
