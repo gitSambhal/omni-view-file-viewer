@@ -185,7 +185,7 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = ({ arrayBuffer, tex
             role STRING,
             active BOOLEAN
           );
-          INSERT INTO users VALUES (1, 'suhail_akhtar', 'suhailak786@gmail.com', 'admin', true);
+          INSERT INTO users VALUES (1, 'admin_user', 'admin@example.com', 'admin', true);
           INSERT INTO users VALUES (2, 'sarah_designer', 'sarah@example.com', 'designer', true);
           INSERT INTO users VALUES (3, 'alex_engineer', 'alex@example.com', 'developer', true);
           INSERT INTO users VALUES (4, 'elena_pm', 'elena@example.com', 'manager', false);
@@ -209,7 +209,7 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = ({ arrayBuffer, tex
             user STRING,
             created_at STRING
           );
-          INSERT INTO activity_logs VALUES (1, 'File Open: schema_dump.sql', 'suhail_akhtar', '2026-09-01 10:15:22');
+          INSERT INTO activity_logs VALUES (1, 'File Open: schema_dump.sql', 'admin_user', '2026-09-01 10:15:22');
           INSERT INTO activity_logs VALUES (2, 'SQL Query Executed', 'alex_engineer', '2026-09-01 10:20:45');
           INSERT INTO activity_logs VALUES (3, 'Live Sync Updated', 'sarah_designer', '2026-09-01 10:25:10');
         `);
@@ -843,37 +843,49 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = ({ arrayBuffer, tex
 
         {/* TAB 2: SQL Console & Live Runner */}
         {activeTab === 'query' && (
-          <div className="w-full flex flex-col h-full min-h-0 p-4 space-y-3 overflow-y-auto">
+          <div className="w-full flex flex-col h-full min-h-0 p-4 space-y-4 overflow-y-auto">
             {/* Quick Helper Banner */}
             <div className="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl text-xs text-emerald-800 dark:text-emerald-300 flex items-start justify-between gap-3 shadow-xs shrink-0">
               <div className="flex items-start gap-2.5">
                 <Sparkles className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                 <div className="space-y-1">
                   <div className="font-semibold text-emerald-950 dark:text-emerald-200 flex items-center gap-2">
-                    <span>100% In-Browser Live SQL Execution Engine</span>
-                    <span className="bg-emerald-600/20 text-emerald-700 dark:text-emerald-300 px-2 py-0.2 rounded text-[10px] font-mono">
+                    <span className="text-sm font-bold">100% In-Browser Live SQL Execution Engine</span>
+                    <span className="bg-emerald-600/20 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded text-[10px] font-mono font-semibold">
                       ANSI SQL / SQLite Compliant
                     </span>
                   </div>
-                  <p className="text-[11px] text-emerald-800/90 dark:text-emerald-300/90 leading-relaxed">
-                    Execute real SELECT, JOIN, GROUP BY, INSERT, UPDATE, and DDL queries directly on your loaded schema. Press <kbd className="bg-emerald-900/20 dark:bg-emerald-950 px-1 py-0.5 rounded font-mono border border-emerald-500/30">Ctrl + Enter</kbd> or click <strong>Run Query</strong>.
+                  <p className="text-xs text-emerald-800/90 dark:text-emerald-300/90 leading-relaxed">
+                    Type or paste any manual SQL query (<code className="font-mono bg-emerald-900/10 dark:bg-emerald-950 px-1 py-0.5 rounded">SELECT</code>, <code className="font-mono bg-emerald-900/10 dark:bg-emerald-950 px-1 py-0.5 rounded">JOIN</code>, <code className="font-mono bg-emerald-900/10 dark:bg-emerald-950 px-1 py-0.5 rounded">GROUP BY</code>, <code className="font-mono bg-emerald-900/10 dark:bg-emerald-950 px-1 py-0.5 rounded">INSERT</code>, <code className="font-mono bg-emerald-900/10 dark:bg-emerald-950 px-1 py-0.5 rounded">UPDATE</code>, <code className="font-mono bg-emerald-900/10 dark:bg-emerald-950 px-1 py-0.5 rounded">CREATE TABLE</code>) and execute in real-time.
                   </p>
                 </div>
               </div>
+
+              <button
+                onClick={() => executeQuery()}
+                disabled={isExecuting}
+                className="hidden sm:flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-xs font-bold font-mono transition-all shadow-md shadow-emerald-900/30 cursor-pointer shrink-0"
+              >
+                {isExecuting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-white" />}
+                <span>Execute (Ctrl+Enter)</span>
+              </button>
             </div>
 
             {/* Quick Sample Queries Chips */}
-            <div className="flex items-center gap-1.5 flex-wrap text-xs">
-              <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 font-semibold mr-1">Quick Presets:</span>
-              {dbTables.slice(0, 3).map(t => (
+            <div className="flex items-center gap-2 flex-wrap text-xs bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 shrink-0">
+              <span className="text-xs font-mono text-slate-500 dark:text-slate-400 font-bold mr-1 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Quick Templates:</span>
+              </span>
+              {dbTables.slice(0, 4).map(t => (
                 <button
                   key={t.name}
                   onClick={() => {
-                    const q = `SELECT * FROM ${t.name} LIMIT 20;`;
+                    const q = `SELECT * FROM ${t.name} LIMIT 25;`;
                     setSqlQuery(q);
                     executeQuery(q);
                   }}
-                  className="bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 text-[11px] font-mono transition-colors cursor-pointer shadow-xs"
+                  className="bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500/20 hover:text-emerald-400 hover:border-emerald-500/40 text-slate-700 dark:text-slate-300 px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-mono transition-all cursor-pointer shadow-2xs"
                 >
                   SELECT * FROM {t.name}
                 </button>
@@ -886,7 +898,7 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = ({ arrayBuffer, tex
                     setSqlQuery(q);
                     executeQuery(q);
                   }}
-                  className="bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 px-2.5 py-1 rounded-lg border border-purple-500/30 text-[11px] font-mono transition-colors cursor-pointer"
+                  className="bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 px-3 py-1 rounded-lg border border-purple-500/30 text-xs font-mono transition-colors cursor-pointer"
                 >
                   JOIN projects & users
                 </button>
@@ -895,33 +907,34 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = ({ arrayBuffer, tex
               {dbTables.some(t => t.name === 'users') && (
                 <button
                   onClick={() => {
-                    const q = `SELECT role, COUNT(*) as count, AVG(id) as avg_id FROM users GROUP BY role;`;
+                    const q = `SELECT role, COUNT(*) as user_count \nFROM users \nGROUP BY role \nORDER BY user_count DESC;`;
                     setSqlQuery(q);
                     executeQuery(q);
                   }}
-                  className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 px-2.5 py-1 rounded-lg border border-blue-500/30 text-[11px] font-mono transition-colors cursor-pointer"
+                  className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-lg border border-blue-500/30 text-xs font-mono transition-colors cursor-pointer"
                 >
                   GROUP BY role
                 </button>
               )}
             </div>
 
-            {/* SQL Query Editor Box */}
-            <div className="bg-slate-900 rounded-xl border border-slate-800 shadow-md overflow-hidden flex flex-col">
+            {/* LARGE & PROMINENT SQL Query Editor Box */}
+            <div className="bg-slate-950 rounded-xl border-2 border-emerald-500/40 dark:border-emerald-500/30 shadow-xl overflow-hidden flex flex-col shrink-0">
               {/* Header Bar */}
-              <div className="flex flex-wrap items-center justify-between px-3 py-2 bg-slate-950 border-b border-slate-800 gap-2">
-                <div className="flex items-center gap-2">
-                  <Code className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="text-xs font-mono font-bold text-slate-200">Manual SQL Editor</span>
-                  <span className="text-[10px] text-slate-500 font-mono bg-slate-800 px-1.5 py-0.2 rounded">
+              <div className="flex flex-wrap items-center justify-between px-4 py-2.5 bg-slate-900 border-b border-slate-800 gap-2">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <Code className="w-4 h-4 text-emerald-400" />
+                  <span className="text-sm font-mono font-bold text-slate-100">Manual SQL Editor</span>
+                  <span className="text-xs text-emerald-400 font-mono bg-emerald-950/80 border border-emerald-800/60 px-2 py-0.5 rounded">
                     {sqlQuery.split('\n').length} line{sqlQuery.split('\n').length === 1 ? '' : 's'}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                   <button
                     onClick={handleFormatSql}
-                    className="text-slate-400 hover:text-emerald-300 text-xs px-2 py-1 rounded hover:bg-slate-800 transition-colors font-mono cursor-pointer border border-transparent hover:border-slate-700"
+                    className="text-slate-300 hover:text-emerald-300 text-xs px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 transition-colors font-mono cursor-pointer border border-slate-700"
                     title="Format keywords to UPPERCASE"
                   >
                     Format SQL
@@ -931,7 +944,7 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = ({ arrayBuffer, tex
                     onClick={() => {
                       navigator.clipboard.writeText(sqlQuery);
                     }}
-                    className="text-slate-400 hover:text-slate-200 text-xs px-2 py-1 rounded hover:bg-slate-800 transition-colors font-mono cursor-pointer border border-transparent hover:border-slate-700"
+                    className="text-slate-300 hover:text-white text-xs px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 transition-colors font-mono cursor-pointer border border-slate-700"
                     title="Copy Query to Clipboard"
                   >
                     Copy
@@ -939,7 +952,7 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = ({ arrayBuffer, tex
 
                   <button
                     onClick={() => setSqlQuery('')}
-                    className="text-slate-400 hover:text-rose-400 text-xs px-2 py-1 rounded hover:bg-slate-800 transition-colors font-mono cursor-pointer"
+                    className="text-slate-400 hover:text-rose-300 text-xs px-2.5 py-1 rounded-md hover:bg-rose-950/40 transition-colors font-mono cursor-pointer border border-transparent hover:border-rose-900/50"
                     title="Clear editor"
                   >
                     Clear
@@ -948,24 +961,24 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = ({ arrayBuffer, tex
                   <button
                     onClick={() => executeQuery()}
                     disabled={isExecuting}
-                    className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 disabled:opacity-50 text-white px-4 py-1.5 rounded-lg text-xs font-semibold font-mono transition-all shadow-md shadow-emerald-900/30 cursor-pointer ml-1"
+                    className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 disabled:opacity-50 text-white px-5 py-1.5 rounded-lg text-xs font-bold font-mono transition-all shadow-md shadow-emerald-900/40 cursor-pointer ml-1"
                     title="Execute SQL Query (Ctrl + Enter)"
                   >
                     {isExecuting ? (
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <RefreshCw className="w-4 h-4 animate-spin" />
                     ) : (
-                      <Play className="w-3.5 h-3.5 fill-white" />
+                      <Play className="w-4 h-4 fill-white" />
                     )}
                     <span>Run Query</span>
-                    <span className="text-[10px] opacity-75 font-mono ml-0.5">(Ctrl+Enter)</span>
+                    <span className="text-[11px] text-emerald-200 font-mono ml-0.5 opacity-90">(Ctrl+Enter)</span>
                   </button>
                 </div>
               </div>
 
               {/* Keyword Assistant Toolbar */}
-              <div className="px-3 py-1.5 bg-slate-950/70 border-b border-slate-800/80 flex items-center gap-1.5 overflow-x-auto text-[11px] font-mono text-slate-300 no-scrollbar">
-                <span className="text-slate-500 text-[10px] uppercase font-sans font-bold tracking-wider mr-1 shrink-0">
-                  SQL Helpers:
+              <div className="px-4 py-2 bg-slate-900/90 border-b border-slate-800 flex items-center gap-2 overflow-x-auto text-xs font-mono text-slate-300 no-scrollbar">
+                <span className="text-slate-400 text-[11px] uppercase font-sans font-bold tracking-wider mr-1 shrink-0">
+                  SQL Builders:
                 </span>
                 {[
                   { label: 'SELECT * FROM', val: 'SELECT * FROM ' },
@@ -974,14 +987,14 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = ({ arrayBuffer, tex
                   { label: 'GROUP BY', val: 'GROUP BY ' },
                   { label: 'ORDER BY', val: 'ORDER BY id DESC' },
                   { label: 'LIMIT 25', val: 'LIMIT 25' },
-                  { label: 'INSERT INTO', val: 'INSERT INTO table_name VALUES (...)' },
-                  { label: 'UPDATE', val: 'UPDATE table_name SET col = val WHERE id = 1' },
+                  { label: 'INSERT INTO', val: 'INSERT INTO table_name (col1, col2) VALUES (val1, val2);' },
+                  { label: 'UPDATE', val: 'UPDATE table_name SET col1 = val WHERE id = 1;' },
                   { label: 'COUNT(*)', val: 'COUNT(*)' }
                 ].map(helper => (
                   <button
                     key={helper.label}
                     onClick={() => insertSqlSnippet(helper.val)}
-                    className="bg-slate-800/90 hover:bg-slate-700 text-emerald-400 hover:text-emerald-300 border border-slate-700/60 px-2 py-0.5 rounded text-[10px] font-mono whitespace-nowrap transition-colors cursor-pointer shrink-0"
+                    className="bg-slate-800 hover:bg-slate-700 text-emerald-400 hover:text-emerald-300 border border-slate-700 px-2.5 py-1 rounded text-xs font-mono whitespace-nowrap transition-colors cursor-pointer shrink-0"
                   >
                     {helper.label}
                   </button>
@@ -989,25 +1002,25 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = ({ arrayBuffer, tex
               </div>
 
               {/* Schema Quick Insertion Chips */}
-              <div className="px-3 py-1.5 bg-slate-900/90 border-b border-slate-800/50 flex items-center gap-1.5 overflow-x-auto text-[10px] font-mono text-slate-400 no-scrollbar">
-                <span className="text-slate-500 text-[10px] uppercase font-sans font-bold tracking-wider mr-1 shrink-0">
-                  Tables & Columns:
+              <div className="px-4 py-1.5 bg-slate-950 border-b border-slate-800/80 flex items-center gap-2 overflow-x-auto text-xs font-mono text-slate-400 no-scrollbar">
+                <span className="text-slate-500 text-[11px] uppercase font-sans font-bold tracking-wider mr-1 shrink-0">
+                  Schema Quick-Insert:
                 </span>
                 {dbTables.map(t => (
                   <button
                     key={t.name}
                     onClick={() => insertSqlSnippet(t.name)}
-                    className="bg-purple-950/40 hover:bg-purple-900/60 text-purple-300 border border-purple-800/40 px-2 py-0.5 rounded font-mono transition-colors cursor-pointer shrink-0"
+                    className="bg-purple-950/60 hover:bg-purple-900/80 text-purple-300 border border-purple-800/60 px-2.5 py-0.5 rounded font-mono transition-colors cursor-pointer shrink-0"
                     title={`Click to insert table name "${t.name}" into query`}
                   >
                     📁 {t.name}
                   </button>
                 ))}
-                {dbTables.flatMap(t => t.columns).slice(0, 8).map((c, i) => (
+                {dbTables.flatMap(t => t.columns).slice(0, 10).map((c, i) => (
                   <button
                     key={i}
                     onClick={() => insertSqlSnippet(c)}
-                    className="bg-blue-950/40 hover:bg-blue-900/60 text-blue-300 border border-blue-800/40 px-1.5 py-0.5 rounded font-mono transition-colors cursor-pointer shrink-0"
+                    className="bg-blue-950/60 hover:bg-blue-900/80 text-blue-300 border border-blue-800/60 px-2 py-0.5 rounded font-mono transition-colors cursor-pointer shrink-0"
                     title={`Click to insert column "${c}" into query`}
                   >
                     {c}
@@ -1015,12 +1028,12 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = ({ arrayBuffer, tex
                 ))}
               </div>
 
-              {/* Multi-line SQL Textarea Editor with Line Numbers */}
-              <div className="relative flex bg-slate-950 font-mono text-xs min-h-[140px]">
+              {/* Large Multi-line SQL Textarea Editor with Line Numbers */}
+              <div className="relative flex bg-slate-950 font-mono text-sm min-h-[220px]">
                 {/* Line numbers gutter */}
-                <div className="w-10 py-3 bg-slate-900/70 border-r border-slate-800 text-slate-600 text-right pr-2 select-none font-mono text-[11px] leading-relaxed shrink-0">
-                  {sqlQuery.split('\n').map((_, idx) => (
-                    <div key={idx}>{idx + 1}</div>
+                <div className="w-12 py-3 bg-slate-900/90 border-r border-slate-800 text-slate-500 text-right pr-2.5 select-none font-mono text-xs leading-relaxed shrink-0">
+                  {Array.from({ length: Math.max(8, sqlQuery.split('\n').length) }).map((_, idx) => (
+                    <div key={idx} className="h-6 leading-6">{idx + 1}</div>
                   ))}
                 </div>
 
@@ -1030,9 +1043,9 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = ({ arrayBuffer, tex
                   value={sqlQuery}
                   onChange={e => setSqlQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  rows={Math.max(5, Math.min(15, sqlQuery.split('\n').length + 1))}
-                  className="flex-1 p-3 bg-slate-950 text-emerald-300 font-mono text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500/40 resize-y leading-relaxed w-full"
-                  placeholder="Enter any manual SQL query (e.g. SELECT * FROM users WHERE role = 'admin' ORDER BY id DESC;)"
+                  rows={Math.max(8, Math.min(22, sqlQuery.split('\n').length + 2))}
+                  className="flex-1 p-3 bg-slate-950 text-emerald-300 font-mono text-sm leading-6 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-y w-full caret-emerald-400 placeholder:text-slate-600"
+                  placeholder="-- Type your SQL query here and press Ctrl+Enter to execute&#10;SELECT * FROM users WHERE role = 'admin' ORDER BY id DESC;"
                   autoCapitalize="off"
                   autoCorrect="off"
                   spellCheck="false"

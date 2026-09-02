@@ -6,16 +6,16 @@
 import React from 'react';
 import {
   FolderOpen,
-  FilePlus,
   RefreshCw,
   Sun,
   Moon,
   ShieldCheck,
-  Zap,
   Sparkles,
   Layers,
-  HelpCircle,
-  Code
+  Code2,
+  Database,
+  Terminal,
+  FileSpreadsheet
 } from 'lucide-react';
 import { Theme } from '../hooks/useTheme';
 
@@ -45,29 +45,29 @@ export const Header: React.FC<HeaderProps> = ({
   isSyncing = false
 }) => {
   return (
-    <header className="flex flex-wrap items-center justify-between px-4 py-2.5 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 select-none shadow-sm dark:shadow-md gap-3 transition-colors">
+    <header className="flex flex-wrap items-center justify-between px-4 py-2 bg-white/95 dark:bg-[#0c121e]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 text-slate-800 dark:text-slate-100 select-none shadow-xs dark:shadow-sm gap-3 transition-colors z-20">
       {/* Brand & Identity */}
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2">
-          <div className="p-2 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl shadow-lg shadow-blue-500/20">
-            <Layers className="w-5 h-5 text-white" />
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-slate-900 dark:bg-blue-600 flex items-center justify-center text-white shadow-xs">
+            <Layers className="w-4 h-4" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="font-bold text-base tracking-tight text-slate-900 dark:bg-gradient-to-r dark:from-white dark:via-slate-200 dark:to-blue-400 dark:bg-clip-text dark:text-transparent">
-                OmniView File Studio
+              <h1 className="font-semibold text-sm tracking-tight text-slate-900 dark:text-slate-100 font-sans">
+                OmniView <span className="font-normal text-slate-500 dark:text-slate-400">Studio</span>
               </h1>
-              <span className="text-[10px] font-mono font-bold bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300 px-1.5 py-0.5 rounded border border-blue-500/30">
-                100% OFFLINE
+              <span className="text-[10px] font-mono font-medium bg-slate-100 text-slate-600 dark:bg-slate-800/80 dark:text-slate-300 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700/80">
+                OFFLINE
               </span>
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Created by{' '}
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
+              By{' '}
               <a
                 href="https://suhail.top"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 dark:text-blue-400 hover:underline font-medium underline-offset-2 transition-colors"
+                className="text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors"
               >
                 Suhail Akhtar
               </a>
@@ -78,90 +78,92 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Main Operational Controls */}
       <div className="flex items-center gap-2">
-        {/* Open Local File */}
+        {/* Primary: Open Local File */}
         <button
           onClick={onOpenFilePicker}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold shadow-md shadow-blue-600/20 transition-all active:scale-95 cursor-pointer"
+          className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white px-3.5 py-1.5 rounded-lg text-xs font-medium shadow-xs transition-all cursor-pointer"
           title="Open files directly from your computer"
         >
-          <FolderOpen className="w-4 h-4" />
-          <span>Open Local File</span>
+          <FolderOpen className="w-3.5 h-3.5" />
+          <span>Open File</span>
         </button>
 
-        {/* Live Sync File Picker & Dashboard Button */}
-        <div className="flex items-center">
+        {/* Live Sync File Control */}
+        <div className="flex items-center bg-slate-100/90 dark:bg-slate-800/80 rounded-lg p-0.5 border border-slate-200 dark:border-slate-700/80">
           <button
             onClick={onOpenFilePicker}
-            className={`flex items-center gap-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-3 py-1.5 ${liveSyncCount > 0 ? 'rounded-l-lg border-r-0' : 'rounded-lg'} text-xs font-medium border border-slate-300 dark:border-slate-700 transition-all active:scale-95 cursor-pointer`}
-            title="Open local files with automatic real-time file live syncing"
+            className="flex items-center gap-1.5 px-2.5 py-1 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded-md text-xs font-medium transition-colors cursor-pointer"
+            title="Open local files with automatic real-time disk sync"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'text-emerald-500 animate-spin' : liveSyncCount > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-slate-400'}`} />
-            <span>Live Sync File</span>
+            <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'text-emerald-500 animate-spin' : liveSyncCount > 0 ? 'text-emerald-500' : 'text-slate-400'}`} />
+            <span>Live Sync</span>
           </button>
           {liveSyncCount > 0 && (
             <button
               onClick={onOpenLiveSyncDashboard}
-              className="bg-emerald-500/10 dark:bg-emerald-500/20 hover:bg-emerald-500/20 dark:hover:bg-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-[10px] font-mono px-2 py-1.5 rounded-r-lg border border-slate-300 dark:border-slate-700 border-l border-l-emerald-500/30 font-bold flex items-center gap-1 cursor-pointer transition-colors"
-              title="Click to open Live Sync Dashboard & Metadata Telemetry"
+              className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[10px] font-mono px-2 py-0.5 rounded font-semibold flex items-center gap-1 cursor-pointer transition-colors border border-emerald-500/20"
+              title="Open Live Sync Dashboard"
             >
               <span className={`w-1.5 h-1.5 rounded-full bg-emerald-500 ${isSyncing ? 'animate-ping' : ''}`} />
-              {liveSyncCount} Active
+              {liveSyncCount}
             </button>
           )}
         </div>
 
-        {/* Load Demos */}
+        {/* Sample Files / Demos */}
         <button
           onClick={onLoadSampleFiles}
-          className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-purple-700 dark:text-purple-300 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-300 dark:border-slate-700 transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/80 transition-colors cursor-pointer"
           title="Load sample interactive documents (PDF, Excel, SQLite, Code, Markdown)"
         >
-          <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-          <span>Load Demos</span>
+          <Sparkles className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+          <span className="hidden sm:inline">Demos</span>
         </button>
 
-        {/* Hex Inspector Toggle for current tab */}
+        {/* Hex Inspector Toggle */}
         <button
           onClick={onOpenHexForCurrentTab}
-          className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-amber-700 dark:text-amber-300 px-2.5 py-1.5 rounded-lg text-xs font-mono border border-slate-300 dark:border-slate-700 transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/80 transition-colors cursor-pointer"
           title="Toggle Hex Byte Inspection for active file"
         >
-          <Code className="w-3.5 h-3.5" />
-          <span>Hex View</span>
+          <Code2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+          <span className="hidden sm:inline">Hex</span>
         </button>
 
         {/* Supported Formats Info Directory */}
         {onOpenSupportedFormats && (
           <button
             onClick={onOpenSupportedFormats}
-            className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-blue-700 dark:text-blue-300 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-slate-300 dark:border-slate-700 transition-colors cursor-pointer"
-            title="Browse all 60+ supported file extensions and reader capabilities"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/80 transition-colors cursor-pointer"
+            title="Browse all 60+ supported file formats and reader capabilities"
           >
-            <Layers className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-            <span className="hidden sm:inline">Formats</span>
+            <Layers className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+            <span className="hidden md:inline">Formats</span>
           </button>
         )}
 
-        <div className="h-5 w-px bg-slate-300 dark:bg-slate-800 mx-1"></div>
+        <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-0.5"></div>
 
-        {/* Privacy badge */}
+        {/* Privacy Badge */}
         <div
-          className="hidden lg:flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20 cursor-default"
-          title="Your files never leave your browser memory. 100% Client-side."
+          className="hidden xl:flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/80 px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700/60 cursor-default"
+          title="100% Client-side. Your files never leave your device."
         >
-          <ShieldCheck className="w-3.5 h-3.5" />
-          <span className="text-[11px] font-medium">Zero Server Uploads</span>
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+          <span className="text-[11px] font-medium">Local Memory Only</span>
         </div>
 
-        {/* Dark Mode Toggle */}
+        {/* Dark / Light Mode Toggle */}
         <button
           onClick={onToggleTheme}
-          className="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition-colors border border-slate-300 dark:border-slate-700 cursor-pointer"
+          className="p-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/80 transition-colors cursor-pointer"
           title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`}
+          aria-label="Toggle color theme"
         >
-          {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-blue-600" />}
+          {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
         </button>
       </div>
     </header>
   );
 };
+

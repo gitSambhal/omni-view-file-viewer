@@ -115,7 +115,7 @@ CREATE TABLE projects (
 );
 
 INSERT INTO users (username, email, role) VALUES 
-('suhail_akhtar', 'suhailak786@gmail.com', 'admin'),
+('admin_user', 'admin@example.com', 'admin'),
 ('alex_dev', 'alex@example.com', 'developer'),
 ('sarah_design', 'sarah@example.com', 'designer');
 

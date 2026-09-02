@@ -158,8 +158,8 @@ export const TabBar: React.FC<TabBarProps> = ({
   const targetTab = contextMenu ? tabs.find(t => t.id === contextMenu.tabId) : null;
 
   return (
-    <div className="flex items-center bg-slate-100 dark:bg-slate-950 border-b border-slate-300 dark:border-slate-800 px-2 overflow-x-auto select-none no-scrollbar transition-colors">
-      <div className="flex items-center gap-1 py-1 flex-1">
+    <div className="flex items-center bg-slate-100/70 dark:bg-[#070b12] border-b border-slate-200/80 dark:border-slate-800/80 px-2 overflow-x-auto select-none no-scrollbar transition-colors">
+      <div className="flex items-center gap-1 py-1 flex-1 min-w-0">
         {tabs.map(tab => {
           const isActive = tab.id === activeTabId;
 
@@ -169,14 +169,17 @@ export const TabBar: React.FC<TabBarProps> = ({
               ref={isActive ? activeTabRef : null}
               onClick={() => onSelectTab(tab.id)}
               onContextMenu={e => handleContextMenu(e, tab.id)}
-              className={`group flex items-center gap-2 px-3 py-1.5 rounded-t-lg border-t-2 text-xs font-mono cursor-pointer transition-all max-w-[220px] shrink-0 ${
+              className={`group relative flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-mono cursor-pointer transition-all max-w-[220px] shrink-0 border ${
                 isActive
-                  ? 'bg-white dark:bg-slate-900 border-blue-600 dark:border-blue-500 text-slate-900 dark:text-slate-100 font-semibold shadow-sm'
-                  : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-900/50'
+                  ? 'bg-white dark:bg-[#0f172a] border-slate-200 dark:border-slate-700/80 text-slate-900 dark:text-slate-100 font-semibold shadow-xs'
+                  : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/40'
               }`}
             >
+              {isActive && (
+                <div className="absolute top-0 left-2 right-2 h-[2px] bg-blue-600 dark:bg-blue-400 rounded-full" />
+              )}
               {getCategoryIcon(tab.category)}
-              <span className="truncate flex-1">{tab.name}</span>
+              <span className="truncate flex-1 text-[11px] font-sans font-medium">{tab.name}</span>
 
               {/* Live sync badge & icon indicator */}
               {tab.liveSyncActive && (
@@ -186,12 +189,12 @@ export const TabBar: React.FC<TabBarProps> = ({
                     e.stopPropagation();
                     if (onToggleLiveSyncTab) onToggleLiveSyncTab(tab.id);
                   }}
-                  title={`Live Sync Active: ${tab.name}\n• Status: ${tab.syncStatus === 'syncing' ? 'Syncing changes...' : 'Watching disk'}\n• Last Synced: ${tab.lastSyncedAt ? new Date(tab.lastSyncedAt).toLocaleTimeString() : 'Just now'}\n• Reloads: ${tab.syncCount || 0} auto-reloads\n• Mode: ${tab.fileHandle ? 'Native Disk Handle' : 'Polling Interval'}`}
+                  title={`Live Sync Active: ${tab.name}\n• Status: ${tab.syncStatus === 'syncing' ? 'Syncing changes...' : 'Watching disk'}\n• Last Synced: ${tab.lastSyncedAt ? new Date(tab.lastSyncedAt).toLocaleTimeString() : 'Just now'}\n• Reloads: ${tab.syncCount || 0} auto-reloads`}
                 >
                   {tab.syncStatus === 'syncing' ? (
                     <span className="relative flex h-3 w-3 items-center justify-center">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <RefreshCw className="w-3 h-3 text-emerald-500 animate-spin relative z-10 font-bold animate-pulse" />
+                      <RefreshCw className="w-3 h-3 text-emerald-500 animate-spin relative z-10 font-bold" />
                     </span>
                   ) : (
                     <span className="relative flex items-center justify-center">
@@ -204,7 +207,7 @@ export const TabBar: React.FC<TabBarProps> = ({
               {/* Close button */}
               <button
                 onClick={e => onCloseTab(tab.id, e)}
-                className="p-0.5 rounded-full hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors opacity-60 group-hover:opacity-100 cursor-pointer"
+                className="p-0.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 cursor-pointer"
                 title="Close Tab (Right click for context menu)"
               >
                 <X className="w-3 h-3" />
@@ -216,10 +219,10 @@ export const TabBar: React.FC<TabBarProps> = ({
         {/* New Tab Button */}
         <button
           onClick={onNewTab}
-          className="p-1.5 ml-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors border border-transparent hover:border-slate-300 dark:hover:border-slate-700 cursor-pointer"
+          className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
           title="Open New File Tab"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-3.5 h-3.5" />
         </button>
       </div>
 
@@ -228,9 +231,9 @@ export const TabBar: React.FC<TabBarProps> = ({
         <div
           ref={menuRef}
           style={{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }}
-          className="fixed z-50 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl p-1.5 text-xs text-slate-700 dark:text-slate-200 font-sans backdrop-blur-md animate-in fade-in duration-150 select-none"
+          className="fixed z-50 w-56 bg-white/95 dark:bg-[#0f172a]/95 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl p-1 text-xs text-slate-700 dark:text-slate-200 font-sans backdrop-blur-md animate-in fade-in duration-100 select-none"
         >
-          <div className="px-2.5 py-1.5 border-b border-slate-100 dark:border-slate-800 font-mono text-[11px] font-bold text-slate-400 dark:text-slate-500 truncate">
+          <div className="px-2.5 py-1.5 border-b border-slate-100 dark:border-slate-800/80 font-mono text-[11px] font-semibold text-slate-400 dark:text-slate-500 truncate">
             {targetTab.name}
           </div>
 
@@ -240,7 +243,7 @@ export const TabBar: React.FC<TabBarProps> = ({
                 onCloseTab(targetTab.id);
                 setContextMenu(null);
               }}
-              className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
             >
               <X className="w-3.5 h-3.5 text-red-500" />
               <span>Close Tab</span>
@@ -252,7 +255,7 @@ export const TabBar: React.FC<TabBarProps> = ({
                   onCloseOtherTabs(targetTab.id);
                   setContextMenu(null);
                 }}
-                className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
               >
                 <XCircle className="w-3.5 h-3.5 text-amber-500" />
                 <span>Close Other Tabs</span>
@@ -265,7 +268,7 @@ export const TabBar: React.FC<TabBarProps> = ({
                   onCloseTabsToRight(targetTab.id);
                   setContextMenu(null);
                 }}
-                className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
               >
                 <ArrowRightCircle className="w-3.5 h-3.5 text-blue-500" />
                 <span>Close Tabs to the Right</span>
@@ -278,7 +281,7 @@ export const TabBar: React.FC<TabBarProps> = ({
                   onCloseAllTabs();
                   setContextMenu(null);
                 }}
-                className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
               >
                 <Layers className="w-3.5 h-3.5 text-slate-400" />
                 <span>Close All Tabs</span>
@@ -286,16 +289,16 @@ export const TabBar: React.FC<TabBarProps> = ({
             )}
           </div>
 
-          <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+          <div className="my-0.5 border-t border-slate-100 dark:border-slate-800/80" />
 
-          <div className="py-1 space-y-0.5">
+          <div className="py-0.5 space-y-0.5">
             {onDuplicateTab && (
               <button
                 onClick={() => {
                   onDuplicateTab(targetTab.id);
                   setContextMenu(null);
                 }}
-                className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
               >
                 <Copy className="w-3.5 h-3.5 text-purple-500" />
                 <span>Duplicate Tab</span>
@@ -308,7 +311,7 @@ export const TabBar: React.FC<TabBarProps> = ({
                   onToggleLiveSyncTab(targetTab.id);
                   setContextMenu(null);
                 }}
-                className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
               >
                 <RefreshCw className="w-3.5 h-3.5 text-emerald-500" />
                 <span>{targetTab.liveSyncActive ? 'Disable Live Sync' : 'Enable Live Sync'}</span>
@@ -321,10 +324,10 @@ export const TabBar: React.FC<TabBarProps> = ({
                   onOpenLiveSyncDashboard();
                   setContextMenu(null);
                 }}
-                className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
               >
                 <RefreshCw className="w-3.5 h-3.5 text-blue-500" />
-                <span>Live Sync Metadata & Log</span>
+                <span>Live Sync Telemetry</span>
               </button>
             )}
 
@@ -334,7 +337,7 @@ export const TabBar: React.FC<TabBarProps> = ({
                   onToggleHexViewTab(targetTab.id);
                   setContextMenu(null);
                 }}
-                className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
               >
                 <Binary className="w-3.5 h-3.5 text-cyan-500" />
                 <span>{targetTab.viewMode === 'hex' ? 'Standard Preview' : 'Hex Byte Mode'}</span>
@@ -347,7 +350,7 @@ export const TabBar: React.FC<TabBarProps> = ({
                   onDownloadTabFile(targetTab.id);
                   setContextMenu(null);
                 }}
-                className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5 text-pink-500" />
                 <span>Download File</span>

@@ -499,10 +499,10 @@ export default function App() {
         ) : activeTab.viewMode === 'hex' ? (
           <div className="w-full flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden">
             {/* Top Reader Subheader Bar */}
-            <div className="flex items-center justify-between px-3 py-1.5 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 select-none shrink-0">
+            <div className="flex items-center justify-between px-3 py-1 bg-white/90 dark:bg-[#0c121e]/90 backdrop-blur-xs border-b border-slate-200/80 dark:border-slate-800/80 text-xs text-slate-600 dark:text-slate-400 select-none shrink-0">
               <div className="flex items-center gap-2 min-w-0">
-                <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-xs">{activeTab.name}</span>
-                <span className="text-[11px] font-mono opacity-70">({(activeTab.size / 1024).toFixed(1)} KB)</span>
+                <span className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-xs">{activeTab.name}</span>
+                <span className="text-[11px] font-mono text-slate-400">({(activeTab.size / 1024).toFixed(1)} KB)</span>
               </div>
               <ReaderSwitcher
                 activeTab={activeTab}
@@ -519,10 +519,10 @@ export default function App() {
           /* Render category specific viewer with dynamic Reader Switcher */
           <div className="w-full flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden">
             {/* Top Reader Subheader Bar */}
-            <div className="flex items-center justify-between px-3 py-1.5 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 select-none shrink-0">
+            <div className="flex items-center justify-between px-3 py-1 bg-white/90 dark:bg-[#0c121e]/90 backdrop-blur-xs border-b border-slate-200/80 dark:border-slate-800/80 text-xs text-slate-600 dark:text-slate-400 select-none shrink-0">
               <div className="flex items-center gap-2 min-w-0">
-                <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-xs">{activeTab.name}</span>
-                <span className="text-[11px] font-mono opacity-70">
+                <span className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-xs">{activeTab.name}</span>
+                <span className="text-[11px] font-mono text-slate-400">
                   {activeTab.size > 1024 * 1024
                     ? `${(activeTab.size / (1024 * 1024)).toFixed(2)} MB`
                     : `${(activeTab.size / 1024).toFixed(1)} KB`}

@@ -3,7 +3,40 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
+  :root {
+    --color-canvas-light: #f8fafc;
+    --color-surface-light: #ffffff;
+    --color-border-light: #e2e8f0;
+    --color-canvas-dark: #090d16;
+    --color-surface-dark: #0f172a;
+    --color-border-dark: #1e293b;
+  }
+
   body {
-    @apply bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-200;
+    @apply bg-slate-50 text-slate-900 dark:bg-[#090d16] dark:text-slate-100 transition-colors duration-150 antialiased selection:bg-blue-500/20 selection:text-blue-600 dark:selection:text-blue-300;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Enterprise custom thin scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300/70 dark:bg-slate-700/70 rounded-full hover:bg-slate-400 dark:hover:bg-slate-600 transition-colors;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }
+
