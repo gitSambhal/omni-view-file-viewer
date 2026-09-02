@@ -38,5 +38,12 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* Ensure syntax highlight code tokens inherit user-selected editor typography */
+  .hljs, pre.hljs, code.hljs {
+    font-family: inherit !important;
+    font-size: inherit !important;
+    line-height: inherit !important;
+  }
 }
 

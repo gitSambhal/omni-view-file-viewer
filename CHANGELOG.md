@@ -7,6 +7,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.8.0] - 2026-09-02
+
+### Added
+- **Search-Enabled View / Reader Switcher**:
+  - Integrated real-time reader search bar across all 23+ viewers by name, description keywords, category group, and supported file extensions.
+  - Interactive "Suggested for this file" badge highlighting recommended reader modes.
+  - Fast keyboard navigation (`Esc` to dismiss) and auto-focused search input.
+- **Intelligent Quick Switcher Chips Engine**:
+  - Dynamically calculates valid view modes tailored strictly to the active file's genuine capabilities:
+    - **JSON / XML / YAML / TOML**: `Tree` + `Code` + `Text` + `Hex` (and `Preview` for XML/SVG)
+    - **GeoJSON**: `Map` + `Tree` + `Code` + `Text` + `Hex`
+    - **Live Web / HTML / SVG**: `Preview` + `Code` + `Tree` + `Text` + `Hex`
+    - **Markdown**: `Markdown` + `Code` + `Text` + `Hex`
+    - **Source Code (TS, JS, Python, C++, Rust, Go, CSS, etc.)**: `Code` + `Text` + `Hex` (omits invalid Tree inspector)
+    - **HTTP / REST API**: `HTTP Studio` + `Code` + `Text` + `Hex`
+    - **Database / SQL**: `Database` + `Code` + `Text` + `Hex`
+    - **Spreadsheet / CSV / Excel**: `Table` + `Text` + `Code` + `Hex`
+    - **Binaries (EXE, DLL, ELF, WASM)**: `PE Inspector` + `Hex`
+    - **Documents (PDF, DOCX, PPTX)**: `Document Viewer` + `Archive` (for Zip-based office docs) + `Hex`
+    - **Images, Audio & Video**: Native viewer + `Hex`
+- **Dropdown Z-Index & Stacking Protection**:
+  - Elevated subheader bars with `relative z-30` and dropdown container with elevated stacking `z-50` / `9999` to eliminate rendering behind iframes, canvases, and split panes.
+
+---
+
+## [1.7.0] - 2026-09-02
+
+### Added
+- **Full-Featured Interactive Code Editor & Typography Engine (`CodeViewer`)**:
+  - **Multi-Language Code Formatter**: 1-Click Code Formatting engine with Prettier standalone (`Shift + Alt + F` / `Ctrl + Shift + I` / `Cmd + Shift + I`) with specialized formatters for JavaScript, TypeScript, JSX, HTML, CSS, SCSS, Markdown, YAML, SQL (keyword capitalization and clause breaking), and JSON.
+  - **Granular Line Height & Spacing Controls**: Adjustable line heights for code reading (*Compact 1.35x*, *Normal 1.6x*, *Relaxed 1.85x*, *Spacious 2.1x*).
+  - **Monospace Font Family Selection**: Selectable high-legibility developer typefaces including *JetBrains Mono*, *Fira Code*, *Cascadia Code*, *Consolas / Monaco*, and *System Monospace* with ligatures support.
+  - **Font Scale & Zoom**: 10px to 26px font-size range with responsive gutter line numbers synchronization.
+  - **Enhanced Code Editing & Indentation**: Smart `Tab` / `Shift + Tab` multi-line indentation without focus loss, Enter key auto-indentation with brace expansion, and auto-closing brackets/quotes.
+  - **Search & Replace Bar (`Ctrl + F` / `Cmd + F`)**: Integrated find & replace with match counter (`1 of 12`), Next/Previous navigation, Case Sensitive mode (`Aa`), Replace, and Replace All.
+  - **Real-Time Editor Status Bar**: Live Line & Column indicator, selection character counter, total lines, character count, tab width, and UTF-8 encoding.
+- **Enhanced Live Sync Engine v2 (`useLiveSync`)**:
+  - **Bidirectional Disk Sync**: Direct save to disk (`Ctrl + S` / `Cmd + S` or Save button) using the File System Access API (`fileHandle.createWritable()`) with fallback Save As picker.
+  - **Drag-and-Drop Handle Detection**: Dropping files onto the application automatically extracts `FileSystemFileHandle` from modern browser dataTransfer items for instant continuous live synchronization.
+  - **Manual Disk Reload & Live Status**: 1-Click "Reload from Disk" and real-time live sync indicators showing active disk watch status and unsaved edits state.
+
+---
+
+## [1.6.0] - 2026-09-01
+
+### Added
+- **Full Interactive E-Book (.epub) Engine**:
+  - Direct client-side decompression and parsing of `.epub` zip archives into full multi-chapter books using `JSZip`.
+  - Parses `META-INF/container.xml`, OPF packages, manifest metadata, spine reading order, and NCX/Nav table of contents.
+  - Resolves and renders embedded illustrations, cover art, and diagrams as data URLs.
+  - **Reading Modes & Appearance Controls**:
+    - 4 Reading Themes: *Paper Light*, *Warm Sepia*, *Slate Midnight*, and *OLED Pure Dark*.
+    - Typefaces: Serif (Georgia/Playfair), Sans-Serif (System), Monospace, and Dyslexic.
+    - Font scale slider (12px to 28px), line-height spacing (Compact, Normal, Relaxed), and column width options.
+    - Table of Contents sidebar with reading progress counters and chapter word counts.
+    - Real-time book search across all chapters with instant chapter jumping.
+    - Web Speech API **Read Aloud** Text-to-Speech audio reader.
+    - Chapter bookmarks with local persistence.
+- **Universal Code Sandbox & Script Runner (`CodeViewer`)**:
+  - In-browser safe execution sandbox for **JavaScript**, **TypeScript**, **Python**, and **Shell / Bash** scripts.
+  - Interactive bottom drawer terminal capturing execution time in milliseconds, return values, and real-time logs (`console.log`, `console.info`, `console.warn`, `console.error`).
+  - Seamless 1-click **Live HTML Preview** and **SQL Studio** runner integration.
+  - Demo EPUB book (*"The Art of Offline Computing"* by Suhail Akhtar) included in sample files.
+
+---
+
 ## [1.5.0] - 2026-09-01
 
 ### Added

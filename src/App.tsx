@@ -12,6 +12,7 @@ import { useLiveSync } from './hooks/useLiveSync';
 import { TabFile, FileCategory } from './types/file';
 import { detectFileCategory, getFileExtension } from './services/fileDetector';
 import { getSampleTabFiles } from './services/sampleFiles';
+import { generateSampleEpubBuffer } from './services/sampleEpub';
 
 import { Header } from './components/Header';
 import { TabBar } from './components/TabBar';
@@ -52,6 +53,20 @@ export default function App() {
 
   const [tabs, setTabs] = useState<TabFile[]>(() => getSampleTabFiles());
   const [activeTabId, setActiveTabId] = useState<string | null>('sample-md');
+
+  // Lazily populate sample EPUB ArrayBuffer on initial mount
+  useEffect(() => {
+    const epubTab = tabs.find(t => t.id === 'sample-epub');
+    if (epubTab && !epubTab.arrayBuffer) {
+      generateSampleEpubBuffer().then(buf => {
+        setTabs(prev =>
+          prev.map(t =>
+            t.id === 'sample-epub' ? { ...t, arrayBuffer: buf, size: buf.byteLength } : t
+          )
+        );
+      });
+    }
+  }, []);
   const [isChangelogOpen, setIsChangelogOpen] = useState<boolean>(false);
   const [isLiveSyncDashboardOpen, setIsLiveSyncDashboardOpen] = useState<boolean>(false);
   const [isSupportedFormatsModalOpen, setIsSupportedFormatsModalOpen] = useState<boolean>(false);
@@ -94,9 +109,10 @@ export default function App() {
     } catch (_) {}
 
     // 2. Read text content for text-based formats (safe buffer size up to 15MB)
-    const isTextFormat = [
-      'code', 'markdown', 'text', 'json', 'log', 'subtitle', 'geojson', 'ebook', 'database', 'http', 'certificate'
-    ].includes(category) || file.type.startsWith('text/') || ['sql', 'csv', 'tsv', 'json', 'xml', 'yaml', 'yml', 'env', 'ini', 'toml', 'log', 'srt', 'vtt', 'properties', 'http', 'rest', 'pem', 'crt', 'cer', 'key', 'pub', 'csr'].includes(ext);
+    const isBinaryEbook = ['epub', 'mobi', 'azw', 'azw3', 'odt', 'pages', 'key', 'numbers', 'odp'].includes(ext);
+    const isTextFormat = (!isBinaryEbook && [
+      'code', 'markdown', 'text', 'json', 'log', 'subtitle', 'geojson', 'database', 'http', 'certificate'
+    ].includes(category)) || (!isBinaryEbook && file.type.startsWith('text/')) || ['sql', 'csv', 'tsv', 'json', 'xml', 'yaml', 'yml', 'env', 'ini', 'toml', 'log', 'srt', 'vtt', 'properties', 'http', 'rest', 'pem', 'crt', 'cer', 'key', 'pub', 'csr', 'rtf'].includes(ext);
 
     if (isTextFormat && file.size < 15 * 1024 * 1024) {
       try {
@@ -104,7 +120,7 @@ export default function App() {
       } catch (_) {}
     }
 
-    // 3. Read ArrayBuffer only when needed for binary parsing (DLL, Binary, Font, Excel, Docx, Zip, PDF, small files < 35MB)
+    // 3. Read ArrayBuffer only when needed for binary parsing (E-Book, DLL, Binary, Font, Excel, Docx, Zip, PDF, small files < 35MB)
     // NOTE: Avoid reading huge contiguous ArrayBuffer for video/audio (> 30MB) since they stream directly from objectUrl
     if (category !== 'video' && category !== 'audio' && file.size < 35 * 1024 * 1024) {
       try {
@@ -182,14 +198,63 @@ export default function App() {
     e.stopPropagation();
   };
 
-  const handleAppDrop = (e: React.DragEvent) => {
+  const handleAppDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     dragCounter.current = 0;
     setIsDraggingOverApp(false);
 
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleFilesSelected(e.dataTransfer.files);
+    const newTabs: TabFile[] = [];
+
+    // Modern browser File System Access API: extract file handles from items if available
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      for (let i = 0; i < e.dataTransfer.items.length; i++) {
+        const item = e.dataTransfer.items[i];
+        if (item.kind === 'file') {
+          try {
+            if ('getAsFileSystemHandle' in item) {
+              const handle = await (item as any).getAsFileSystemHandle();
+              if (handle && handle.kind === 'file') {
+                const file = await handle.getFile();
+                const tab = await processFile(file, handle);
+                newTabs.push(tab);
+                continue;
+              }
+            }
+          } catch (_) {}
+
+          const file = item.getAsFile();
+          if (file) {
+            try {
+              const tab = await processFile(file);
+              newTabs.push(tab);
+            } catch (err: any) {
+              addToast('error', 'Error opening file', `Could not read "${file.name}": ${err.message}`);
+            }
+          }
+        }
+      }
+    } else if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      for (let i = 0; i < e.dataTransfer.files.length; i++) {
+        const file = e.dataTransfer.files[i];
+        try {
+          const tab = await processFile(file);
+          newTabs.push(tab);
+        } catch (err: any) {
+          addToast('error', 'Error opening file', `Could not read "${file.name}": ${err.message}`);
+        }
+      }
+    }
+
+    if (newTabs.length > 0) {
+      setTabs(prev => [...prev, ...newTabs]);
+      setActiveTabId(newTabs[0].id);
+      const withLiveSync = newTabs.filter(t => t.liveSyncActive).length;
+      if (withLiveSync > 0) {
+        addToast('success', 'Live Sync Active', `Opened ${newTabs.length} file(s) with ${withLiveSync} in live real-time sync.`);
+      } else {
+        addToast('success', 'Files Opened', `Successfully loaded ${newTabs.length} file(s).`);
+      }
     }
   };
 
@@ -393,6 +458,142 @@ export default function App() {
     addToast('info', 'Reader Mode Changed', `Switched reader mode for active file.`);
   };
 
+  const handleTabContentChange = (id: string, newContent: string) => {
+    setTabs(prev =>
+      prev.map(t =>
+        t.id === id
+          ? {
+              ...t,
+              textContent: newContent,
+              hasUnsavedChanges: true
+            }
+          : t
+      )
+    );
+  };
+
+  const handleSaveTabToDisk = async (id: string, contentToSave?: string): Promise<boolean> => {
+    const tab = tabs.find(t => t.id === id);
+    if (!tab) return false;
+
+    const content = contentToSave !== undefined ? contentToSave : tab.textContent;
+    if (content === undefined) return false;
+
+    // Case 1: Tab already has a linked FileSystemFileHandle
+    if (tab.fileHandle) {
+      try {
+        const writable = await (tab.fileHandle as any).createWritable();
+        await writable.write(content);
+        await writable.close();
+
+        const updatedFile = await tab.fileHandle.getFile();
+        setTabs(prev =>
+          prev.map(t =>
+            t.id === id
+              ? {
+                  ...t,
+                  textContent: content,
+                  lastModified: updatedFile.lastModified,
+                  size: updatedFile.size,
+                  lastSyncedAt: Date.now(),
+                  syncStatus: 'synced',
+                  hasUnsavedChanges: false
+                }
+              : t
+          )
+        );
+        addToast('success', 'File Saved & Synced', `"${tab.name}" saved directly to disk.`);
+        return true;
+      } catch (err: any) {
+        console.warn('Direct fileHandle write failed, attempting save picker fallback:', err);
+      }
+    }
+
+    // Case 2: No fileHandle or permission requires picker
+    if ('showSaveFilePicker' in window) {
+      try {
+        const handle = await (window as any).showSaveFilePicker({
+          suggestedName: tab.name
+        });
+        if (handle) {
+          const writable = await handle.createWritable();
+          await writable.write(content);
+          await writable.close();
+
+          const newFile = await handle.getFile();
+          setTabs(prev =>
+            prev.map(t =>
+              t.id === id
+                ? {
+                    ...t,
+                    name: newFile.name,
+                    fileHandle: handle,
+                    liveSyncActive: true,
+                    textContent: content,
+                    lastModified: newFile.lastModified,
+                    size: newFile.size,
+                    lastSyncedAt: Date.now(),
+                    syncStatus: 'synced',
+                    hasUnsavedChanges: false
+                  }
+                : t
+            )
+          );
+          addToast('success', 'Saved & Live Sync Linked', `Saved "${newFile.name}" and linked real-time live sync.`);
+          return true;
+        }
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          handleDownloadTabFile(id);
+        }
+      }
+    } else {
+      handleDownloadTabFile(id);
+    }
+    return false;
+  };
+
+  const handleReloadTabFromDisk = async (id: string) => {
+    const tab = tabs.find(t => t.id === id);
+    if (!tab || !tab.fileHandle) {
+      addToast('info', 'Live Sync', 'File is not linked to a local disk handle.');
+      return;
+    }
+
+    try {
+      const file = await tab.fileHandle.getFile();
+      let textContent: string | undefined;
+      const isTextCategory = ['code', 'markdown', 'text', 'json', 'log', 'subtitle', 'geojson', 'database', 'http', 'certificate', 'html'].includes(tab.category) || file.type.startsWith('text/');
+      if (isTextCategory) {
+        textContent = await file.text();
+      }
+      const arrayBuffer = await file.arrayBuffer();
+      const objectUrl = URL.createObjectURL(file);
+
+      setTabs(prev =>
+        prev.map(t =>
+          t.id === id
+            ? {
+                ...t,
+                textContent: textContent !== undefined ? textContent : t.textContent,
+                arrayBuffer,
+                objectUrl,
+                lastModified: file.lastModified,
+                size: file.size,
+                lastSyncedAt: Date.now(),
+                syncStatus: 'synced',
+                hasUnsavedChanges: false,
+                syncCount: (t.syncCount || 0) + 1
+              }
+            : t
+        )
+      );
+      addToast('success', 'Reloaded from Disk', `"${tab.name}" refreshed with latest disk state.`);
+    } catch (err: any) {
+      addToast('error', 'Reload Failed', `Could not read "${tab.name}" from disk: ${err.message}`);
+    }
+  };
+
   // Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -497,9 +698,9 @@ export default function App() {
             onOpenSupportedFormats={() => setIsSupportedFormatsModalOpen(true)}
           />
         ) : activeTab.viewMode === 'hex' ? (
-          <div className="w-full flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden">
+          <div className="w-full flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden relative">
             {/* Top Reader Subheader Bar */}
-            <div className="flex items-center justify-between px-3 py-1 bg-white/90 dark:bg-[#0c121e]/90 backdrop-blur-xs border-b border-slate-200/80 dark:border-slate-800/80 text-xs text-slate-600 dark:text-slate-400 select-none shrink-0">
+            <div className="flex items-center justify-between px-3 py-1 bg-white/90 dark:bg-[#0c121e]/90 backdrop-blur-xs border-b border-slate-200/80 dark:border-slate-800/80 text-xs text-slate-600 dark:text-slate-400 select-none shrink-0 relative z-30">
               <div className="flex items-center gap-2 min-w-0">
                 <span className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-xs">{activeTab.name}</span>
                 <span className="text-[11px] font-mono text-slate-400">({(activeTab.size / 1024).toFixed(1)} KB)</span>
@@ -517,9 +718,9 @@ export default function App() {
           </div>
         ) : (
           /* Render category specific viewer with dynamic Reader Switcher */
-          <div className="w-full flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden">
+          <div className="w-full flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden relative">
             {/* Top Reader Subheader Bar */}
-            <div className="flex items-center justify-between px-3 py-1 bg-white/90 dark:bg-[#0c121e]/90 backdrop-blur-xs border-b border-slate-200/80 dark:border-slate-800/80 text-xs text-slate-600 dark:text-slate-400 select-none shrink-0">
+            <div className="flex items-center justify-between px-3 py-1 bg-white/90 dark:bg-[#0c121e]/90 backdrop-blur-xs border-b border-slate-200/80 dark:border-slate-800/80 text-xs text-slate-600 dark:text-slate-400 select-none shrink-0 relative z-30">
               <div className="flex items-center gap-2 min-w-0">
                 <span className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-xs">{activeTab.name}</span>
                 <span className="text-[11px] font-mono text-slate-400">
@@ -592,6 +793,15 @@ export default function App() {
                   <CodeViewer
                     textContent={activeTab.textContent}
                     filename={activeTab.name}
+                    fileHandle={activeTab.fileHandle}
+                    liveSyncActive={activeTab.liveSyncActive}
+                    syncStatus={activeTab.syncStatus}
+                    lastSyncedAt={activeTab.lastSyncedAt}
+                    hasUnsavedChanges={activeTab.hasUnsavedChanges}
+                    onContentChange={(newContent) => handleTabContentChange(activeTab.id, newContent)}
+                    onSaveToDisk={(content) => handleSaveTabToDisk(activeTab.id, content)}
+                    onReloadFromDisk={() => handleReloadTabFromDisk(activeTab.id)}
+                    onToggleLiveSync={() => handleToggleLiveSyncTab(activeTab.id)}
                     onSwitchToLivePreview={() => handleSetTabReader(activeTab.id, 'html')}
                     onSwitchToDatabase={() => handleSetTabReader(activeTab.id, 'database')}
                   />
@@ -721,6 +931,7 @@ export default function App() {
               if (currentCategory === 'ebook') {
                 return (
                   <EbookViewer
+                    arrayBuffer={activeTab.arrayBuffer}
                     textContent={activeTab.textContent}
                     filename={activeTab.name}
                   />

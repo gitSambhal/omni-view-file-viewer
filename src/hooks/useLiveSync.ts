@@ -19,7 +19,7 @@ export function useLiveSync({
   onFileUpdated,
   onNotify,
   enabled = true,
-  pollIntervalMs = 1500
+  pollIntervalMs = 1200
 }: UseLiveSyncOptions) {
   const tabsRef = useRef(tabs);
   tabsRef.current = tabs;
@@ -43,7 +43,7 @@ export function useLiveSync({
         try {
           const newFile = await tab.fileHandle.getFile();
           if (newFile.lastModified > tab.lastModified) {
-            // Trigger temporary spinning indicator when disk changes are found
+            // Trigger visual live sync indicator
             setIsSyncing(true);
             if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
             syncTimeoutRef.current = setTimeout(() => {
@@ -54,18 +54,19 @@ export function useLiveSync({
             let arrayBuffer: ArrayBuffer | undefined;
             let objectUrl: string | undefined;
 
-            if (tab.category === 'code' || tab.category === 'markdown' || tab.category === 'text' || tab.category === 'json') {
+            const isTextCategory = [
+              'code', 'markdown', 'text', 'json', 'log', 'subtitle', 'geojson', 'database', 'http', 'certificate', 'html'
+            ].includes(tab.category) || newFile.type.startsWith('text/');
+
+            if (isTextCategory && newFile.size < 15 * 1024 * 1024) {
               textContent = await newFile.text();
-            } else if (tab.category === 'image' || tab.category === 'pdf' || tab.category === 'video' || tab.category === 'audio') {
+            }
+
+            if (tab.category === 'image' || tab.category === 'pdf' || tab.category === 'video' || tab.category === 'audio') {
               arrayBuffer = await newFile.arrayBuffer();
               objectUrl = URL.createObjectURL(newFile);
-            } else {
+            } else if (!textContent && newFile.size < 35 * 1024 * 1024) {
               arrayBuffer = await newFile.arrayBuffer();
-              if (tab.category === 'excel' || tab.category === 'docx') {
-                try {
-                  textContent = await newFile.text();
-                } catch (_) {}
-              }
             }
 
             const now = Date.now();
@@ -76,33 +77,23 @@ export function useLiveSync({
               lastModified: newFile.lastModified,
               size: newFile.size,
               fileRaw: newFile,
-              textContent,
-              arrayBuffer,
+              textContent: textContent !== undefined ? textContent : tab.textContent,
+              arrayBuffer: arrayBuffer || tab.arrayBuffer,
               objectUrl: objectUrl || tab.objectUrl,
               lastSyncedAt: now,
               syncCount: nextSyncCount,
-              syncStatus: 'syncing'
+              syncStatus: 'synced',
+              hasUnsavedChanges: false
             });
-
-            // Revert tab syncStatus back to 'synced' after 2.2s so tab pulse stops cleanly
-            setTimeout(() => {
-              onFileUpdated({
-                id: tab.id,
-                syncStatus: 'synced'
-              });
-            }, 2200);
 
             onNotify(
               'info',
               'Live File Sync',
-              `"${newFile.name}" changed on disk and was automatically reloaded.`
+              `"${newFile.name}" updated from disk and reloaded.`
             );
           }
-        } catch (err) {
-          onFileUpdated({
-            id: tab.id,
-            syncStatus: 'paused'
-          });
+        } catch (err: any) {
+          console.warn(`Live sync check skipped for ${tab.name}:`, err);
         }
       }
     };

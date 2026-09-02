@@ -25,7 +25,7 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, onClose 
             </div>
             <div>
               <h3 className="font-bold text-slate-100 text-base">What's New in OmniView Studio</h3>
-              <p className="text-xs text-slate-400">Release Version v1.4.0</p>
+              <p className="text-xs text-slate-400">Release Version v1.8.0</p>
             </div>
           </div>
 
@@ -39,17 +39,45 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, onClose 
 
         {/* Modal Content */}
         <div className="p-6 space-y-6 overflow-y-auto text-sm text-slate-300 leading-relaxed font-sans">
-          {/* v1.4.0 Highlights */}
+          {/* v1.8.0 Highlights */}
+          <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-xl p-4 space-y-2">
+            <div className="flex items-center gap-2 font-semibold text-cyan-300">
+              <Sparkles className="w-4 h-4 text-cyan-400" />
+              <span>Version 1.8.0 - Intelligent Quick Switcher & Search-Enabled View Menu</span>
+            </div>
+            <ul className="space-y-1.5 text-xs text-slate-300 list-disc list-inside">
+              <li><strong>Intelligent Quick Switcher Chips:</strong> View modes (Tree, Code, Text, Hex, Preview, Table, Captions, Map) are now dynamically computed for supported files only. Plain code files cleanly show Code/Text/Hex without invalid Tree views, while JSON/XML/YAML files display full Tree inspectors.</li>
+              <li><strong>Search-Enabled View Dropdown:</strong> Real-time search filter across all 23+ viewers by name, description, category, and file extensions with instant keyboard navigation (<kbd className="px-1 py-0.2 bg-slate-800 rounded font-mono text-[10px]">Esc</kbd>).</li>
+              <li><strong>Suggested Readers:</strong> Automatic badges identifying the most relevant rendering engines for the active file.</li>
+              <li><strong>Stacking & Z-Index Protection:</strong> High-elevation dropdown rendering ensuring options are never trapped behind iframes, canvases, or viewer layers.</li>
+            </ul>
+          </div>
+
+          {/* v1.7.0 Highlights */}
+          <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-4 space-y-2">
+            <div className="flex items-center gap-2 font-semibold text-indigo-300">
+              <Sparkles className="w-4 h-4 text-indigo-400" />
+              <span>Version 1.7.0 - Interactive Code Editor, Prettier Formatter & Live Sync v2</span>
+            </div>
+            <ul className="space-y-1.5 text-xs text-slate-300 list-disc list-inside">
+              <li><strong>Multi-Language Code Formatter:</strong> 1-Click code formatting powered by Prettier standalone and specialized formatters for JS, TS, HTML, CSS, Markdown, YAML, SQL, and JSON with keyboard shortcut (<code>Shift + Alt + F</code> / <code>Ctrl + Shift + I</code>).</li>
+              <li><strong>Typography & Line Height Controls:</strong> Customizable line-height spacing (Compact 1.35x, Normal 1.6x, Relaxed 1.85x, Spacious 2.1x), font scaling (10px - 26px), and monospace typeface selector (JetBrains Mono, Fira Code, Cascadia, Consolas, System).</li>
+              <li><strong>Interactive Code Editing & Indentation:</strong> Smart multi-line Tab indentation, Enter key auto-indentation with brace expansion, and auto-closing bracket pairs.</li>
+              <li><strong>Integrated Search & Replace:</strong> Real-time match navigation, case-sensitivity toggle, replace, and replace all.</li>
+              <li><strong>Live Sync v2 with Bidirectional Disk Save:</strong> Real-time disk watching, direct disk save (<code>Ctrl + S</code>) via File System Access API, and automatic FileSystemFileHandle extraction on file drop.</li>
+            </ul>
+          </div>
+
+          {/* v1.6.0 Highlights */}
           <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 space-y-2">
             <div className="flex items-center gap-2 font-semibold text-emerald-300">
               <Sparkles className="w-4 h-4 text-emerald-400" />
-              <span>Version 1.4.0 - Localhost Gateway & Supported Formats Directory</span>
+              <span>Version 1.6.0 - Interactive E-Book (EPUB) Engine & Universal Code Sandbox</span>
             </div>
             <ul className="space-y-1.5 text-xs text-slate-300 list-disc list-inside">
-              <li><strong>Localhost Permission Gateway:</strong> Automatic interceptor and interactive security gateway for HTTP/REST requests targeting localhost, 127.0.0.1, or local subnets, with session preference management and terminal cURL exporter.</li>
-              <li><strong>Interactive Local Server CORS Guide:</strong> 1-Click middleware copy snippets for Node.js Express, Python FastAPI, and Go.</li>
-              <li><strong>Comprehensive Formats Directory (SupportedFormatsModal):</strong> Searchable catalog of 60+ extensions across 15 format categories with native reader capability tags.</li>
-              <li><strong>Revamped Landing Page:</strong> Interactive format category chips, direct format directory launcher, and instant sample loader.</li>
+              <li><strong>Interactive E-Book Engine (.epub):</strong> True client-side ZIP decompression parsing OPF spine, metadata, and NCX table of contents with 4 reading themes (Paper, Sepia, Midnight, OLED), font scaling, line height controls, book search, and Web Speech API Read Aloud audio reader.</li>
+              <li><strong>Universal Code Sandbox & Script Runner:</strong> In-browser interactive script runner for JavaScript, TypeScript, Python, and Bash scripts with live console output drawer.</li>
+              <li><strong>Enlarged Manual SQL Studio:</strong> Spacious, full-featured SQL editor with AlaSQL in-memory engine, multi-tab results, and keyboard execution.</li>
             </ul>
           </div>
 

@@ -635,5 +635,19 @@ export function getSampleTabFiles(): TabFile[] {
     zoomLevel: 100
   };
 
-  return [sampleMd, sampleHtml, sampleHttp, sampleDll, sampleCode, sampleLog, sampleCsv, sampleSql, sampleGeoJson, sampleCert, sampleJson];
+  const sampleEpub: TabFile = {
+    id: 'sample-epub',
+    name: 'The_Art_of_Offline_Computing.epub',
+    size: 24500,
+    type: 'application/epub+zip',
+    lastModified: now - 360000,
+    extension: 'epub',
+    category: 'ebook',
+    liveSyncActive: false,
+    syncStatus: 'synced',
+    viewMode: 'preview',
+    zoomLevel: 100
+  };
+
+  return [sampleMd, sampleEpub, sampleHtml, sampleHttp, sampleDll, sampleCode, sampleLog, sampleCsv, sampleSql, sampleGeoJson, sampleCert, sampleJson];
 }
