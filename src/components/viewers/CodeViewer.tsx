@@ -674,86 +674,12 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
 
   return (
     <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 bg-white dark:bg-[#1e2227] text-slate-800 dark:text-slate-100 font-mono overflow-hidden transition-colors relative select-text">
-      {/* 1. Editor Main Header Toolbar */}
-      <div className="flex flex-wrap items-center justify-between px-3 py-2 bg-slate-100 dark:bg-[#21252b] border-b border-slate-200 dark:border-slate-700/80 gap-2 z-20 shrink-0 select-none shadow-2xs">
-        {/* Left: Language, Format, Run, Live View */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {/* File Badge */}
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-cyan-400 bg-cyan-950/50 px-2.5 py-1 rounded-lg border border-cyan-500/30">
-            <FileCode className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="font-semibold text-slate-200">{filename}</span>
-            <span className="text-[10px] text-cyan-300/75">({totalLines.toLocaleString()} lines)</span>
-          </div>
-
-          {/* Live Sync Status Pill */}
-          <div className="flex items-center gap-1">
-            {fileHandle ? (
-              <button
-                onClick={onToggleLiveSync}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono border transition-all cursor-pointer ${
-                  liveSyncActive
-                    ? 'bg-emerald-950/60 text-emerald-400 border-emerald-500/40 shadow-2xs'
-                    : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700'
-                }`}
-                title={liveSyncActive ? 'Live Sync Active: Watching disk changes in real-time. Click to toggle.' : 'Live Sync Paused. Click to resume.'}
-              >
-                <span className={`w-2 h-2 rounded-full ${liveSyncActive ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`} />
-                <span>{liveSyncActive ? 'Live Sync' : 'Sync Paused'}</span>
-              </button>
-            ) : (
-              <button
-                onClick={handleSaveCode}
-                className="flex items-center gap-1 text-[11px] font-mono px-2 py-1 rounded-lg bg-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-700 border border-slate-700 cursor-pointer"
-                title="Connect this file to local disk for automatic real-time sync"
-              >
-                <HardDrive className="w-3 h-3 text-slate-400" />
-                <span>Link Disk</span>
-              </button>
-            )}
-
-            {/* Save Button */}
-            <button
-              onClick={handleSaveCode}
-              disabled={isSaving}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
-                hasUnsavedChanges
-                  ? 'bg-amber-600 hover:bg-amber-500 text-white border-amber-500 shadow-xs'
-                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
-              }`}
-              title="Save Changes to Disk (Ctrl+S / Cmd+S)"
-            >
-              <Save className={`w-3.5 h-3.5 ${isSaving ? 'animate-spin' : ''}`} />
-              <span>{isSaving ? 'Saving...' : hasUnsavedChanges ? 'Save *' : 'Save'}</span>
-            </button>
-
-            {/* Reload from Disk */}
-            {fileHandle && onReloadFromDisk && (
-              <button
-                onClick={handleReload}
-                disabled={isReloading}
-                className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg text-xs cursor-pointer"
-                title="Force Reload from Disk"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${isReloading ? 'animate-spin' : ''}`} />
-              </button>
-            )}
-          </div>
-
-          <div className="h-4 w-px bg-slate-700 mx-1 hidden sm:block" />
-
-          {/* Format Code Button */}
-          <button
-            onClick={handleFormatCode}
-            disabled={isFormatting || isReadOnly}
-            className="flex items-center gap-1.5 bg-indigo-600/90 hover:bg-indigo-500 text-white px-2.5 py-1 rounded-lg text-xs font-semibold shadow-2xs transition-all cursor-pointer disabled:opacity-40"
-            title="Format Code with Prettier (Shift+Alt+F or Ctrl+Shift+I)"
-          >
-            <Sparkles className={`w-3.5 h-3.5 text-indigo-200 ${isFormatting ? 'animate-spin' : ''}`} />
-            <span>{isFormatting ? 'Formatting...' : 'Format'}</span>
-          </button>
-
-          {/* Run Code Sandbox Button & Runner Selector */}
-          <div className="flex items-center gap-1 bg-slate-800/80 p-0.5 rounded-lg border border-slate-700/70">
+      {/* 1. Streamlined Single-Row Editor Toolbar */}
+      <div className="flex items-center justify-between px-3 py-1.5 bg-slate-100 dark:bg-[#21252b] border-b border-slate-200 dark:border-slate-700/80 gap-2 z-20 shrink-0 select-none shadow-2xs overflow-x-auto no-scrollbar">
+        {/* Left Action Controls */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {/* Primary Run Code Sandbox Button & Unified Language/Runner Selector */}
+          <div className="flex items-center gap-0.5 bg-slate-800/90 p-0.5 rounded-lg border border-slate-700/80">
             <button
               onClick={handleRunCode}
               disabled={isRunning}
@@ -764,18 +690,37 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
               <span>{isRunning ? 'Running...' : 'Run'}</span>
             </button>
 
-            {/* Quick Runner Selector Dropdown */}
+            {/* Unified Language & Execution Engine Selector */}
             <select
-              value={selectedRunner}
-              onChange={e => setSelectedRunner(e.target.value as SupportedRunner)}
-              className="bg-transparent text-slate-200 text-xs px-1.5 py-0.5 rounded focus:outline-none cursor-pointer border-none font-medium hover:text-white"
-              title="Select Execution Engine"
+              value={language}
+              onChange={e => {
+                const newLang = e.target.value;
+                setLanguage(newLang);
+                setSelectedRunner(detectRunner(filename, newLang));
+              }}
+              className="bg-transparent text-slate-200 text-xs px-2 py-0.5 rounded focus:outline-none cursor-pointer border-none font-medium hover:text-white"
+              title="Select Language & Execution Engine"
             >
-              {RUNNERS_REGISTRY.map(r => (
-                <option key={r.id} value={r.id} className="bg-slate-900 text-slate-100">
-                  {r.name.split(' (')[0]}
-                </option>
-              ))}
+              <option value="typescript" className="bg-slate-900 text-slate-100">TypeScript</option>
+              <option value="javascript" className="bg-slate-900 text-slate-100">JavaScript</option>
+              <option value="python" className="bg-slate-900 text-slate-100">Python</option>
+              <option value="html" className="bg-slate-900 text-slate-100">HTML</option>
+              <option value="css" className="bg-slate-900 text-slate-100">CSS</option>
+              <option value="scss" className="bg-slate-900 text-slate-100">SCSS</option>
+              <option value="json" className="bg-slate-900 text-slate-100">JSON</option>
+              <option value="sql" className="bg-slate-900 text-slate-100">SQL</option>
+              <option value="bash" className="bg-slate-900 text-slate-100">Bash</option>
+              <option value="markdown" className="bg-slate-900 text-slate-100">Markdown</option>
+              <option value="xml" className="bg-slate-900 text-slate-100">XML / SVG</option>
+              <option value="yaml" className="bg-slate-900 text-slate-100">YAML</option>
+              <option value="java" className="bg-slate-900 text-slate-100">Java</option>
+              <option value="cpp" className="bg-slate-900 text-slate-100">C / C++</option>
+              <option value="rust" className="bg-slate-900 text-slate-100">Rust</option>
+              <option value="go" className="bg-slate-900 text-slate-100">Go</option>
+              <option value="php" className="bg-slate-900 text-slate-100">PHP</option>
+              <option value="ruby" className="bg-slate-900 text-slate-100">Ruby</option>
+              <option value="ini" className="bg-slate-900 text-slate-100">INI / TOML</option>
+              <option value="plaintext" className="bg-slate-900 text-slate-100">Plain Text</option>
             </select>
 
             {/* Code Runners Directory / Guide Button */}
@@ -790,15 +735,67 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
             )}
           </div>
 
-          {/* NPM Package Tester & Live CDN Playground */}
+          <div className="h-4 w-px bg-slate-700/60 mx-0.5 hidden sm:block" />
+
+          {/* Format Code Button */}
+          <button
+            onClick={handleFormatCode}
+            disabled={isFormatting || isReadOnly}
+            className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/80 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer disabled:opacity-40"
+            title="Format Code with Prettier (Shift+Alt+F)"
+          >
+            <Sparkles className={`w-3.5 h-3.5 text-purple-400 ${isFormatting ? 'animate-spin' : ''}`} />
+            <span>{isFormatting ? 'Formatting...' : 'Format'}</span>
+          </button>
+
+          {/* Save Button */}
+          <button
+            onClick={handleSaveCode}
+            disabled={isSaving}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
+              hasUnsavedChanges
+                ? 'bg-amber-600 hover:bg-amber-500 text-white border-amber-500 shadow-xs'
+                : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
+            }`}
+            title="Save Changes to Disk (Ctrl+S / Cmd+S)"
+          >
+            <Save className={`w-3.5 h-3.5 ${isSaving ? 'animate-spin' : ''}`} />
+            <span>{isSaving ? 'Saving...' : hasUnsavedChanges ? 'Save *' : 'Save'}</span>
+          </button>
+
+          {/* Link Disk option if not handles */}
+          {!fileHandle && (
+            <button
+              onClick={handleSaveCode}
+              className="flex items-center gap-1 text-[11px] font-mono px-2 py-1 rounded-lg bg-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-700 border border-slate-700 cursor-pointer"
+              title="Connect this file to local disk for automatic real-time sync"
+            >
+              <HardDrive className="w-3 h-3 text-slate-400" />
+              <span>Link Disk</span>
+            </button>
+          )}
+
+          {/* Reload from Disk */}
+          {fileHandle && onReloadFromDisk && (
+            <button
+              onClick={handleReload}
+              disabled={isReloading}
+              className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg text-xs cursor-pointer"
+              title="Force Reload from Disk"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isReloading ? 'animate-spin' : ''}`} />
+            </button>
+          )}
+
+          {/* NPM Package Playground Button */}
           {onOpenNpmTester && (
             <button
               onClick={onOpenNpmTester}
-              className="flex items-center gap-1.5 bg-amber-600/90 hover:bg-amber-500 text-white px-2.5 py-1 rounded-lg text-xs font-semibold shadow-2xs transition-all cursor-pointer"
-              title="Open NPM Package Tester & Live CDN Playground (test any package directly)"
+              className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer"
+              title="Open NPM Package Tester & Live CDN Playground"
             >
-              <Package className="w-3.5 h-3.5 text-amber-200" />
-              <span>NPM Tester</span>
+              <Package className="w-3.5 h-3.5 text-amber-400" />
+              <span>NPM Playground</span>
             </button>
           )}
 
@@ -806,7 +803,7 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
           {isHtmlCapable && onSwitchToLivePreview && (
             <button
               onClick={onSwitchToLivePreview}
-              className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1 rounded-lg text-xs font-semibold shadow-2xs transition-all cursor-pointer"
+              className="flex items-center gap-1.5 bg-blue-600/90 hover:bg-blue-500 text-white px-2.5 py-1 rounded-lg text-xs font-semibold shadow-2xs transition-all cursor-pointer"
               title="Open in Live HTML Sandbox Preview"
             >
               <Globe className="w-3.5 h-3.5 text-blue-200" />
@@ -817,7 +814,7 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
           {isSqlCapable && onSwitchToDatabase && (
             <button
               onClick={onSwitchToDatabase}
-              className="flex items-center gap-1.5 bg-teal-600 hover:bg-teal-500 text-white px-2.5 py-1 rounded-lg text-xs font-semibold shadow-2xs transition-all cursor-pointer"
+              className="flex items-center gap-1.5 bg-teal-600/90 hover:bg-teal-500 text-white px-2.5 py-1 rounded-lg text-xs font-semibold shadow-2xs transition-all cursor-pointer"
               title="Execute SQL queries in interactive Database Studio"
             >
               <Database className="w-3.5 h-3.5 text-teal-200" />
@@ -826,7 +823,7 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
           )}
         </div>
 
-        {/* Right: Search, Language Picker, Settings & Copy */}
+        {/* Right Tools Group: Search, Copy, Settings */}
         <div className="flex items-center gap-1.5 shrink-0">
           {/* Format Notification Toast Banner */}
           {formatMessage && (
@@ -844,42 +841,22 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
           {/* Search Toggle */}
           <button
             onClick={() => setIsSearchOpen(!isSearchOpen)}
-            className={`p-1.5 rounded-lg text-xs transition-colors cursor-pointer ${
-              isSearchOpen ? 'bg-cyan-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
+            className={`p-1.5 rounded-lg text-xs transition-colors cursor-pointer border ${
+              isSearchOpen ? 'bg-cyan-600 text-white border-cyan-500' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border-slate-700'
             }`}
             title="Find and Replace (Ctrl+F)"
           >
             <Search className="w-3.5 h-3.5" />
           </button>
 
-          {/* Language Selector */}
-          <select
-            value={language}
-            onChange={e => setLanguage(e.target.value)}
-            className="bg-slate-800 border border-slate-700 text-slate-200 text-xs px-2.5 py-1 rounded-lg focus:outline-none focus:border-cyan-500 cursor-pointer"
-            title="Syntax Language"
+          {/* Copy Code Button */}
+          <button
+            onClick={handleCopy}
+            className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg text-xs cursor-pointer transition-colors"
+            title="Copy entire code to clipboard"
           >
-            <option value="javascript">JavaScript (JS/JSX)</option>
-            <option value="typescript">TypeScript (TS/TSX)</option>
-            <option value="python">Python</option>
-            <option value="html">HTML</option>
-            <option value="css">CSS</option>
-            <option value="scss">SCSS</option>
-            <option value="json">JSON</option>
-            <option value="sql">SQL</option>
-            <option value="bash">Bash / Shell</option>
-            <option value="markdown">Markdown</option>
-            <option value="xml">XML / SVG</option>
-            <option value="yaml">YAML</option>
-            <option value="java">Java</option>
-            <option value="cpp">C / C++</option>
-            <option value="rust">Rust</option>
-            <option value="go">Go</option>
-            <option value="php">PHP</option>
-            <option value="ruby">Ruby</option>
-            <option value="ini">INI / TOML</option>
-            <option value="plaintext">Plain Text</option>
-          </select>
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+          </button>
 
           {/* Editor Settings Dropdown */}
           <div className="relative">

@@ -4,7 +4,7 @@
  * OmniView Dynamic NPM Package Tester & Live CDN Playground
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   X,
   Package,
@@ -12,24 +12,19 @@ import {
   Copy,
   ExternalLink,
   Search,
-  Sparkles,
-  CheckCircle2,
-  AlertCircle,
-  Clock,
-  Layers,
-  FileCode,
-  ShieldCheck,
-  Zap,
+  Check,
   Terminal,
-  ChevronRight,
-  Plus
+  Plus,
+  Layers,
+  Clock,
+  ShieldCheck,
+  Wand2,
+  Palette,
+  Loader2
 } from 'lucide-react';
 import {
-  loadNpmPackage,
-  fetchNpmPackageMetadata,
   runJavaScript,
-  ConsoleLogItem,
-  NpmPackageMeta
+  ConsoleLogItem
 } from '../services/codeRunners';
 
 export interface NpmTesterModalProps {
@@ -46,11 +41,144 @@ interface CuratedPackage {
   defaultSnippet: string;
 }
 
-const CURATED_PACKAGES: CuratedPackage[] = [
+export interface TokenStyles {
+  keyword: string;
+  string: string;
+  number: string;
+  function: string;
+  comment: string;
+  type: string;
+  variable: string;
+}
+
+export interface EditorTheme {
+  id: string;
+  name: string;
+  bg: string;
+  text: string;
+  textHex: string;
+  border: string;
+  headerBg: string;
+  gutterText: string;
+  caretColor: string;
+  tokens: TokenStyles;
+}
+
+interface NpmSearchResult {
+  name: string;
+  version: string;
+  description: string;
+  publisher?: string;
+}
+
+const EDITOR_THEMES: EditorTheme[] = [
+  {
+    id: 'github-dark',
+    name: 'GitHub Dark',
+    bg: 'bg-[#0d1117]',
+    text: 'text-[#c9d1d9]',
+    textHex: '#c9d1d9',
+    border: 'border-[#30363d]',
+    headerBg: 'bg-[#161b22]',
+    gutterText: 'text-[#484f58]',
+    caretColor: '#58a6ff',
+    tokens: {
+      keyword: '#ff7b72',
+      string: '#a5d6ff',
+      number: '#79c0ff',
+      function: '#d2a8ff',
+      comment: '#8b949e',
+      type: '#7ee787',
+      variable: '#ffa657'
+    }
+  },
+  {
+    id: 'one-dark',
+    name: 'One Dark',
+    bg: 'bg-[#1e2227]',
+    text: 'text-[#abb2bf]',
+    textHex: '#abb2bf',
+    border: 'border-[#3e4451]',
+    headerBg: 'bg-[#21252b]',
+    gutterText: 'text-[#5c6370]',
+    caretColor: '#528bff',
+    tokens: {
+      keyword: '#c678dd',
+      string: '#98c379',
+      number: '#d19a66',
+      function: '#61afef',
+      comment: '#5c6370',
+      type: '#e5c07b',
+      variable: '#e06c75'
+    }
+  },
+  {
+    id: 'night-owl',
+    name: 'Night Owl',
+    bg: 'bg-[#011627]',
+    text: 'text-[#d6deeb]',
+    textHex: '#d6deeb',
+    border: 'border-[#1d3b53]',
+    headerBg: 'bg-[#0b253a]',
+    gutterText: 'text-[#4b6479]',
+    caretColor: '#80a4c1',
+    tokens: {
+      keyword: '#c792ea',
+      string: '#ecc48d',
+      number: '#f78c6c',
+      function: '#82aaff',
+      comment: '#637777',
+      type: '#addb67',
+      variable: '#7fdbca'
+    }
+  },
+  {
+    id: 'monokai',
+    name: 'Monokai',
+    bg: 'bg-[#272822]',
+    text: 'text-[#f8f8f2]',
+    textHex: '#f8f8f2',
+    border: 'border-[#3e3d32]',
+    headerBg: 'bg-[#1e1f1c]',
+    gutterText: 'text-[#75715e]',
+    caretColor: '#f8f8f0',
+    tokens: {
+      keyword: '#f92672',
+      string: '#e6db74',
+      number: '#ae81ff',
+      function: '#a6e22e',
+      comment: '#75715e',
+      type: '#66d9ef',
+      variable: '#fd971f'
+    }
+  },
+  {
+    id: 'light',
+    name: 'VS Light',
+    bg: 'bg-white',
+    text: 'text-[#24292e]',
+    textHex: '#24292e',
+    border: 'border-slate-300',
+    headerBg: 'bg-slate-100',
+    gutterText: 'text-slate-400',
+    caretColor: '#0969da',
+    tokens: {
+      keyword: '#cf222e',
+      string: '#0a3069',
+      number: '#0550ae',
+      function: '#8250df',
+      comment: '#6e7781',
+      type: '#116329',
+      variable: '#953800'
+    }
+  }
+];
+
+const POPULAR_PACKAGES: CuratedPackage[] = [
   {
     name: 'lodash',
     category: 'Utilities',
-    tagline: 'Modern JavaScript utility library delivering modularity, performance & extras',
+    tagline: 'Modern JavaScript utility library',
     defaultSnippet: `import _ from 'lodash';
 
 // Lodash chunk, shuffle, and object deep manipulation
@@ -71,13 +199,12 @@ const user = {
 console.log("Deep get website:", _.get(user, 'profile.social.website'));
 console.log("Shuffled array:", _.shuffle(numbers));
 
-// Export or return result
 ({ chunks, website: _.get(user, 'profile.social.website') });`
   },
   {
     name: 'dayjs',
     category: 'Date & Time',
-    tagline: 'Fast 2kB alternative to Moment.js with modern immutable API',
+    tagline: 'Fast 2kB alternative to Moment.js',
     defaultSnippet: `import dayjs from 'dayjs';
 
 const now = dayjs();
@@ -86,203 +213,132 @@ console.log("Formatted:", now.format('dddd, MMMM D, YYYY h:mm:ss A'));
 
 const future = now.add(14, 'day').add(3, 'hour');
 console.log("14 days + 3 hours from now:", future.format('YYYY-MM-DD HH:mm'));
-console.log("Difference in days:", future.diff(now, 'day'));
-
-// Relative calendar formatting
-const startOfYear = dayjs().startOf('year');
-console.info("Days since start of year:", now.diff(startOfYear, 'day'));
 
 ({ today: now.format('YYYY-MM-DD'), daysInMonth: now.daysInMonth() });`
   },
   {
     name: 'zod',
     category: 'Validation',
-    tagline: 'TypeScript-first schema declaration and validation with static type inference',
+    tagline: 'TypeScript-first schema validation',
     defaultSnippet: `import { z } from 'zod';
 
-// Define a strict schema
 const UserSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(2),
   email: z.string().email(),
-  age: z.number().int().min(18),
-  tags: z.array(z.string()).default([])
+  age: z.number().int().min(18)
 });
-
-console.log("Schema defined. Testing valid payload...");
 
 const validData = {
   id: "123e4567-e89b-12d3-a456-426614174000",
   name: "Suhail",
   email: "suhail@example.com",
-  age: 28,
-  tags: ["developer", "architect"]
+  age: 28
 };
 
 const parsed = UserSchema.safeParse(validData);
-if (parsed.success) {
-  console.info("✅ Valid Payload successfully parsed:", parsed.data);
-} else {
-  console.error("❌ Validation Failed:", parsed.error);
-}
-
-// Test invalid payload
-const invalid = UserSchema.safeParse({ id: "invalid", email: "not-an-email", age: 15 });
-console.warn("Testing invalid data (expected errors):", invalid.error?.issues);`
+console.info("Validation Result:", parsed.success ? "Passed" : "Failed");
+console.log("Parsed Data:", parsed.data);`
   },
   {
     name: 'mathjs',
     category: 'Math & Science',
-    tagline: 'Extensive math library for JavaScript and Node.js with symbolic computation',
+    tagline: 'Extensive math library for JS/TS',
     defaultSnippet: `import * as math from 'mathjs';
 
-console.log("Math.js version:", math.evaluate ? "Loaded" : "Ready");
-
-// Arithmetic and symbolic expression evaluation
-console.log("12.7 cm to inch:", math.evaluate('12.7 cm to inch').toString());
-console.log("sin(45 deg) ^ 2:", math.evaluate('sin(45 deg) ^ 2'));
+console.log("Unit conversion (12.7 cm to inch):", math.evaluate('12.7 cm to inch').toString());
 console.log("Matrix determinant:", math.det([[-2, 2, 3], [-1, 1, 3], [2, 0, -1]]));
 
-// Unit conversions
 const speed = math.unit(100, 'km/h');
-console.info("100 km/h in mph:", speed.to('mph').toString());
-
-// Complex numbers
-const c1 = math.complex('2 + 3i');
-const c2 = math.complex('4 - 2i');
-console.log("Complex multiplication (2+3i) * (4-2i):", math.multiply(c1, c2).toString());`
+console.info("100 km/h in miles per hour:", speed.to('mile/h').toString());`
   },
   {
     name: 'uuid',
     category: 'Utilities',
-    tagline: 'RFC4122 compliant UUIDs (v1, v4, v5) generator for JS / TS',
-    defaultSnippet: `import { v4 as uuidv4, v1 as uuidv1, validate, version } from 'uuid';
+    tagline: 'RFC4122 compliant UUID generator',
+    defaultSnippet: `import { v4 as uuidv4, validate } from 'uuid';
 
-const id1 = uuidv4();
-const id2 = uuidv4();
-const id3 = uuidv1();
-
-console.log("Generated UUID v4 (Random):", id1);
-console.log("Generated UUID v4 (Random 2):", id2);
-console.log("Generated UUID v1 (Timestamp):", id3);
-
-console.info("Is id1 valid UUID?", validate(id1));
-console.info("id1 UUID Version:", version(id1));
-console.info("id3 UUID Version:", version(id3));
-
-const batch = Array.from({ length: 5 }, () => ({ id: uuidv4(), created: Date.now() }));
-console.table(batch);`
-  },
-  {
-    name: 'canvas-confetti',
-    category: 'Visual & UI',
-    tagline: 'Performant canvas-based celebratory confetti animations in-browser',
-    defaultSnippet: `import confetti from 'canvas-confetti';
-
-console.log("🎉 Triggering celebratory confetti cannon in browser!");
-
-// Fire confetti blast
-confetti({
-  particleCount: 100,
-  spread: 70,
-  origin: { y: 0.6 }
-});
-
-console.info("Confetti blast executed successfully! Look at your screen 🎉");`
-  },
-  {
-    name: 'chroma-js',
-    category: 'Colors',
-    tagline: 'JavaScript color conversion and color scale manipulation library',
-    defaultSnippet: `import chroma from 'chroma-js';
-
-// Color scales and palette generation
-const scale = chroma.scale(['#2563eb', '#10b981', '#f59e0b', '#ef4444']).mode('lch').colors(6);
-console.log("Generated 6-step LCH color scale:", scale);
-
-const color = chroma('#3b82f6');
-console.log("Hex:", color.hex());
-console.log("RGB:", color.rgb());
-console.log("HSL:", color.hsl().map(v => typeof v === 'number' ? Math.round(v) : v));
-console.log("Luminance:", color.luminance().toFixed(3));
-console.log("Darken 1.5:", color.darken(1.5).hex());
-console.log("Contrast ratio against white:", chroma.contrast(color, 'white').toFixed(2));
-
-scale.map(hex => ({ hex, luminance: chroma(hex).luminance().toFixed(3) }));`
-  },
-  {
-    name: 'papaparse',
-    category: 'Data & CSV',
-    tagline: 'Fast and powerful in-browser CSV (comma-separated values) parser',
-    defaultSnippet: `import Papa from 'papaparse';
-
-const csvData = \`name,department,salary,status
-Alice Smith,Engineering,125000,Active
-Bob Johnson,Marketing,95000,Active
-Charlie Brown,Design,105000,On Leave
-Diana Prince,Security,140000,Active\`;
-
-console.log("Parsing CSV stream into JSON records...");
-const result = Papa.parse(csvData, {
-  header: true,
-  dynamicTyping: true,
-  skipEmptyLines: true
-});
-
-console.table(result.data);
-console.info("Parsed row count:", result.data.length);
-console.info("Fields detected:", result.meta.fields);
-
-result.data;`
-  },
-  {
-    name: 'crypto-js',
-    category: 'Crypto',
-    tagline: 'JavaScript library of standard cryptographic algorithms (AES, SHA, MD5, HMAC)',
-    defaultSnippet: `import CryptoJS from 'crypto-js';
-
-const message = "OmniView File Studio - 100% Offline & Local Previewer";
-console.log("Original Message:", message);
-
-// Hashing
-const sha256Hash = CryptoJS.SHA256(message).toString();
-const md5Hash = CryptoJS.MD5(message).toString();
-console.log("SHA-256 Hash:", sha256Hash);
-console.log("MD5 Hash:", md5Hash);
-
-// AES Encryption & Decryption
-const secretKey = "super-secret-passphrase";
-const encrypted = CryptoJS.AES.encrypt(message, secretKey).toString();
-console.info("AES Encrypted Ciphertext:", encrypted);
-
-const decryptedBytes = CryptoJS.AES.decrypt(encrypted, secretKey);
-const decryptedText = decryptedBytes.toString(CryptoJS.enc.Utf8);
-console.info("Decrypted Plaintext:", decryptedText);
-
-({ original: message, sha256: sha256Hash, decryptedMatch: message === decryptedText });`
-  },
-  {
-    name: 'nanoid',
-    category: 'Utilities',
-    tagline: 'Tiny, secure, URL-friendly unique string ID generator for JavaScript',
-    defaultSnippet: `import { nanoid, customAlphabet } from 'nanoid';
-
-console.log("Standard NanoID (21 chars):", nanoid());
-console.log("Short NanoID (10 chars):", nanoid(10));
-
-// Custom alphabet ID (e.g. alphanumeric only, or PIN numbers)
-const numericPin = customAlphabet('0123456789', 6);
-console.log("6-Digit OTP / PIN:", numericPin());
-
-const slugId = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 8);
-console.log("URL-safe slug ID:", slugId());
-
-const ids = Array.from({ length: 5 }, () => ({ id: nanoid(), short: nanoid(8) }));
-console.table(ids);`
+const id = uuidv4();
+console.log("Generated UUID v4:", id);
+console.log("Is valid UUID:", validate(id));`
   }
 ];
 
-const CATEGORIES = ['All', 'Utilities', 'Date & Time', 'Validation', 'Math & Science', 'Colors', 'Data & CSV', 'Crypto', 'Visual & UI'];
+function formatJsTsCode(input: string): string {
+  const lines = input.split('\n');
+  let indentLevel = 0;
+  const formattedLines: string[] = [];
+  let prevEmpty = false;
+
+  for (let rawLine of lines) {
+    const line = rawLine.trim();
+
+    if (!line) {
+      if (!prevEmpty) {
+        formattedLines.push('');
+        prevEmpty = true;
+      }
+      continue;
+    }
+    prevEmpty = false;
+
+    if (/^[}\]\)]/.test(line)) {
+      indentLevel = Math.max(0, indentLevel - 1);
+    }
+
+    const indented = '  '.repeat(indentLevel) + line;
+    formattedLines.push(indented);
+
+    const openBrackets = (line.match(/[{[(]/g) || []).length;
+    const closeBrackets = (line.match(/[}\]]/g) || []).length;
+    const diff = openBrackets - closeBrackets;
+    if (diff > 0) {
+      indentLevel += diff;
+    }
+  }
+
+  return formattedLines.join('\n');
+}
+
+/** Theme-Aware JS/TS Tokenizer */
+function highlightSyntaxLine(line: string, tokens: TokenStyles): React.ReactNode[] {
+  if (!line) return ['\n'];
+
+  const regex = /(\/\/[^\n]*|\/\*[\s\S]*?\*\/|'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"|`(?:\\.|[^`\\])*`|\b(?:import|from|as|export|default|const|let|var|function|return|if|else|try|catch|async|await|new|typeof|type|interface|class|of|in|extends|implements)\b|\b(?:true|false|null|undefined|NaN|Infinity)\b|\b\d+(?:\.\d+)?\b|\b[A-Z][a-zA-Z0-9_$]*\b|\b[a-zA-Z_$][a-zA-Z0-9_$]*(?=\s*\())/g;
+
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(line)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(line.substring(lastIndex, match.index));
+    }
+    const token = match[0];
+    if (token.startsWith('//') || token.startsWith('/*')) {
+      parts.push(<span key={match.index} style={{ color: tokens.comment, fontStyle: 'italic' }}>{token}</span>);
+    } else if (token.startsWith("'") || token.startsWith('"') || token.startsWith('`')) {
+      parts.push(<span key={match.index} style={{ color: tokens.string }}>{token}</span>);
+    } else if (/^(import|from|as|export|default|const|let|var|function|return|if|else|try|catch|async|await|new|typeof|type|interface|class|of|in|extends|implements)$/.test(token)) {
+      parts.push(<span key={match.index} style={{ color: tokens.keyword, fontWeight: 600 }}>{token}</span>);
+    } else if (/^(true|false|null|undefined|NaN|Infinity)$/.test(token)) {
+      parts.push(<span key={match.index} style={{ color: tokens.number, fontWeight: 500 }}>{token}</span>);
+    } else if (/^\d+(?:\.\d+)?$/.test(token)) {
+      parts.push(<span key={match.index} style={{ color: tokens.number }}>{token}</span>);
+    } else if (/^[A-Z][a-zA-Z0-9_$]*$/.test(token)) {
+      parts.push(<span key={match.index} style={{ color: tokens.type }}>{token}</span>);
+    } else {
+      parts.push(<span key={match.index} style={{ color: tokens.function }}>{token}</span>);
+    }
+    lastIndex = regex.lastIndex;
+  }
+
+  if (lastIndex < line.length) {
+    parts.push(line.substring(lastIndex));
+  }
+
+  return parts;
+}
 
 export const NpmTesterModal: React.FC<NpmTesterModalProps> = ({
   isOpen,
@@ -290,93 +346,110 @@ export const NpmTesterModal: React.FC<NpmTesterModalProps> = ({
   onInsertImport,
   onOpenAsNewTab
 }) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [activePackageName, setActivePackageName] = useState('lodash');
-  const [code, setCode] = useState(CURATED_PACKAGES[0].defaultSnippet);
-  const [meta, setMeta] = useState<NpmPackageMeta | null>(null);
-  const [isLoadingMeta, setIsLoadingMeta] = useState(false);
-  const [isRunning, setIsRunning] = useState(false);
+  const [activePackageName, setActivePackageName] = useState<string>('lodash');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [suggestions, setSuggestions] = useState<NpmSearchResult[]>([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState<boolean>(false);
+  const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
+
+  const [code, setCode] = useState<string>(POPULAR_PACKAGES[0].defaultSnippet);
+  const [selectedThemeId, setSelectedThemeId] = useState<string>('github-dark');
   const [logs, setLogs] = useState<ConsoleLogItem[]>([]);
-  const [execStatus, setExecStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [isRunning, setIsRunning] = useState<boolean>(false);
   const [execTime, setExecTime] = useState<number | null>(null);
-  const [copied, setCopied] = useState(false);
-  const [exportedMembers, setExportedMembers] = useState<string[]>([]);
-  const [isInspecting, setIsInspecting] = useState(false);
+  const [copied, setCopied] = useState<boolean>(false);
+  const [formattedMessage, setFormattedMessage] = useState<boolean>(false);
 
-  // Load package metadata and default snippet when active package changes
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const gutterRef = useRef<HTMLDivElement>(null);
+  const backdropRef = useRef<HTMLDivElement>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  // Live NPM Registry Suggestions API Search
   useEffect(() => {
-    if (!isOpen) return;
+    const query = searchQuery.trim();
+    if (!query || query.length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
 
-    let isMounted = true;
-    setIsLoadingMeta(true);
-    setExportedMembers([]);
-
-    fetchNpmPackageMetadata(activePackageName).then(data => {
-      if (isMounted) {
-        setMeta(data);
-        setIsLoadingMeta(false);
+    const timer = setTimeout(async () => {
+      setIsLoadingSuggestions(true);
+      try {
+        const res = await fetch(`https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(query)}&size=7`);
+        if (res.ok) {
+          const data = await res.json();
+          const results: NpmSearchResult[] = (data.objects || []).map((obj: any) => ({
+            name: obj.package.name,
+            version: obj.package.version,
+            description: obj.package.description || '',
+            publisher: obj.package.publisher?.username || ''
+          }));
+          setSuggestions(results);
+          setShowSuggestions(results.length > 0);
+        }
+      } catch (err) {
+        console.warn('NPM search request error:', err);
+      } finally {
+        setIsLoadingSuggestions(false);
       }
-    });
+    }, 200);
 
-    // Escape key closes the modal
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Close suggestions on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
-    return () => {
-      isMounted = false;
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [activePackageName, isOpen, onClose]);
+  if (!isOpen) return null;
 
-  // Handle selecting a curated package
-  const handleSelectCurated = (pkg: CuratedPackage) => {
+  const currentTheme = EDITOR_THEMES.find(t => t.id === selectedThemeId) || EDITOR_THEMES[0];
+  const lines = code.split('\n');
+
+  const handleSelectPackage = (pkg: CuratedPackage) => {
     setActivePackageName(pkg.name);
     setCode(pkg.defaultSnippet);
     setLogs([]);
-    setExecStatus('idle');
     setExecTime(null);
+    setShowSuggestions(false);
   };
 
-  // Handle searching / loading custom package name
-  const handleLoadCustomPackage = (customName: string) => {
-    const clean = customName.trim();
+  const handleLoadCustomPackage = (name: string) => {
+    const clean = name.trim();
     if (!clean) return;
-
     setActivePackageName(clean);
-    // Find if we have a curated snippet
-    const existing = CURATED_PACKAGES.find(p => p.name.toLowerCase() === clean.toLowerCase());
+
+    const existing = POPULAR_PACKAGES.find(p => p.name.toLowerCase() === clean.toLowerCase());
     if (existing) {
       setCode(existing.defaultSnippet);
     } else {
-      // Generate default test template
       const varName = clean.replace(/[^a-zA-Z0-9]/g, '_').replace(/^[0-9]/, '_');
       setCode(`import * as ${varName} from '${clean}';
 
 console.log("📦 Loaded npm package: ${clean}");
 console.dir(${varName});
 
-// Inspect all exported keys
-const exportsList = Object.keys(${varName});
-console.info("Exported members count:", exportsList.length);
-console.log("Members:", exportsList.slice(0, 30));
-
-${varName};`);
+const members = Object.keys(${varName});
+console.log("Exported members count:", members.length);
+console.log("Members:", members.slice(0, 20));`);
     }
     setLogs([]);
-    setExecStatus('idle');
     setExecTime(null);
+    setShowSuggestions(false);
   };
 
-  // Execute test code in the in-browser sandbox
   const handleRunTest = async () => {
     setIsRunning(true);
     setLogs([]);
-    setExecStatus('idle');
     setExecTime(null);
 
     const startTime = performance.now();
@@ -384,17 +457,9 @@ ${varName};`);
 
     const addLog = (type: ConsoleLogItem['type'], content: any, tableData?: any) => {
       const now = new Date();
-      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}.${now.getMilliseconds().toString().padStart(3, '0')}`;
-      let str = '';
-      if (typeof content === 'object') {
-        try {
-          str = JSON.stringify(content, null, 2);
-        } catch (_) {
-          str = String(content);
-        }
-      } else {
-        str = String(content);
-      }
+      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+      let str = typeof content === 'object' ? JSON.stringify(content, null, 2) : String(content);
+
       collectedLogs.push({
         id: Math.random().toString(36).substring(2, 9),
         type,
@@ -410,12 +475,10 @@ ${varName};`);
       if (result !== undefined) {
         addLog('return', result);
       }
-      setExecStatus('success');
     } catch (err: any) {
       if (collectedLogs.length === 0 || collectedLogs[collectedLogs.length - 1]?.type !== 'error') {
         addLog('error', err.message || String(err));
       }
-      setExecStatus('error');
     } finally {
       const endTime = performance.now();
       setExecTime(endTime - startTime);
@@ -423,272 +486,299 @@ ${varName};`);
     }
   };
 
-  // Inspect Exports directly from CDN
-  const handleInspectExports = async () => {
-    setIsInspecting(true);
-    try {
-      const mod = await loadNpmPackage(activePackageName);
-      if (mod) {
-        const keys = Object.keys(mod);
-        setExportedMembers(keys);
-      }
-    } catch (err) {
-      console.warn('Inspect exports error:', err);
-    } finally {
-      setIsInspecting(false);
-    }
+  const handleFormatCode = () => {
+    const formatted = formatJsTsCode(code);
+    setCode(formatted);
+    setFormattedMessage(true);
+    setTimeout(() => setFormattedMessage(false), 2000);
   };
 
-  // Copy code to clipboard
   const handleCopyCode = () => {
     navigator.clipboard.writeText(code);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Filter curated packages
-  const filteredCurated = CURATED_PACKAGES.filter(p => {
-    const matchesCat = selectedCategory === 'All' || p.category === selectedCategory;
-    const matchesSearch =
-      !searchQuery ||
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.tagline.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCat && matchesSearch;
-  });
-
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-6 animate-in fade-in duration-200">
-      <div className="bg-slate-900 border border-slate-700/90 rounded-3xl max-w-5xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden text-slate-100 font-sans">
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-in fade-in duration-150">
+      <div className="bg-white dark:bg-[#0c121e] border border-slate-200 dark:border-slate-800 rounded-2xl max-w-5xl w-full max-h-[90vh] flex flex-col shadow-xl overflow-hidden text-slate-800 dark:text-slate-100 font-sans">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-slate-950 border-b border-slate-800 shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-gradient-to-br from-amber-500 to-rose-600 text-white rounded-2xl shadow-md">
-              <Package className="w-5 h-5" />
+            <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
+              <Package className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-bold text-slate-100 text-base">NPM Package Live Tester & CDN Playground</h3>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold">
-                  Zero Install • Browser CDN
+                <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                  NPM CDN Playground
+                </h3>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold border border-emerald-500/20">
+                  Zero Install
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
-                Load, import, and test any NPM library directly in-memory via dynamic CDN streaming
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Live package search & instant in-memory TypeScript execution.
               </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Search & Curated Categories Carousel */}
-        <div className="p-4 bg-slate-950/80 border-b border-slate-800 space-y-3 shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+        {/* Live Search & Package Auto-Suggest Bar */}
+        <div className="p-3.5 bg-slate-100/60 dark:bg-slate-950/40 border-b border-slate-200 dark:border-slate-800 space-y-2 shrink-0">
+          <div className="relative" ref={searchContainerRef}>
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
+                onFocus={() => {
+                  if (suggestions.length > 0) setShowSuggestions(true);
+                }}
                 onKeyDown={e => {
                   if (e.key === 'Enter' && searchQuery.trim()) {
                     handleLoadCustomPackage(searchQuery.trim());
                   }
                 }}
-                placeholder="Search or enter ANY npm package name (e.g. lodash, dayjs, zod, mathjs, axios, @faker-js/faker)..."
-                className="w-full pl-9 pr-24 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 font-mono"
+                placeholder="Search live NPM registry (e.g. axios, lodash, zod, three, chart.js, dayjs)..."
+                className="w-full pl-9 pr-24 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-mono"
               />
-              {searchQuery.trim() && (
+              {isLoadingSuggestions ? (
+                <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                  <Loader2 className="w-3.5 h-3.5 text-blue-500 animate-spin" />
+                </div>
+              ) : searchQuery.trim() ? (
                 <button
                   onClick={() => handleLoadCustomPackage(searchQuery.trim())}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold cursor-pointer transition-colors shadow-2xs"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-semibold cursor-pointer transition-colors"
                 >
-                  Load Package
+                  Load
                 </button>
-              )}
+              ) : null}
             </div>
+
+            {/* Floating Live NPM Suggestions Dropdown */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-[#0c121e] border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl z-[99999] overflow-hidden max-h-64 overflow-y-auto animate-in fade-in duration-100 divide-y divide-slate-100 dark:divide-slate-800/60">
+                <div className="px-3 py-1.5 bg-slate-50 dark:bg-slate-900 text-[10px] font-mono uppercase font-bold text-slate-400 flex items-center justify-between">
+                  <span>Live NPM Search Results</span>
+                  <span>registry.npmjs.org</span>
+                </div>
+                {suggestions.map(item => (
+                  <button
+                    key={item.name}
+                    onClick={() => {
+                      setSearchQuery(item.name);
+                      handleLoadCustomPackage(item.name);
+                    }}
+                    className="w-full text-left p-2.5 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors cursor-pointer flex items-center justify-between group"
+                  >
+                    <div className="min-w-0 pr-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-xs text-blue-600 dark:text-blue-400 group-hover:underline">
+                          {item.name}
+                        </span>
+                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                          v{item.version}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                        {item.description || 'NPM package'}
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                      Load →
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Category Chips */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
-            {CATEGORIES.map(cat => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1 rounded-lg font-medium whitespace-nowrap transition-colors cursor-pointer text-xs ${
-                  selectedCategory === cat
-                    ? 'bg-blue-600 text-white font-bold shadow-sm'
-                    : 'bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-
-          {/* Curated Package Badges */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-            {filteredCurated.map(pkg => {
+          {/* Quick Popular Package Chips */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+            <span className="text-[10px] font-mono text-slate-400 uppercase font-semibold shrink-0">
+              Popular:
+            </span>
+            {POPULAR_PACKAGES.map(pkg => {
               const isSelected = activePackageName.toLowerCase() === pkg.name.toLowerCase();
               return (
                 <button
                   key={pkg.name}
-                  onClick={() => handleSelectCurated(pkg)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-mono font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                  onClick={() => handleSelectPackage(pkg)}
+                  className={`px-2.5 py-1 rounded-md text-xs font-mono transition-all cursor-pointer whitespace-nowrap ${
                     isSelected
-                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/60 shadow-xs'
-                      : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-800'
+                      ? 'bg-amber-500 text-slate-950 font-semibold shadow-xs'
+                      : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-slate-300'
                   }`}
                 >
-                  <Package className={`w-3.5 h-3.5 ${isSelected ? 'text-amber-400' : 'text-slate-500'}`} />
-                  <span>{pkg.name}</span>
+                  {pkg.name}
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* Main Content: Split Grid between Inspector/Editor and Output */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-5">
-          {/* Left Column: Package Meta & Code Editor (7 cols) */}
-          <div className="lg:col-span-7 flex flex-col space-y-4">
-            {/* Package Metadata Card */}
-            <div className="p-4 bg-slate-950/90 border border-slate-800 rounded-2xl space-y-2">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono font-bold text-amber-400 text-sm">{meta?.name || activePackageName}</span>
-                  <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
-                    v{meta?.version || 'latest'}
-                  </span>
-                  {meta?.license && (
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-950/60 text-emerald-300 border border-emerald-800/60">
-                      {meta.license}
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2 text-xs">
-                  <a
-                    href={`https://www.npmjs.com/package/${activePackageName}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-slate-400 hover:text-amber-400 transition-colors"
-                  >
-                    <span>npm</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                  <button
-                    onClick={handleInspectExports}
-                    disabled={isInspecting}
-                    className="text-[11px] text-blue-400 hover:text-blue-300 underline cursor-pointer disabled:opacity-50"
-                  >
-                    {isInspecting ? 'Inspecting...' : 'Inspect Exports'}
-                  </button>
-                </div>
+        {/* Main Grid Area */}
+        <div className="flex-1 overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-12 gap-4 min-h-0">
+          {/* Left Column: Theme-Aware Editor & Actions (7 cols) */}
+          <div className="md:col-span-7 flex flex-col space-y-2">
+            <div className="flex items-center justify-between text-xs px-1">
+              <div className="flex items-center gap-2">
+                <span className="font-mono font-bold text-amber-600 dark:text-amber-400">{activePackageName}</span>
+                <a
+                  href={`https://www.npmjs.com/package/${activePackageName}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[10px] text-slate-400 hover:text-blue-500 flex items-center gap-0.5"
+                >
+                  <span>npm</span>
+                  <ExternalLink className="w-2.5 h-2.5" />
+                </a>
               </div>
 
-              <p className="text-xs text-slate-300 leading-relaxed">
-                {isLoadingMeta ? 'Fetching metadata from NPM registry...' : meta?.description || 'NPM package available for in-browser execution.'}
-              </p>
-
-              {/* Exported Members Chips */}
-              {exportedMembers.length > 0 && (
-                <div className="pt-2 border-t border-slate-800/80 space-y-1">
-                  <div className="text-[11px] font-mono text-slate-400">
-                    Detected Exports ({exportedMembers.length}):
-                  </div>
-                  <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto">
-                    {exportedMembers.slice(0, 40).map(m => (
-                      <span
-                        key={m}
-                        className="text-[10px] font-mono bg-slate-900 text-cyan-300 px-1.5 py-0.5 rounded border border-slate-800"
-                      >
-                        {m}
-                      </span>
-                    ))}
-                    {exportedMembers.length > 40 && (
-                      <span className="text-[10px] text-slate-500 font-mono">+{exportedMembers.length - 40} more</span>
-                    )}
-                  </div>
+              {/* Theme & Format Toolbar */}
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700/80 text-[10px] font-mono">
+                  <Palette className="w-3 h-3 text-slate-400 ml-1" />
+                  {EDITOR_THEMES.map(theme => (
+                    <button
+                      key={theme.id}
+                      onClick={() => setSelectedThemeId(theme.id)}
+                      className={`px-1.5 py-0.5 rounded transition-all cursor-pointer ${
+                        selectedThemeId === theme.id
+                          ? 'bg-blue-600 text-white font-semibold shadow-xs'
+                          : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                      }`}
+                    >
+                      {theme.name}
+                    </button>
+                  ))}
                 </div>
-              )}
+
+                <button
+                  onClick={handleFormatCode}
+                  className="flex items-center gap-1 px-2 py-1 bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-500/20 rounded-lg text-xs font-medium cursor-pointer transition-colors"
+                  title="Format Code"
+                >
+                  <Wand2 className="w-3 h-3 text-purple-500" />
+                  <span>{formattedMessage ? 'Formatted!' : 'Format'}</span>
+                </button>
+
+                <button
+                  onClick={handleCopyCode}
+                  className="text-[11px] text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center gap-1 cursor-pointer"
+                >
+                  {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                  <span>{copied ? 'Copied' : 'Copy'}</span>
+                </button>
+              </div>
             </div>
 
-            {/* Test Code Editor */}
-            <div className="flex-1 flex flex-col bg-[#1e2227] border border-slate-700/80 rounded-2xl overflow-hidden shadow-inner min-h-[300px]">
-              {/* Editor Bar */}
-              <div className="flex items-center justify-between px-4 py-2 bg-[#21252b] border-b border-slate-700/80 text-xs">
-                <div className="flex items-center gap-2">
-                  <FileCode className="w-4 h-4 text-cyan-400" />
-                  <span className="font-mono text-slate-300 font-semibold">{activePackageName}.test.ts</span>
+            {/* Synchronized Theme-Aware Pixel-Perfect Code Editor */}
+            <div className={`flex-1 flex flex-col border rounded-xl overflow-hidden min-h-[260px] ${currentTheme.bg} ${currentTheme.border}`}>
+              <div className="flex-1 flex min-h-0 relative">
+                {/* Synchronized Line Numbers Gutter */}
+                <div
+                  ref={gutterRef}
+                  className={`select-none py-3.5 px-2.5 text-right font-mono text-xs ${currentTheme.gutterText} border-r border-slate-800/20 shrink-0 overflow-hidden`}
+                  style={{ height: '100%' }}
+                >
+                  {lines.map((_, idx) => (
+                    <div key={idx} className="leading-relaxed">
+                      {idx + 1}
+                    </div>
+                  ))}
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleCopyCode}
-                    className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+                {/* Editor Container with Pixel-Perfect Syntax Highlight Backdrop */}
+                <div className="relative flex-1 min-h-0 overflow-hidden font-mono text-xs leading-relaxed">
+                  {/* Theme Syntax Highlight Backdrop */}
+                  <div
+                    ref={backdropRef}
+                    className="absolute inset-0 p-3.5 font-mono text-xs leading-relaxed pointer-events-none overflow-hidden whitespace-pre"
+                    style={{ color: currentTheme.textHex }}
+                    aria-hidden="true"
                   >
-                    <Copy className="w-3 h-3" />
-                    <span>{copied ? 'Copied' : 'Copy'}</span>
-                  </button>
+                    {lines.map((lineText, idx) => (
+                      <div key={idx} className="leading-relaxed">
+                        {highlightSyntaxLine(lineText, currentTheme.tokens)}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Interactive Textarea Foreground */}
+                  <textarea
+                    ref={textareaRef}
+                    value={code}
+                    onChange={e => setCode(e.target.value)}
+                    onScroll={e => {
+                      const top = e.currentTarget.scrollTop;
+                      const left = e.currentTarget.scrollLeft;
+                      if (gutterRef.current) gutterRef.current.scrollTop = top;
+                      if (backdropRef.current) {
+                        backdropRef.current.scrollTop = top;
+                        backdropRef.current.scrollLeft = left;
+                      }
+                    }}
+                    onKeyDown={e => {
+                      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                        e.preventDefault();
+                        if (!isRunning) handleRunTest();
+                      } else if (e.key === 'Tab') {
+                        e.preventDefault();
+                        const target = e.currentTarget;
+                        const start = target.selectionStart;
+                        const end = target.selectionEnd;
+                        const newCode = code.substring(0, start) + '  ' + code.substring(end);
+                        setCode(newCode);
+                        setTimeout(() => {
+                          target.selectionStart = target.selectionEnd = start + 2;
+                        }, 0);
+                      }
+                    }}
+                    spellCheck={false}
+                    className="absolute inset-0 w-full h-full p-3.5 bg-transparent font-mono text-xs leading-relaxed focus:outline-none resize-none overflow-auto whitespace-pre no-scrollbar"
+                    style={{
+                      color: 'transparent',
+                      caretColor: currentTheme.caretColor,
+                      WebkitTextFillColor: 'transparent'
+                    }}
+                    placeholder="// Write code importing packages..."
+                  />
                 </div>
               </div>
 
-              {/* Textarea */}
-              <textarea
-                value={code}
-                onChange={e => setCode(e.target.value)}
-                onKeyDown={e => {
-                  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                    e.preventDefault();
-                    if (!isRunning) handleRunTest();
-                  } else if (e.key === 'Tab') {
-                    e.preventDefault();
-                    const target = e.currentTarget;
-                    const start = target.selectionStart;
-                    const end = target.selectionEnd;
-                    const newCode = code.substring(0, start) + '  ' + code.substring(end);
-                    setCode(newCode);
-                    setTimeout(() => {
-                      target.selectionStart = target.selectionEnd = start + 2;
-                    }, 0);
-                  }
-                }}
-                spellCheck={false}
-                className="flex-1 w-full p-4 bg-transparent text-slate-100 font-mono text-xs leading-relaxed focus:outline-none resize-none no-scrollbar"
-                placeholder="// Write code using import ... from 'package'"
-              />
-
-              {/* Editor Action Buttons Footer */}
-              <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-[#21252b]/90 border-t border-slate-700/80">
+              {/* Editor Footer Actions */}
+              <div className={`flex items-center justify-between p-2.5 ${currentTheme.headerBg} border-t ${currentTheme.border}`}>
                 <button
                   onClick={handleRunTest}
                   disabled={isRunning}
-                  className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md transition-all cursor-pointer disabled:opacity-50"
+                  className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold shadow-xs cursor-pointer transition-all disabled:opacity-50"
                 >
-                  <Play className={`w-4 h-4 fill-current ${isRunning ? 'animate-spin' : ''}`} />
-                  <span>{isRunning ? 'Downloading & Running...' : 'Run Test (Ctrl+Enter)'}</span>
+                  <Play className={`w-3.5 h-3.5 fill-current ${isRunning ? 'animate-spin' : ''}`} />
+                  <span>{isRunning ? 'Running...' : 'Run Code (Ctrl+Enter)'}</span>
                 </button>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   {onInsertImport && (
                     <button
                       onClick={() => {
                         const statement = `import ${activePackageName.replace(/[^a-zA-Z0-9]/g, '_')} from '${activePackageName}';\n`;
                         onInsertImport(statement);
                       }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold cursor-pointer transition-colors"
-                      title="Insert import statement into active editor"
+                      className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium cursor-pointer transition-colors"
                     >
-                      <Plus className="w-3.5 h-3.5 text-blue-400" />
-                      <span>Insert Import</span>
+                      <Plus className="w-3 h-3 text-blue-400" />
+                      <span>Import</span>
                     </button>
                   )}
 
@@ -698,11 +788,10 @@ ${varName};`);
                         onOpenAsNewTab(code, `${activePackageName}.test.ts`, 'typescript');
                         onClose();
                       }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/90 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold cursor-pointer transition-colors shadow-2xs"
-                      title="Open this test script in a new OmniView tab"
+                      className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-600/90 hover:bg-blue-500 text-white rounded-lg text-xs font-medium cursor-pointer transition-colors"
                     >
-                      <Layers className="w-3.5 h-3.5 text-blue-200" />
-                      <span>Open in New Tab</span>
+                      <Layers className="w-3 h-3" />
+                      <span>New Tab</span>
                     </button>
                   )}
                 </div>
@@ -710,101 +799,60 @@ ${varName};`);
             </div>
           </div>
 
-          {/* Right Column: Execution Console Output (5 cols) */}
-          <div className="lg:col-span-5 flex flex-col bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-md min-h-[300px]">
-            {/* Console Header */}
-            <div className="flex items-center justify-between px-4 py-2.5 bg-slate-900 border-b border-slate-800 text-xs">
-              <div className="flex items-center gap-2">
-                <Terminal className="w-4 h-4 text-emerald-400" />
-                <span className="font-mono font-bold text-slate-200">Execution Output</span>
-                {execStatus === 'success' && (
-                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                )}
-                {execStatus === 'error' && (
-                  <span className="w-2 h-2 rounded-full bg-rose-500" />
-                )}
+          {/* Right Column: Console Log Output (5 cols) */}
+          <div className="md:col-span-5 flex flex-col bg-[#070b12] border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden min-h-[260px]">
+            <div className="flex items-center justify-between px-3 py-2 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-xs font-mono">
+              <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                <Terminal className="w-3.5 h-3.5 text-emerald-500" />
+                <span className="font-semibold">Console Output</span>
               </div>
-
               {execTime !== null && (
-                <div className="flex items-center gap-1 text-[11px] text-slate-400 font-mono">
+                <div className="flex items-center gap-1 text-[10px] text-slate-400">
                   <Clock className="w-3 h-3" />
                   <span>{execTime.toFixed(1)}ms</span>
                 </div>
               )}
             </div>
 
-            {/* Console Logs Body */}
-            <div className="flex-1 p-4 overflow-y-auto space-y-2.5 font-mono text-xs">
+            <div className="flex-1 p-3 overflow-y-auto space-y-2 font-mono text-xs text-slate-200">
               {logs.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-500 space-y-2">
-                  <Zap className="w-8 h-8 text-slate-600" />
-                  <p className="text-xs">Click "Run Test" to load the package from CDN and execute the code in-browser.</p>
+                <div className="h-full flex flex-col items-center justify-center text-center p-4 text-slate-500 space-y-1">
+                  <Play className="w-6 h-6 text-slate-600 opacity-50" />
+                  <p className="text-xs">Click "Run Code" to execute in sandbox.</p>
                 </div>
               ) : (
-                logs.map(log => {
-                  let badgeBg = 'bg-slate-800 text-slate-300 border-slate-700';
-                  if (log.type === 'error') badgeBg = 'bg-red-950/80 text-red-300 border-red-800';
-                  if (log.type === 'warn') badgeBg = 'bg-amber-950/80 text-amber-300 border-amber-800';
-                  if (log.type === 'info') badgeBg = 'bg-blue-950/80 text-blue-300 border-blue-800';
-                  if (log.type === 'return') badgeBg = 'bg-emerald-950/80 text-emerald-300 border-emerald-800';
-                  if (log.type === 'table') badgeBg = 'bg-cyan-950/80 text-cyan-300 border-cyan-800';
-
-                  return (
-                    <div key={log.id} className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className={`text-[9px] uppercase px-1.5 py-0.5 rounded border font-bold ${badgeBg}`}>
-                          {log.type}
-                        </span>
-                        <span className="text-[10px] text-slate-600">{log.time}</span>
-                      </div>
-
-                      {log.tableData ? (
-                        <div className="overflow-x-auto my-1 border border-slate-800 rounded-lg">
-                          <table className="w-full text-[11px] text-left border-collapse">
-                            <thead>
-                              <tr className="bg-slate-900 border-b border-slate-800">
-                                {log.tableData.columns.map((c, i) => (
-                                  <th key={i} className="p-1.5 font-semibold text-cyan-300 border-r border-slate-800 last:border-r-0">
-                                    {c}
-                                  </th>
-                                ))}
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {log.tableData.rows.map((r, ri) => (
-                                <tr key={ri} className="border-b border-slate-900/60 hover:bg-slate-900/40">
-                                  {r.map((cell, ci) => (
-                                    <td key={ci} className="p-1.5 text-slate-300 border-r border-slate-800/60 last:border-r-0">
-                                      {cell}
-                                    </td>
-                                  ))}
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      ) : (
-                        <pre className="text-slate-200 whitespace-pre-wrap break-all leading-relaxed pl-1">
-                          {log.content}
-                        </pre>
-                      )}
+                logs.map(log => (
+                  <div key={log.id} className="space-y-0.5">
+                    <div className="flex items-center gap-1.5 text-[9px]">
+                      <span className={`px-1 rounded uppercase font-bold ${
+                        log.type === 'error' ? 'bg-rose-950 text-rose-300' :
+                        log.type === 'return' ? 'bg-emerald-950 text-emerald-300' :
+                        'bg-slate-800 text-slate-300'
+                      }`}>
+                        {log.type}
+                      </span>
+                      <span className="text-slate-600">{log.time}</span>
                     </div>
-                  );
-                })
+                    <pre className="text-slate-300 whitespace-pre-wrap break-all leading-relaxed">
+                      {log.content}
+                    </pre>
+                  </div>
+                ))
               )}
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex flex-wrap items-center justify-between px-6 py-3 bg-slate-950 border-t border-slate-800 text-xs text-slate-400">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span>Modules execute inside isolated in-browser V8 sandbox. Zero server dependencies.</span>
+        <div className="flex items-center justify-between px-5 py-2.5 bg-slate-50 dark:bg-slate-900/60 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
+          <div className="flex items-center gap-1.5 text-[11px]">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+            <span>Packages run locally via esm.sh CDN. Zero server code execution.</span>
           </div>
+
           <button
             onClick={onClose}
-            className="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl font-medium transition-colors cursor-pointer"
+            className="px-3.5 py-1 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-medium transition-colors cursor-pointer"
           >
             Close
           </button>

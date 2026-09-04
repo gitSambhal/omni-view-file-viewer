@@ -9,18 +9,13 @@ import {
   X,
   Play,
   Terminal,
-  Cpu,
   Database,
-  Code,
+  Code2,
   Globe,
-  FileCode,
   ShieldCheck,
-  Zap,
-  CheckCircle2,
-  Sparkles,
-  ArrowRight,
+  Check,
   Copy,
-  Layers
+  Sparkles
 } from 'lucide-react';
 import { RUNNERS_REGISTRY, SupportedRunner } from '../services/codeRunners';
 
@@ -49,7 +44,6 @@ console.table(users);
 const avgScore = users.reduce((acc, u) => acc + u.score, 0) / users.length;
 console.info("Average Score:", avgScore.toFixed(2));
 
-// Return value test
 ({ totalUsers: users.length, averageScore: avgScore });`
   },
   typescript: {
@@ -74,10 +68,10 @@ const slowest = metrics.reduce((prev, curr) => (curr.durationMs > prev.durationM
 console.warn("Bottleneck identified:", slowest.name, \`(\${slowest.durationMs}ms)\`);`
   },
   python: {
-    title: 'Python 3.12 (Math & Algorithms)',
+    title: 'Python 3.12 (Pyodide Wasm)',
     filename: 'statistics_demo.py',
     language: 'python',
-    code: `# Python In-Browser Execution (Pyodide & Local Engine)
+    code: `# Python In-Browser Execution via Pyodide 3.12 Wasm
 import math
 
 def calculate_stats(numbers):
@@ -85,23 +79,20 @@ def calculate_stats(numbers):
     count = len(numbers)
     mean = total / count
     variance = sum((x - mean) ** 2 for x in numbers) / count
-    std_dev = math.sqrt(variance)
-    return {"count": count, "mean": round(mean, 2), "std_dev": round(std_dev, 2)}
+    return {"count": count, "mean": round(mean, 2), "std_dev": round(math.sqrt(variance), 2)}
 
 scores = [88, 92, 79, 95, 84, 90, 76, 98]
 print(f"Analyzing {len(scores)} student exam scores...")
 stats = calculate_stats(scores)
 
 for key, val in stats.items():
-    print(f"  • {key.upper()}: {val}")
-
-print("Python execution successfully completed in-browser!")`
+    print(f"  • {key.upper()}: {val}")`
   },
   sql: {
-    title: 'SQL Relational Queries (AlaSQL)',
+    title: 'SQL Relational Database (AlaSQL)',
     filename: 'inventory.sql',
     language: 'sql',
-    code: `-- Relational In-Memory Database Execution
+    code: `-- Relational In-Memory Database Query
 CREATE TABLE Products (
   id INT,
   name STRING,
@@ -113,56 +104,30 @@ CREATE TABLE Products (
 INSERT INTO Products VALUES
   (1, 'Mechanical Keyboard', 'Hardware', 129.99, 45),
   (2, '4K UltraWide Monitor', 'Displays', 499.00, 18),
-  (3, 'Wireless Mouse', 'Hardware', 49.50, 120),
-  (4, 'Noise-Cancelling Headphones', 'Audio', 199.95, 34);
+  (3, 'Wireless Mouse', 'Hardware', 49.50, 120);
 
--- Query Category Performance
-SELECT 
-  category, 
-  COUNT(*) AS total_items, 
-  ROUND(AVG(price), 2) AS avg_price, 
-  SUM(stock) AS total_inventory 
-FROM Products 
-GROUP BY category 
-ORDER BY total_inventory DESC;`
+SELECT category, COUNT(*) AS items, ROUND(AVG(price), 2) AS avg_price FROM Products GROUP BY category;`
   },
   bash: {
-    title: 'Shell / Bash Command Pipelines',
-    filename: 'build_pipeline.sh',
+    title: 'Shell / Bash Pipeline',
+    filename: 'pipeline.sh',
     language: 'bash',
-    code: `# Unix Shell Pipeline Execution in In-Browser Sandbox
-echo "=== System Environment Diagnostics ==="
+    code: `# Unix Shell Pipeline Execution in Sandbox
+echo "=== Environment Diagnostics ==="
 export APP_NAME="OmniView File Studio"
-export BUILD_ID="v2.4.0-edge"
+echo "Application: $APP_NAME"
 
-echo "Application: $APP_NAME ($BUILD_ID)"
-date
-
-# Pipeline chaining test
-echo "lemon\napple\nbanana\ncherry\navocado" | sort | grep -v "banana" | head -n 3
-
-echo "Base64 Encoding pipeline:"
-echo "Hello from client-side Bash" | base64`
+echo "lemon\napple\nbanana\ncherry" | sort | head -n 3`
   },
   json: {
-    title: 'JSON Data Transformation',
+    title: 'JSON Data Workspace',
     filename: 'manifest.json',
     language: 'json',
     code: `{
   "workspace": "OmniView File Studio",
   "version": "2.4.0",
-  "features": [
-    "100% Offline Client-side Processing",
-    "Universal Code Runners (JS, TS, Python, SQL, Bash)",
-    "Direct URL Streaming with CORS Fallback",
-    "Live Disk Sync via File System Access API"
-  ],
-  "engines": {
-    "javascript": "V8 Sandbox",
-    "python": "Pyodide CPython 3.12 WebAssembly",
-    "sql": "AlaSQL Relational Engine",
-    "bash": "Unix Pipeline Simulator"
-  }
+  "features": ["100% Offline", "Code Runners", "Live Disk Sync"],
+  "engine": "In-Browser Execution"
 }`
   },
   regex: {
@@ -172,11 +137,10 @@ echo "Hello from client-side Bash" | base64`
     code: `// Regex Tester Pattern: /([A-Z]+)\s+\[(\d{4}-\d{2}-\d{2})\]\s+(.*)/gi
 INFO [2026-09-04] Application initialized in 12ms
 WARN [2026-09-04] High memory threshold detected: 82%
-ERROR [2026-09-04] Failed to connect to external port 3001
-SUCCESS [2026-09-04] Local database synchronizer completed`
+ERROR [2026-09-04] Connection port 3001 busy`
   },
   brainfuck: {
-    title: 'Brainfuck Turing Machine',
+    title: 'Brainfuck Turing Sandbox',
     filename: 'hello_world.bf',
     language: 'plaintext',
     code: `++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.`
@@ -189,47 +153,55 @@ export const CodeRunnersModal: React.FC<CodeRunnersModalProps> = ({
   onLoadSampleSnippet
 }) => {
   const [selectedRunner, setSelectedRunner] = useState<SupportedRunner>('python');
+  const [copied, setCopied] = useState<boolean>(false);
 
   if (!isOpen) return null;
 
   const currentSample = RUNNER_SAMPLES[selectedRunner];
+  const activeRunnerMeta = RUNNERS_REGISTRY.find(r => r.id === selectedRunner) || RUNNERS_REGISTRY[0];
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(currentSample.code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/65 backdrop-blur-sm animate-in fade-in duration-200 select-none">
-      <div className="relative w-full max-w-4xl bg-white dark:bg-[#0f172a] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] text-slate-800 dark:text-slate-100 select-text">
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-150">
+      <div className="relative w-full max-w-4xl bg-white dark:bg-[#0c121e] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden flex flex-col max-h-[90vh] text-slate-800 dark:text-slate-100">
         {/* Header */}
-        <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/40">
+        <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between bg-slate-50 dark:bg-slate-900/60">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-              <Zap className="w-5 h-5" />
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+              <Code2 className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
-                <span>In-Browser Code Runners & Execution Engines</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+              <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <span>Code Execution Engines</span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold border border-emerald-500/20">
                   100% Client-Side
                 </span>
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Execute code directly in browser memory without sending data to any external server.
+                Run scripts locally in browser memory without sending data to any server.
               </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Modal Content */}
-        <div className="flex-1 overflow-y-auto flex flex-col md:flex-row min-h-0 divide-y md:divide-y-0 md:divide-x divide-slate-100 dark:divide-slate-800">
-          {/* Left Column: Runner Directory List */}
-          <div className="w-full md:w-72 shrink-0 p-3 space-y-1.5 overflow-y-auto bg-slate-50/40 dark:bg-slate-950/40">
-            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-2 py-1">
-              Supported Code Runners ({RUNNERS_REGISTRY.length})
+        {/* Modal Body */}
+        <div className="flex-1 overflow-y-auto flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-slate-200 dark:divide-slate-800 min-h-0">
+          {/* Left Navigation Tabs */}
+          <div className="w-full md:w-60 shrink-0 p-3 space-y-1 bg-slate-50/50 dark:bg-slate-950/40 overflow-y-auto">
+            <div className="text-[10px] font-mono uppercase font-bold tracking-wider text-slate-400 px-2 py-1">
+              Select Engine ({RUNNERS_REGISTRY.length})
             </div>
             {RUNNERS_REGISTRY.map(runner => {
               const isSelected = selectedRunner === runner.id;
@@ -237,132 +209,120 @@ export const CodeRunnersModal: React.FC<CodeRunnersModalProps> = ({
                 <button
                   key={runner.id}
                   onClick={() => setSelectedRunner(runner.id)}
-                  className={`w-full text-left p-3 rounded-2xl border transition-all cursor-pointer flex flex-col gap-1 ${
+                  className={`w-full text-left px-3 py-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-between ${
                     isSelected
-                      ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                      : 'bg-white dark:bg-slate-900/70 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-800 dark:text-slate-200'
+                      ? 'bg-blue-600 text-white font-semibold shadow-xs'
+                      : 'hover:bg-slate-200/60 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300'
                   }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-xs">{runner.name}</span>
-                    <span
-                      className={`text-[9px] font-mono px-1.5 py-0.5 rounded-full border ${
-                        isSelected ? 'bg-white/20 text-white border-white/30' : runner.badgeColor
-                      }`}
-                    >
-                      {runner.fileExtensions[0].toUpperCase()}
-                    </span>
-                  </div>
-                  <span className={`text-[10px] ${isSelected ? 'text-blue-100' : 'text-slate-400'}`}>
-                    {runner.engine}
+                  <span className="text-xs">{runner.name}</span>
+                  <span
+                    className={`text-[9px] font-mono px-1.5 py-0.5 rounded border ${
+                      isSelected
+                        ? 'bg-white/20 text-white border-white/30'
+                        : 'bg-slate-200/60 dark:bg-slate-800 text-slate-500 border-slate-300 dark:border-slate-700'
+                    }`}
+                  >
+                    .{runner.fileExtensions[0]}
                   </span>
                 </button>
               );
             })}
           </div>
 
-          {/* Right Column: Selected Runner Details & Code Sample */}
-          {(() => {
-            const runner = RUNNERS_REGISTRY.find(r => r.id === selectedRunner) || RUNNERS_REGISTRY[0];
-            return (
-              <div className="flex-1 p-5 overflow-y-auto space-y-5 text-xs">
-                {/* Engine Banner */}
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
-                    <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                      <span>{runner.name}</span>
-                      <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${runner.badgeColor}`}>
-                        {runner.engine}
-                      </span>
-                    </h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                      {runner.description}
-                    </p>
-                  </div>
-
-                  {onLoadSampleSnippet && (
-                    <button
-                      onClick={() => {
-                        onLoadSampleSnippet(currentSample.code, currentSample.filename, currentSample.language);
-                        onClose();
-                      }}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold shadow-xs shrink-0 cursor-pointer transition-all self-start sm:self-auto"
-                    >
-                      <Play className="w-3.5 h-3.5 fill-current" />
-                      <span>Try in Editor</span>
-                    </button>
-                  )}
+          {/* Right Main Details & Code Area */}
+          <div className="flex-1 p-5 overflow-y-auto space-y-4 text-xs">
+            {/* Selected Runner Overview */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                    {activeRunnerMeta.name}
+                  </h4>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium">
+                    {activeRunnerMeta.engine}
+                  </span>
                 </div>
-
-                {/* Capabilities Grid */}
-                <div className="space-y-2">
-                  <div className="text-[11px] uppercase font-bold tracking-wider text-slate-400">
-                    Engine Capabilities
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {runner.capabilities.map((cap, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center gap-2 p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300"
-                      >
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                        <span className="text-xs font-medium">{cap}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Interactive Sample Snippet Preview */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="text-[11px] uppercase font-bold tracking-wider text-slate-400">
-                      Sample Code ({currentSample.filename})
-                    </div>
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(currentSample.code);
-                      }}
-                      className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer font-medium"
-                    >
-                      <Copy className="w-3 h-3" />
-                      <span>Copy Code</span>
-                    </button>
-                  </div>
-
-                  <div className="bg-[#1e2227] text-slate-200 p-3.5 rounded-2xl font-mono text-xs overflow-x-auto border border-slate-700 max-h-56">
-                    <pre className="m-0 whitespace-pre leading-relaxed">{currentSample.code}</pre>
-                  </div>
-                </div>
-
-                {/* HTML & Web Preview Note */}
-                <div className="p-3.5 rounded-2xl bg-blue-500/5 border border-blue-500/20 text-slate-600 dark:text-slate-300 flex items-start gap-2.5">
-                  <Globe className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
-                  <div className="space-y-0.5">
-                    <span className="font-bold text-xs text-slate-900 dark:text-white block">
-                      HTML, CSS & SVG Live Sandbox
-                    </span>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                      HTML files (.html, .htm, .svg) can also be toggled into full interactive <strong>Live Preview</strong> with isolated iframe sandbox, console output listeners, and device viewport simulations.
-                    </p>
-                  </div>
-                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  {activeRunnerMeta.description}
+                </p>
               </div>
-            );
-          })()}
+
+              {onLoadSampleSnippet && (
+                <button
+                  onClick={() => {
+                    onLoadSampleSnippet(currentSample.code, currentSample.filename, currentSample.language);
+                    onClose();
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold shadow-xs shrink-0 cursor-pointer transition-all self-start sm:self-auto"
+                >
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>Run in Workspace</span>
+                </button>
+              )}
+            </div>
+
+            {/* Key Capabilities */}
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-mono uppercase font-bold tracking-wider text-slate-400">
+                Capabilities
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {activeRunnerMeta.capabilities.map((cap, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-[#070b12] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs"
+                  >
+                    <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <span>{cap}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Sample Snippet Preview */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono uppercase font-bold tracking-wider text-slate-400">
+                  Sample Code ({currentSample.filename})
+                </span>
+                <button
+                  onClick={handleCopy}
+                  className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer font-medium"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="w-3 h-3 text-emerald-500" />
+                      <span className="text-emerald-500">Copied</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3 h-3" />
+                      <span>Copy</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <div className="bg-[#111827] text-slate-200 p-3.5 rounded-xl font-mono text-xs overflow-x-auto border border-slate-800 max-h-56">
+                <pre className="m-0 whitespace-pre leading-relaxed">{currentSample.code}</pre>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 flex items-center justify-between">
-          <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-            <span>Isolated Sandboxing: Scripts cannot access cookies, parent storage, or unauthorized local files.</span>
+        <div className="px-5 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+          <div className="flex items-center gap-1.5">
+            <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+            <span>Client-Side Sandbox: Zero server dependencies or data transmission.</span>
           </div>
 
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+            className="px-4 py-1.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-medium transition-colors cursor-pointer text-xs"
           >
-            Close Guide
+            Close
           </button>
         </div>
       </div>
