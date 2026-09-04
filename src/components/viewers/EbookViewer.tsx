@@ -326,22 +326,22 @@ export const EbookViewer: React.FC<EbookViewerProps> = ({ arrayBuffer, textConte
 
   if (loading) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-8 bg-slate-900 text-slate-100 min-h-0 min-w-0">
+      <div className="flex-1 flex flex-col items-center justify-center p-8 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-0 min-w-0 transition-colors">
         <div className="w-10 h-10 border-3 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
-        <h3 className="text-base font-semibold text-slate-200">Decompressing E-Book Container...</h3>
-        <p className="text-xs text-slate-400 mt-1">Parsing OPF spine, manifest, chapter XHTML, and TOC structure</p>
+        <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200">Decompressing E-Book Container...</h3>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Parsing OPF spine, manifest, chapter XHTML, and TOC structure</p>
       </div>
     );
   }
 
   if (error || !book) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-8 bg-slate-900 text-slate-100 text-center min-h-0 min-w-0">
-        <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center mb-4">
+      <div className="flex-1 flex flex-col items-center justify-center p-8 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-center min-h-0 min-w-0 transition-colors">
+        <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 dark:text-red-400 flex items-center justify-center mb-4">
           <BookOpen className="w-6 h-6" />
         </div>
-        <h3 className="text-lg font-bold text-slate-200 mb-2">Could Not Open E-Book</h3>
-        <p className="text-xs text-slate-400 max-w-md mb-6 leading-relaxed">
+        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-2">Could Not Open E-Book</h3>
+        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mb-6 leading-relaxed">
           {error || 'This file could not be parsed as a valid EPUB or document archive.'}
         </p>
       </div>
@@ -356,7 +356,7 @@ export const EbookViewer: React.FC<EbookViewerProps> = ({ arrayBuffer, textConte
     <div
       ref={rootContainerRef}
       className={`flex flex-col flex-1 h-full min-h-0 min-w-0 ${themeStyles.wrapperBg} transition-colors duration-150 overflow-hidden relative select-text ${
-        isFullscreen ? 'fixed inset-0 z-50' : ''
+        isFullscreen ? 'fixed inset-0 z-[99999]' : ''
       }`}
     >
       {/* Scoped CSS styling for EPUB Chapter Content */}
@@ -728,7 +728,7 @@ export const EbookViewer: React.FC<EbookViewerProps> = ({ arrayBuffer, textConte
               <div className="flex items-start gap-2.5">
                 {book.metadata.coverUrl ? (
                   <img
-                    src={book.metadata.coverUrl}
+                    src={book.metadata.coverUrl || undefined}
                     alt="Cover"
                     className="w-12 h-16 object-cover rounded-md shadow-xs border border-black/10 shrink-0"
                   />

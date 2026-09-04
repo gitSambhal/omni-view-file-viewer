@@ -239,7 +239,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
               className="inline-block transform-gpu"
             >
               <img
-                src={imgSrc}
+                src={imgSrc || undefined}
                 alt={filename}
                 onLoad={handleImageLoad}
                 draggable={false}

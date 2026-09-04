@@ -635,58 +635,68 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
         </div>
       ) : isAudio ? (
         /* AUDIO PLAYER STUDIO */
-        <div className="flex-1 flex flex-col items-center justify-center p-6 bg-gradient-to-b from-slate-900 via-slate-950 to-black text-slate-100">
+        <div className="flex-1 flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors overflow-y-auto">
           <audio
             ref={el => { mediaRef.current = el; }}
-            src={mediaSrc}
+            src={mediaSrc || undefined}
             preload="auto"
             loop={isLooping}
+            controls={useNativeControls}
             onTimeUpdate={handleTimeUpdate}
             onLoadedMetadata={handleLoadedMetadata}
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
             onEnded={() => setIsPlaying(false)}
             onError={handleMediaError}
+            className={useNativeControls ? 'w-full max-w-xl my-3 accent-purple-500' : 'hidden'}
           />
 
-          <div className="w-full max-w-xl bg-slate-900/80 backdrop-blur-xl rounded-3xl border border-slate-800 shadow-2xl p-8 flex flex-col items-center space-y-6">
+          <div className="w-full max-w-xl bg-white dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-8 flex flex-col items-center space-y-5">
             {/* Header Badge */}
-            <div className="w-full flex items-center justify-between text-xs font-mono text-purple-400">
+            <div className="w-full flex flex-wrap items-center justify-between text-xs font-mono text-purple-600 dark:text-purple-400 gap-2">
               <div className="flex items-center gap-2 font-semibold">
-                <Music className="w-4 h-4 text-purple-400 animate-pulse" />
+                <Music className="w-4 h-4 text-purple-500 dark:text-purple-400 animate-pulse" />
                 <span>Audio Studio Pro</span>
                 {mediaInfo && (
-                  <span className="px-2 py-0.5 bg-purple-500/20 border border-purple-500/30 rounded text-[11px] text-purple-300">
+                  <span className="px-2 py-0.5 bg-purple-50 dark:bg-purple-500/20 border border-purple-200 dark:border-purple-500/30 rounded text-[11px] text-purple-700 dark:text-purple-300">
                     {mediaInfo.formatName}
                   </span>
                 )}
               </div>
               <div className="flex items-center gap-2">
                 <button
+                  onClick={() => setUseNativeControls(prev => !prev)}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer text-[11px]"
+                  title={useNativeControls ? "Switch to Custom Studio UI" : "Switch to Native Browser Controls"}
+                >
+                  <Settings className="w-3 h-3 text-purple-500 dark:text-purple-400" />
+                  <span>{useNativeControls ? "Studio UI" : "Native Controls"}</span>
+                </button>
+                <button
                   onClick={() => setIsInspectorOpen(true)}
-                  className="flex items-center gap-1 px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                  className="flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer text-[11px]"
                   title="View Audio Stream & Header Specs"
                 >
-                  <Info className="w-3 h-3 text-purple-400" />
-                  <span className="text-[11px]">Specs</span>
+                  <Info className="w-3 h-3 text-purple-500 dark:text-purple-400" />
+                  <span>Specs</span>
                 </button>
-                <span className="truncate max-w-[160px] text-slate-400">{filename}</span>
+                <span className="truncate max-w-[140px] text-slate-500 dark:text-slate-400">{filename}</span>
               </div>
             </div>
 
             {/* Vinyl Record / Album Centerpiece */}
-            <div className="relative flex items-center justify-center w-48 h-48 my-2">
+            <div className="relative flex items-center justify-center w-40 h-40 sm:w-48 sm:h-48 my-1">
               <div
-                className={`w-44 h-44 rounded-full bg-gradient-to-tr from-slate-950 via-slate-900 to-slate-800 border-4 border-slate-700 shadow-2xl flex items-center justify-center transition-transform duration-700 ${
+                className={`w-36 h-36 sm:w-44 sm:h-44 rounded-full bg-gradient-to-tr from-slate-950 via-slate-900 to-slate-800 border-4 border-slate-700 shadow-2xl flex items-center justify-center transition-transform duration-700 ${
                   isPlaying ? 'animate-[spin_4s_linear_infinite]' : ''
                 }`}
               >
                 {/* Vinyl Grooves */}
-                <div className="w-36 h-36 rounded-full border border-slate-700/60 flex items-center justify-center">
-                  <div className="w-28 h-28 rounded-full border border-slate-700/40 flex items-center justify-center">
+                <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full border border-slate-700/60 flex items-center justify-center">
+                  <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full border border-slate-700/40 flex items-center justify-center">
                     {/* Vinyl Center Label */}
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-purple-600 to-pink-600 flex items-center justify-center shadow-inner">
-                      <div className="w-4 h-4 rounded-full bg-slate-950 border border-purple-300"></div>
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-purple-600 to-pink-600 flex items-center justify-center shadow-inner">
+                      <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-slate-950 border border-purple-300"></div>
                     </div>
                   </div>
                 </div>
@@ -700,8 +710,16 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
 
             {/* Audio Scrubber */}
             <div className="w-full space-y-1.5">
-              <div className="flex items-center justify-between text-xs font-mono text-slate-400">
-                <span>{formatTime(currentTime)}</span>
+              <div className="flex items-center justify-between text-xs font-mono text-slate-500 dark:text-slate-400">
+                <button
+                  onClick={() => setShowTimeRemaining(!showTimeRemaining)}
+                  className="hover:text-purple-500 transition-colors cursor-pointer"
+                  title="Click to toggle remaining time format"
+                >
+                  {showTimeRemaining
+                    ? `-${formatTime(Math.max(0, duration - currentTime))}`
+                    : formatTime(currentTime)}
+                </button>
                 <span>{formatTime(duration)}</span>
               </div>
               <input
@@ -711,17 +729,17 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
                 step={0.1}
                 value={currentTime}
                 onChange={handleSeek}
-                className="w-full accent-purple-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+                className="w-full accent-purple-500 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg cursor-pointer"
               />
             </div>
 
-            {/* Primary Controls */}
-            <div className="w-full flex items-center justify-between">
-              <div className="flex items-center gap-2">
+            {/* Primary Controls Row */}
+            <div className="w-full flex flex-wrap items-center justify-between gap-3 pt-1">
+              <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => setIsLooping(!isLooping)}
                   className={`p-2 rounded-full transition-colors cursor-pointer ${
-                    isLooping ? 'bg-purple-600/30 text-purple-400 border border-purple-500/50' : 'text-slate-400 hover:text-white'
+                    isLooping ? 'bg-purple-600/30 text-purple-600 dark:text-purple-400 border border-purple-500/50' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                   title={isLooping ? 'Loop Enabled' : 'Loop Disabled'}
                 >
@@ -729,13 +747,14 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
                 </button>
                 <button
                   onClick={() => handleSkip(-10)}
-                  className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-full transition-colors cursor-pointer"
+                  className="p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-full transition-colors cursor-pointer"
                   title="Rewind 10s"
                 >
                   <Rewind className="w-4 h-4" />
                 </button>
               </div>
 
+              {/* Central Big Play/Pause Button */}
               <button
                 onClick={togglePlay}
                 className="p-4 bg-purple-600 hover:bg-purple-500 text-white rounded-full shadow-xl shadow-purple-600/30 transition-transform active:scale-95 cursor-pointer"
@@ -747,16 +766,50 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleSkip(10)}
-                  className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-full transition-colors cursor-pointer"
+                  className="p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-full transition-colors cursor-pointer"
                   title="Forward 10s"
                 >
                   <FastForward className="w-4 h-4" />
                 </button>
 
-                <div className="flex items-center gap-1.5 ml-2">
-                  <button onClick={toggleMute} className="text-slate-400 hover:text-white cursor-pointer">
+                {/* Speed Menu Selector */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowSpeedMenu(!showSpeedMenu)}
+                    className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg text-xs font-mono font-medium text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+                    title="Playback Speed"
+                  >
+                    {playbackSpeed}x
+                  </button>
+
+                  {showSpeedMenu && (
+                    <div className="absolute bottom-9 right-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-1.5 shadow-2xl z-50 flex flex-col gap-1 min-w-[95px] backdrop-blur-xl text-xs font-mono">
+                      {[0.5, 0.75, 1.0, 1.25, 1.5, 2.0].map(sp => (
+                        <button
+                          key={sp}
+                          onClick={() => {
+                            setPlaybackSpeed(sp);
+                            if (mediaRef.current) mediaRef.current.playbackRate = sp;
+                            setShowSpeedMenu(false);
+                          }}
+                          className={`px-3 py-1 rounded text-left transition-colors cursor-pointer ${
+                            playbackSpeed === sp
+                              ? 'bg-purple-600 text-white font-bold'
+                              : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                          }`}
+                        >
+                          {sp}x {sp === 1.0 && '(1x)'}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Volume Slider */}
+                <div className="flex items-center gap-1.5 ml-1">
+                  <button onClick={toggleMute} className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer">
                     {isMuted || volume === 0 ? (
-                      <VolumeX className="w-4 h-4 text-red-400" />
+                      <VolumeX className="w-4 h-4 text-red-500" />
                     ) : volume < 0.5 ? (
                       <Volume1 className="w-4 h-4" />
                     ) : (
@@ -770,7 +823,7 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
                     step={0.05}
                     value={isMuted ? 0 : volume}
                     onChange={e => changeVolume(Number(e.target.value))}
-                    className="w-16 accent-purple-500 h-1 bg-slate-800 rounded cursor-pointer"
+                    className="w-16 accent-purple-500 h-1 bg-slate-200 dark:bg-slate-800 rounded cursor-pointer"
                   />
                 </div>
               </div>
@@ -784,7 +837,7 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
           {mediaSrc && (
             <video
               ref={el => { mediaRef.current = el; }}
-              src={mediaSrc}
+              src={mediaSrc || undefined}
               preload="auto"
               playsInline
               loop={isLooping}

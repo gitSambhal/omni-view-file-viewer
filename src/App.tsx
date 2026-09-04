@@ -10,18 +10,23 @@ import { useTheme } from './hooks/useTheme';
 import { useToast } from './hooks/useToast';
 import { useLiveSync } from './hooks/useLiveSync';
 import { TabFile, FileCategory } from './types/file';
-import { detectFileCategory, getFileExtension } from './services/fileDetector';
+import { detectFileCategory, getFileExtension, probeAmbiguousCategory } from './services/fileDetector';
 import { getSampleTabFiles } from './services/sampleFiles';
 import { generateSampleEpubBuffer } from './services/sampleEpub';
 import { generateSampleWavBlob, generateSampleVideoBlob } from './services/sampleMedia';
 
 import { Header } from './components/Header';
 import { TabBar } from './components/TabBar';
+import { Sidebar } from './components/Sidebar';
+import { CommandPalette } from './components/CommandPalette';
 import { DropZone } from './components/DropZone';
 import { Footer } from './components/Footer';
 import { ChangelogModal } from './components/ChangelogModal';
 import { LiveSyncModal } from './components/LiveSyncModal';
 import { SupportedFormatsModal } from './components/SupportedFormatsModal';
+import { OpenFileFromUrlModal } from './components/OpenFileFromUrlModal';
+import { CodeRunnersModal } from './components/CodeRunnersModal';
+import { NpmTesterModal } from './components/NpmTesterModal';
 import { ToastContainer } from './components/Toast';
 import { HexViewer } from './components/HexViewer';
 import { ReaderSwitcher } from './components/ReaderSwitcher';
@@ -102,10 +107,41 @@ export default function App() {
   const [isChangelogOpen, setIsChangelogOpen] = useState<boolean>(false);
   const [isLiveSyncDashboardOpen, setIsLiveSyncDashboardOpen] = useState<boolean>(false);
   const [isSupportedFormatsModalOpen, setIsSupportedFormatsModalOpen] = useState<boolean>(false);
+  const [isUrlModalOpen, setIsUrlModalOpen] = useState<boolean>(false);
+  const [isRunnersGuideOpen, setIsRunnersGuideOpen] = useState<boolean>(false);
+  const [isNpmTesterOpen, setIsNpmTesterOpen] = useState<boolean>(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) return false;
+    return true;
+  });
   const [isDraggingOverApp, setIsDraggingOverApp] = useState<boolean>(false);
   const dragCounter = useRef<number>(0);
 
-  const activeTab = tabs.find(t => t.id === activeTabId) || null;
+  // Global Keyboard Shortcuts (Cmd/Ctrl + K for Command Palette, Cmd/Ctrl + B for Sidebar, Cmd/Ctrl + O for Open File)
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if user is typing in an input or textarea (unless Cmd/Ctrl key is pressed)
+      const target = e.target as HTMLElement;
+      const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen(prev => !prev);
+      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        setIsSidebarOpen(prev => !prev);
+      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'o') {
+        e.preventDefault();
+        handleOpenFilePicker();
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, []);
+
+  const activeTab = activeTabId === 'welcome' ? null : tabs.find(t => t.id === activeTabId) || null;
 
   // File Live Sync Callback
   const handleFileUpdated = useCallback((updated: Partial<TabFile> & { id: string }) => {
@@ -126,10 +162,18 @@ export default function App() {
   });
 
   // Process raw File object into TabFile
-  const processFile = async (file: File, handle?: FileSystemFileHandle): Promise<TabFile> => {
-    const category = detectFileCategory(file.name, file.type);
+  const processFile = async (file: File, handle?: FileSystemFileHandle, sourceUrl?: string): Promise<TabFile> => {
+    let category = detectFileCategory(file.name, file.type);
     const ext = getFileExtension(file.name);
     const tabId = `file-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+
+    // Intelligently probe leading bytes for ambiguous types (.ts, .mts) to guarantee TypeScript vs MPEG-TS video accuracy
+    if (['ts', 'mts'].includes(ext) && file.size > 0) {
+      try {
+        const sampleSlice = await file.slice(0, 2048).arrayBuffer();
+        category = probeAmbiguousCategory(file.name, category, sampleSlice);
+      } catch (_) {}
+    }
 
     let textContent: string | undefined;
     let arrayBuffer: ArrayBuffer | undefined;
@@ -144,7 +188,7 @@ export default function App() {
     const isBinaryEbook = ['epub', 'mobi', 'azw', 'azw3', 'odt', 'pages', 'key', 'numbers', 'odp'].includes(ext);
     const isTextFormat = (!isBinaryEbook && [
       'code', 'markdown', 'text', 'json', 'log', 'subtitle', 'geojson', 'database', 'http', 'certificate'
-    ].includes(category)) || (!isBinaryEbook && file.type.startsWith('text/')) || ['sql', 'csv', 'tsv', 'json', 'xml', 'yaml', 'yml', 'env', 'ini', 'toml', 'log', 'srt', 'vtt', 'properties', 'http', 'rest', 'pem', 'crt', 'cer', 'key', 'pub', 'csr', 'rtf'].includes(ext);
+    ].includes(category)) || (!isBinaryEbook && file.type.startsWith('text/')) || ['ts', 'tsx', 'mts', 'cts', 'js', 'jsx', 'sql', 'csv', 'tsv', 'json', 'xml', 'yaml', 'yml', 'env', 'ini', 'toml', 'log', 'srt', 'vtt', 'properties', 'http', 'rest', 'pem', 'crt', 'cer', 'key', 'pub', 'csr', 'rtf'].includes(ext);
 
     if (isTextFormat && file.size < 15 * 1024 * 1024) {
       try {
@@ -153,7 +197,6 @@ export default function App() {
     }
 
     // 3. Read ArrayBuffer only when needed for binary parsing (E-Book, DLL, Binary, Font, Excel, Docx, Zip, PDF, small files < 35MB)
-    // NOTE: Avoid reading huge contiguous ArrayBuffer for video/audio (> 30MB) since they stream directly from objectUrl
     if (category !== 'video' && category !== 'audio' && file.size < 35 * 1024 * 1024) {
       try {
         arrayBuffer = await file.arrayBuffer();
@@ -177,12 +220,248 @@ export default function App() {
       arrayBuffer,
       textContent,
       objectUrl,
+      sourceUrl,
       liveSyncActive: !!handle,
       lastSyncedAt: Date.now(),
       syncStatus: 'synced',
       viewMode: 'preview',
       zoomLevel: 100
     };
+  };
+
+  // Open Remote File from URL
+  const handleFileFromUrl = async (file: File, sourceUrl: string) => {
+    try {
+      const tab = await processFile(file, undefined, sourceUrl);
+      setTabs(prev => [...prev, tab]);
+      setActiveTabId(tab.id);
+      addToast('success', 'Remote File Loaded', `Successfully opened "${file.name}" from URL.`);
+    } catch (err: any) {
+      addToast('error', 'Failed to Open File', err.message || 'Could not process remote file.');
+    }
+  };
+
+  // Load Sample Code Runner Snippet
+  const handleLoadSampleSnippet = (code: string, filename: string, _language: string) => {
+    const ext = filename.split('.').pop() || 'js';
+    const category = detectFileCategory(filename, '');
+    const tabId = `snippet-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    const newTab: TabFile = {
+      id: tabId,
+      name: filename,
+      size: new Blob([code]).size,
+      type: 'text/plain',
+      lastModified: Date.now(),
+      extension: ext,
+      category,
+      textContent: code,
+      liveSyncActive: false,
+      syncStatus: 'synced',
+      viewMode: 'preview',
+      zoomLevel: 100
+    };
+    setTabs(prev => [...prev, newTab]);
+    setActiveTabId(tabId);
+    addToast('info', 'Code Sample Loaded', `Opened ${filename} ready for execution.`);
+  };
+
+  // Insert Import Statement into Active Code Editor Tab
+  const handleInsertImportStatement = (statement: string) => {
+    if (!activeTabId) {
+      // Create new scratchpad tab if no tab is open
+      handleLoadSampleSnippet(`${statement}\nconsole.log("Ready to execute with imported package.");\n`, 'scratchpad.ts', 'typescript');
+      return;
+    }
+    setTabs(prev =>
+      prev.map(t => {
+        if (t.id === activeTabId) {
+          const prevText = t.textContent || '';
+          return {
+            ...t,
+            textContent: `${statement}${prevText}`,
+            hasUnsavedChanges: true
+          };
+        }
+        return t;
+      })
+    );
+    addToast('success', 'Import Inserted', `Added import statement to "${tabs.find(t => t.id === activeTabId)?.name || 'active file'}".`);
+  };
+
+  // Create In-Memory Interactive Scratchpad
+  const handleNewScratchpad = (type: 'ts' | 'python' | 'sql' | 'markdown' | 'html' | 'json') => {
+    let filename = 'scratchpad.ts';
+    let code = '';
+    let category: FileCategory = 'code';
+
+    if (type === 'ts') {
+      filename = `playground-${Date.now().toString().slice(-4)}.ts`;
+      code = `// In-Browser TypeScript & NPM Execution Engine
+import _ from 'lodash';
+import dayjs from 'dayjs';
+
+console.log("🚀 OmniView TypeScript Sandbox initialized!");
+console.log("Current Date & Time:", dayjs().format('YYYY-MM-DD HH:mm:ss'));
+
+// Test Lodash utility transformations
+const numbers = [10, 20, 30, 40, 50];
+const shuffled = _.shuffle(numbers);
+const mean = _.mean(numbers);
+
+console.log("Original Numbers:", numbers);
+console.log("Shuffled:", shuffled);
+console.log("Mean Average:", mean);
+`;
+      category = 'code';
+    } else if (type === 'python') {
+      filename = `script-${Date.now().toString().slice(-4)}.py`;
+      code = `# In-Browser Python 3.12 (Pyodide WebAssembly Engine)
+import math
+import sys
+
+print("🐍 Python 3.12 running client-side in browser!")
+print(f"Platform: {sys.platform}")
+
+# Calculate prime numbers
+def primes_up_to(n):
+    primes = []
+    for num in range(2, n + 1):
+        if all(num % p != 0 for p in primes):
+            primes.append(num)
+    return primes
+
+result = primes_up_to(50)
+print("Primes up to 50:", result)
+print("Pi constant:", math.pi)
+`;
+      category = 'code';
+    } else if (type === 'sql') {
+      filename = `database-${Date.now().toString().slice(-4)}.sql`;
+      code = `-- In-Browser SQLite & AlaSQL Relational Console
+CREATE TABLE customers (
+  id INTEGER PRIMARY KEY,
+  name TEXT,
+  email TEXT,
+  balance REAL
+);
+
+INSERT INTO customers (id, name, email, balance) VALUES
+  (1, 'Alice Johnson', 'alice@example.com', 2500.50),
+  (2, 'Bob Smith', 'bob@example.com', 1840.00),
+  (3, 'Charlie Brown', 'charlie@example.com', 4320.75),
+  (4, 'Diana Prince', 'diana@example.com', 9500.00);
+
+SELECT * FROM customers WHERE balance > 2000 ORDER BY balance DESC;
+`;
+      category = 'database';
+    } else if (type === 'markdown') {
+      filename = `notes-${Date.now().toString().slice(-4)}.md`;
+      code = `# Project Notes & Scratchpad
+
+Created with **OmniView Studio** — 100% offline in-browser previewer.
+
+## Action Items
+- [x] Test dynamic NPM package loader
+- [x] Run client-side Python 3.12 script
+- [ ] Inspect SQLite database schema
+
+## Performance Summary
+| Metric | Value | Status |
+| :--- | :--- | :--- |
+| Load Time | < 50ms | 🟢 Instant |
+| Memory Footprint | < 15MB | 🟢 Lightweight |
+| Server Uploads | 0 bytes | 🛡️ 100% Private |
+
+> *"True craftsmanship is zero-latency execution with elegant typography."*
+`;
+      category = 'markdown';
+    } else if (type === 'html') {
+      filename = `canvas-${Date.now().toString().slice(-4)}.html`;
+      code = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Interactive Sandbox</title>
+  <style>
+    body { font-family: system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #0f172a; color: #f8fafc; }
+    canvas { background: #1e293b; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+    h1 { font-size: 1.25rem; margin-bottom: 0.5rem; }
+  </style>
+</head>
+<body>
+  <h1>Interactive Particles</h1>
+  <canvas id="stage" width="400" height="250"></canvas>
+  <script>
+    const canvas = document.getElementById('stage');
+    const ctx = canvas.getContext('2d');
+    let t = 0;
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < 30; i++) {
+        const x = canvas.width / 2 + Math.cos(t * 0.05 + i * 0.2) * (50 + i * 3);
+        const y = canvas.height / 2 + Math.sin(t * 0.05 + i * 0.2) * (30 + i * 2);
+        ctx.fillStyle = 'hsl(' + (i * 12 + t * 2) % 360 + ', 80%, 65%)';
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      t++;
+      requestAnimationFrame(render);
+    }
+    render();
+  </script>
+</body>
+</html>`;
+      category = 'html';
+    } else if (type === 'json') {
+      filename = `payload-${Date.now().toString().slice(-4)}.json`;
+      code = JSON.stringify(
+        {
+          appName: "OmniView File Studio",
+          developer: "Suhail Akhtar",
+          website: "https://suhail.top",
+          version: "v2.1.0",
+          features: [
+            "60+ File Formats",
+            "In-Browser Python 3.12 Runtime",
+            "Dynamic NPM Package Loader",
+            "SQLite & AlaSQL Engine",
+            "Hex Byte Inspector",
+            "100% Client-Side Privacy"
+          ],
+          offlineMode: true,
+          createdTimestamp: new Date().toISOString()
+        },
+        null,
+        2
+      );
+      category = 'json';
+    }
+
+    const tabId = `scratchpad-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    const enc = new TextEncoder();
+    const bytes = enc.encode(code);
+
+    const newTab: TabFile = {
+      id: tabId,
+      name: filename,
+      size: bytes.byteLength,
+      type: 'text/plain',
+      lastModified: Date.now(),
+      extension: filename.split('.').pop() || '',
+      category,
+      textContent: code,
+      arrayBuffer: bytes.buffer,
+      liveSyncActive: false,
+      lastSyncedAt: Date.now(),
+      syncStatus: 'synced',
+      viewMode: 'preview',
+      zoomLevel: 100
+    };
+
+    setTabs(prev => [...prev, newTab]);
+    setActiveTabId(tabId);
+    addToast('success', 'Scratchpad Created', `Created "${filename}" in workspace.`);
   };
 
   // Handle drag & drop or input file list
@@ -694,42 +973,77 @@ export default function App() {
         onOpenHexForCurrentTab={handleToggleHexView}
         onOpenLiveSyncDashboard={() => setIsLiveSyncDashboardOpen(true)}
         onOpenSupportedFormats={() => setIsSupportedFormatsModalOpen(true)}
+        onOpenUrlModal={() => setIsUrlModalOpen(true)}
+        onOpenRunnersGuide={() => setIsRunnersGuideOpen(true)}
+        onOpenNpmTester={() => setIsNpmTesterOpen(true)}
+        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+        onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
+        isSidebarOpen={isSidebarOpen}
+        onNewScratchpad={handleNewScratchpad}
         liveSyncCount={liveSyncCount}
         isSyncing={isSyncing}
       />
 
-      {/* Tab Bar */}
-      {tabs.length > 0 && (
-        <TabBar
+      {/* Workspace Body: Sidebar + Center Content */}
+      <div className="flex-1 flex min-h-0 min-w-0 overflow-hidden relative">
+        {/* Workspace Explorer Sidebar */}
+        <Sidebar
+          isOpen={isSidebarOpen}
+          onToggleOpen={() => setIsSidebarOpen(prev => !prev)}
           tabs={tabs}
           activeTabId={activeTabId}
           onSelectTab={setActiveTabId}
           onCloseTab={handleCloseTab}
-          onCloseOtherTabs={handleCloseOtherTabs}
-          onCloseTabsToRight={handleCloseTabsToRight}
           onCloseAllTabs={handleCloseAllTabs}
-          onDuplicateTab={handleDuplicateTab}
-          onToggleLiveSyncTab={handleToggleLiveSyncTab}
-          onToggleHexViewTab={handleToggleHexViewTab}
-          onDownloadTabFile={handleDownloadTabFile}
+          onOpenFilePicker={handleOpenFilePicker}
+          onOpenUrlModal={() => setIsUrlModalOpen(true)}
+          onOpenNpmTester={() => setIsNpmTesterOpen(true)}
+          onOpenRunnersGuide={() => setIsRunnersGuideOpen(true)}
           onOpenLiveSyncDashboard={() => setIsLiveSyncDashboardOpen(true)}
-          onNewTab={handleOpenFilePicker}
+          onOpenHexForCurrentTab={handleToggleHexView}
+          onNewScratchpad={handleNewScratchpad}
+          onDownloadTabFile={handleDownloadTabFile}
+          liveSyncCount={liveSyncCount}
         />
-      )}
 
-      {/* Main Workspace Stage */}
-      <main className="flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden relative">
-        {tabs.length === 0 || !activeTab ? (
-          <DropZone
-            onFilesSelected={handleFilesSelected}
-            onOpenFilePicker={handleOpenFilePicker}
-            onLoadSamples={() => {
-              setTabs(getSampleTabFiles());
-              setActiveTabId('sample-md');
-            }}
-            onOpenSupportedFormats={() => setIsSupportedFormatsModalOpen(true)}
-          />
-        ) : activeTab.viewMode === 'hex' ? (
+        {/* Center Workspace Stage */}
+        <div className="flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden relative">
+          {/* Tab Bar */}
+          {tabs.length > 0 && (
+            <TabBar
+              tabs={tabs}
+              activeTabId={activeTabId}
+              onSelectTab={setActiveTabId}
+              onCloseTab={handleCloseTab}
+              onCloseOtherTabs={handleCloseOtherTabs}
+              onCloseTabsToRight={handleCloseTabsToRight}
+              onCloseAllTabs={handleCloseAllTabs}
+              onDuplicateTab={handleDuplicateTab}
+              onToggleLiveSyncTab={handleToggleLiveSyncTab}
+              onToggleHexViewTab={handleToggleHexViewTab}
+              onDownloadTabFile={handleDownloadTabFile}
+              onOpenLiveSyncDashboard={() => setIsLiveSyncDashboardOpen(true)}
+              onNewTab={handleOpenFilePicker}
+            />
+          )}
+
+          {/* Main Viewer Stage */}
+          <main className="flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden relative">
+            {tabs.length === 0 || !activeTab ? (
+              <DropZone
+                onFilesSelected={handleFilesSelected}
+                onOpenFilePicker={handleOpenFilePicker}
+                onLoadSamples={() => {
+                  setTabs(getSampleTabFiles());
+                  setActiveTabId('sample-md');
+                }}
+                onOpenSupportedFormats={() => setIsSupportedFormatsModalOpen(true)}
+                onOpenUrlModal={() => setIsUrlModalOpen(true)}
+                onOpenRunnersGuide={() => setIsRunnersGuideOpen(true)}
+                onOpenNpmTester={() => setIsNpmTesterOpen(true)}
+                onNewScratchpad={handleNewScratchpad}
+              />
+            ) : activeTab.viewMode === 'hex' ? (
           <div className="w-full flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden relative">
             {/* Top Reader Subheader Bar */}
             <div className="flex items-center justify-between px-3 py-1 bg-white/90 dark:bg-[#0c121e]/90 backdrop-blur-xs border-b border-slate-200/80 dark:border-slate-800/80 text-xs text-slate-600 dark:text-slate-400 select-none shrink-0 relative z-30">
@@ -836,6 +1150,8 @@ export default function App() {
                     onToggleLiveSync={() => handleToggleLiveSyncTab(activeTab.id)}
                     onSwitchToLivePreview={() => handleSetTabReader(activeTab.id, 'html')}
                     onSwitchToDatabase={() => handleSetTabReader(activeTab.id, 'database')}
+                    onOpenRunnersGuide={() => setIsRunnersGuideOpen(true)}
+                    onOpenNpmTester={() => setIsNpmTesterOpen(true)}
                   />
                 );
               }
@@ -989,6 +1305,8 @@ export default function App() {
           </div>
         )}
       </main>
+      </div>
+      </div>
 
       {/* Footer */}
       <Footer
@@ -996,6 +1314,32 @@ export default function App() {
         onOpenChangelog={() => setIsChangelogOpen(true)}
         onToggleViewMode={handleToggleHexView}
         onOpenLiveSyncDashboard={() => setIsLiveSyncDashboardOpen(true)}
+      />
+
+      {/* Global Command Palette */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        tabs={tabs}
+        activeTabId={activeTabId}
+        onSelectTab={setActiveTabId}
+        onCloseTab={handleCloseTab}
+        onCloseAllTabs={handleCloseAllTabs}
+        onOpenFilePicker={handleOpenFilePicker}
+        onOpenUrlModal={() => setIsUrlModalOpen(true)}
+        onOpenNpmTester={() => setIsNpmTesterOpen(true)}
+        onOpenRunnersGuide={() => setIsRunnersGuideOpen(true)}
+        onOpenLiveSyncDashboard={() => setIsLiveSyncDashboardOpen(true)}
+        onOpenSupportedFormats={() => setIsSupportedFormatsModalOpen(true)}
+        onLoadSampleFiles={() => {
+          setTabs(getSampleTabFiles());
+          setActiveTabId('sample-md');
+          addToast('info', 'Demos Loaded', 'Loaded sample interactive files.');
+        }}
+        onOpenHexForCurrentTab={handleToggleHexView}
+        onNewScratchpad={handleNewScratchpad}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
 
       {/* Live Sync Dashboard Modal */}
@@ -1022,6 +1366,28 @@ export default function App() {
           setActiveTabId('sample-md');
           addToast('info', 'Demos Loaded', 'Loaded interactive sample files.');
         }}
+      />
+
+      {/* Open Remote File from URL Modal */}
+      <OpenFileFromUrlModal
+        isOpen={isUrlModalOpen}
+        onClose={() => setIsUrlModalOpen(false)}
+        onFileLoaded={handleFileFromUrl}
+      />
+
+      {/* Code Runners Directory & Samples Modal */}
+      <CodeRunnersModal
+        isOpen={isRunnersGuideOpen}
+        onClose={() => setIsRunnersGuideOpen(false)}
+        onLoadSampleSnippet={handleLoadSampleSnippet}
+      />
+
+      {/* NPM Package Tester & Live CDN Playground Modal */}
+      <NpmTesterModal
+        isOpen={isNpmTesterOpen}
+        onClose={() => setIsNpmTesterOpen(false)}
+        onInsertImport={handleInsertImportStatement}
+        onOpenAsNewTab={handleLoadSampleSnippet}
       />
 
       {/* Non-blocking Toasts */}

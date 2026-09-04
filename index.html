@@ -12,10 +12,16 @@
     <!-- Developer Attribution & SEO Meta -->
     <meta name="author" content="Suhail Akhtar (suhail.top)" />
     <meta name="description" content="100% offline & local file preview studio with multi-tab workspace, live file sync, dark mode, and support for PDFs, Office docs, code, databases, media & archives." />
-    <meta name="keywords" content="file viewer, offline pdf viewer, docx viewer, excel viewer, code editor, live file sync, json viewer, database viewer, hex viewer, local file previewer" />
+    <meta name="keywords" content="file viewer, offline pdf viewer, docx viewer, excel viewer, code editor, live file sync, json viewer, database viewer, hex viewer, local file previewer, suhail akhtar" />
     <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#0f172a" />
     <link rel="canonical" href="https://suhail.top" />
+
+    <!-- Mobile & PWA Web App Metadata -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="OmniView" />
 
     <!-- Favicon & PWA Icons -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -29,12 +35,45 @@
     <meta property="og:url" content="https://suhail.top" />
     <meta property="og:site_name" content="OmniView File Studio" />
     <meta property="og:image" content="/favicon.svg" />
+    <meta property="og:locale" content="en_US" />
 
     <!-- Twitter Cards -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="OmniView File Studio - Offline & Local File Previewer" />
     <meta name="twitter:description" content="100% offline & local file preview studio with multi-tab workspace, live file sync, dark mode, and support for PDFs, Office docs, code, databases, media & archives." />
     <meta name="twitter:image" content="/favicon.svg" />
+
+    <!-- Structured JSON-LD Schema for Search Crawlers -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "OmniView File Studio",
+      "alternateName": "OmniView",
+      "url": "https://suhail.top",
+      "description": "100% offline & local file preview studio with multi-tab workspace, live file sync, dark mode, and support for 60+ file formats including PDFs, Office docs, code, databases, media & archives.",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "All",
+      "browserRequirements": "Requires JavaScript. Requires HTML5.",
+      "author": {
+        "@type": "Person",
+        "name": "Suhail Akhtar",
+        "url": "https://suhail.top"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "100% Local Offline Parsing",
+        "Multi-Tab File Previewer",
+        "Live Local Disk Sync",
+        "PDF, Office, Code, Database & Media Viewing",
+        "In-Browser Python Pyodide Wasm Sandbox"
+      ]
+    }
+    </script>
 
     <!-- Google Typography & Developer Monospace Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -46,5 +85,3 @@
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-
-

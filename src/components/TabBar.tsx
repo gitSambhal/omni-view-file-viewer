@@ -231,7 +231,7 @@ export const TabBar: React.FC<TabBarProps> = ({
         <div
           ref={menuRef}
           style={{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }}
-          className="fixed z-50 w-56 bg-white/95 dark:bg-[#0f172a]/95 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl p-1 text-xs text-slate-700 dark:text-slate-200 font-sans backdrop-blur-md animate-in fade-in duration-100 select-none"
+          className="fixed z-[99999] w-56 bg-white/95 dark:bg-[#0f172a]/95 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl p-1 text-xs text-slate-700 dark:text-slate-200 font-sans backdrop-blur-md animate-in fade-in duration-100 select-none"
         >
           <div className="px-2.5 py-1.5 border-b border-slate-100 dark:border-slate-800/80 font-mono text-[11px] font-semibold text-slate-400 dark:text-slate-500 truncate">
             {targetTab.name}

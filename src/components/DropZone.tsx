@@ -1,6 +1,7 @@
 /**
  * @license Apache-2.0
  * Developer: Suhail Akhtar (https://suhail.top)
+ * OmniView File Studio - Comprehensive Landing Page & Welcome Hub
  */
 
 import React, { useState } from 'react';
@@ -16,14 +17,23 @@ import {
   ImageIcon,
   ShieldCheck,
   Sparkles,
-  RefreshCw,
-  Globe,
-  Cpu,
-  Type,
-  Layers,
+  Link2,
+  Package,
+  Terminal,
+  Code2,
   ArrowRight,
-  SlidersHorizontal,
-  KeyRound
+  Zap,
+  Layers,
+  Video,
+  Music,
+  BookOpen,
+  Binary,
+  CheckCircle2,
+  FileSpreadsheet,
+  Globe,
+  Key,
+  Command,
+  HardDrive
 } from 'lucide-react';
 
 interface DropZoneProps {
@@ -31,13 +41,21 @@ interface DropZoneProps {
   onOpenFilePicker: () => void;
   onLoadSamples: () => void;
   onOpenSupportedFormats?: () => void;
+  onOpenUrlModal?: () => void;
+  onOpenRunnersGuide?: () => void;
+  onOpenNpmTester?: () => void;
+  onNewScratchpad?: (type: 'ts' | 'python' | 'sql' | 'markdown' | 'html' | 'json') => void;
 }
 
 export const DropZone: React.FC<DropZoneProps> = ({
   onFilesSelected,
   onOpenFilePicker,
   onLoadSamples,
-  onOpenSupportedFormats
+  onOpenSupportedFormats,
+  onOpenUrlModal,
+  onOpenRunnersGuide,
+  onOpenNpmTester,
+  onNewScratchpad
 }) => {
   const [isDragging, setIsDragging] = useState<boolean>(false);
 
@@ -67,200 +85,299 @@ export const DropZone: React.FC<DropZoneProps> = ({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`flex-1 flex flex-col items-center justify-center p-6 md:p-12 transition-all duration-200 overflow-y-auto ${
+      className={`flex-1 flex flex-col items-center justify-start p-4 sm:p-6 md:p-10 transition-all duration-200 overflow-y-auto ${
         isDragging
-          ? 'bg-blue-500/5 dark:bg-blue-950/20 border-2 border-dashed border-blue-500'
-          : 'bg-slate-50/50 dark:bg-[#090d16]'
+          ? 'bg-blue-500/10 dark:bg-blue-950/30 border-2 border-dashed border-blue-500'
+          : 'bg-slate-50 dark:bg-[#080d1a]'
       }`}
     >
-      <div className="w-full max-w-4xl flex flex-col items-center text-center space-y-8 py-6">
-        {/* Modern Minimal Drop Target Hero */}
+      <div className="w-full max-w-5xl flex flex-col items-center text-center space-y-8 py-2">
+        {/* Top Hero Badge */}
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 dark:bg-blue-500/15 border border-blue-500/20 text-blue-700 dark:text-blue-300 text-xs font-mono font-medium animate-in fade-in slide-in-from-top-2 duration-300">
+          <ShieldCheck className="w-4 h-4 text-emerald-500" />
+          <span>100% Client-Side Privacy • Zero Server Uploads</span>
+        </div>
+
+        {/* Main App Title & Subtitle */}
+        <div className="space-y-3 max-w-3xl">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50 font-sans">
+            OmniView <span className="text-blue-600 dark:text-blue-400">File Studio</span>
+          </h1>
+          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl mx-auto">
+            Universal offline file reader, inspector & developer playground. Instantly preview, edit, and run 
+            <strong className="text-slate-900 dark:text-slate-100 font-semibold"> 60+ file formats</strong> — 
+            PDFs, Office docs, Code, SQLite databases, Media, Archives, and WebAssembly sandboxes — completely in your browser.
+          </p>
+        </div>
+
+        {/* Drop Target Box */}
         <div
           onClick={onOpenFilePicker}
-          className="group relative cursor-pointer flex flex-col items-center justify-center p-8 w-full max-w-lg rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 shadow-xs hover:shadow-sm transition-all"
+          className="group relative cursor-pointer flex flex-col items-center justify-center p-8 sm:p-10 w-full max-w-2xl rounded-3xl bg-white dark:bg-[#0f172a] border-2 border-dashed border-slate-300 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-400 shadow-sm hover:shadow-xl transition-all duration-200"
         >
-          <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:bg-blue-50 dark:group-hover:bg-blue-950/50 flex items-center justify-center transition-all mb-3.5">
-            <Upload className="w-5 h-5 transition-transform group-hover:-translate-y-0.5" />
+          <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center transition-all mb-4 group-hover:scale-110 shadow-inner">
+            <Upload className="w-7 h-7 transition-transform group-hover:-translate-y-0.5" />
           </div>
-          <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
-            Drop files here or browse local storage
+
+          <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
+            Drop your files here, or click to browse
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm">
-            Zero cloud uploads. All inspection runs locally in high-speed browser memory.
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5 max-w-md leading-relaxed">
+            Drag and drop any file to view it instantly. All parsing, rendering, and code execution runs locally inside browser memory.
           </p>
 
-          <div className="mt-4 flex items-center gap-2">
-            <span className="text-xs font-medium text-blue-600 dark:text-blue-400 flex items-center gap-1 group-hover:underline">
-              <span>Choose Files</span>
-              <ArrowRight className="w-3 h-3" />
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+            <span className="flex items-center gap-2 bg-blue-600 group-hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold shadow-md transition-all">
+              <FolderOpen className="w-4 h-4" />
+              <span>Browse Local Device</span>
             </span>
+
+            <button
+              type="button"
+              onClick={e => {
+                e.stopPropagation();
+                onLoadSamples();
+              }}
+              className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-purple-100 dark:hover:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4 text-purple-500 animate-pulse" />
+              <span>Load Interactive Samples</span>
+            </button>
+
+            {onOpenUrlModal && (
+              <button
+                type="button"
+                onClick={e => {
+                  e.stopPropagation();
+                  onOpenUrlModal();
+                }}
+                className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer"
+              >
+                <Link2 className="w-4 h-4 text-blue-500" />
+                <span>Fetch URL</span>
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-wrap items-center justify-center gap-2.5">
-          <button
-            onClick={onOpenFilePicker}
-            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white px-4 py-2 rounded-lg font-medium text-xs shadow-xs transition-all cursor-pointer"
-          >
-            <FolderOpen className="w-3.5 h-3.5" />
-            <span>Select Files</span>
-          </button>
-
-          <button
-            onClick={onOpenFilePicker}
-            className="flex items-center gap-1.5 bg-white dark:bg-[#0f172a] hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 px-3.5 py-2 rounded-lg font-medium text-xs border border-slate-200 dark:border-slate-700/80 shadow-2xs transition-all cursor-pointer"
-          >
-            <RefreshCw className="w-3.5 h-3.5 text-emerald-500" />
-            <span>Open with Live Sync</span>
-          </button>
-
-          <button
-            onClick={onLoadSamples}
-            className="flex items-center gap-1.5 bg-white dark:bg-[#0f172a] hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 px-3.5 py-2 rounded-lg font-medium text-xs border border-slate-200 dark:border-slate-700/80 shadow-2xs transition-all cursor-pointer"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-purple-500" />
-            <span>Load Demos</span>
-          </button>
-
-          {onOpenSupportedFormats && (
-            <button
-              onClick={onOpenSupportedFormats}
-              className="flex items-center gap-1.5 bg-white dark:bg-[#0f172a] hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 px-3.5 py-2 rounded-lg font-medium text-xs border border-slate-200 dark:border-slate-700/80 shadow-2xs transition-all cursor-pointer"
-            >
-              <Layers className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-              <span>Format Directory</span>
-            </button>
-          )}
-        </div>
-
-        {/* Supported Formats Grid with Clean Enterprise Cards */}
-        <div className="w-full pt-4 border-t border-slate-200/80 dark:border-slate-800/80 space-y-3">
-          <div className="flex items-center justify-between px-1">
-            <span className="text-[11px] font-mono font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-2">
-              <span>Supported Formats & Native Capabilities</span>
-              <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
-                60+ Extensions
-              </span>
-            </span>
-
+        {/* "What is OmniView About?" Capabilities Grid */}
+        <div className="w-full space-y-4 pt-4">
+          <div className="flex items-center justify-between text-left border-b border-slate-200 dark:border-slate-800 pb-2">
+            <div className="flex items-center gap-2">
+              <Zap className="w-5 h-5 text-amber-500" />
+              <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider font-mono">
+                Supported Applications & File Engines
+              </h2>
+            </div>
             {onOpenSupportedFormats && (
               <button
                 onClick={onOpenSupportedFormats}
-                className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline font-medium cursor-pointer flex items-center gap-1"
+                className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-semibold flex items-center gap-1 cursor-pointer"
               >
-                <span>Browse All</span>
-                <span>&rarr;</span>
+                <span>60+ Formats Directory</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
-            {/* HTTP / REST */}
-            <div
-              onClick={onOpenSupportedFormats}
-              className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800/80 text-slate-700 dark:text-slate-300 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-900/60 transition-all cursor-pointer text-left"
-            >
-              <Globe className="w-4 h-4 text-emerald-500 shrink-0" />
-              <div className="min-w-0">
-                <div className="font-semibold text-slate-900 dark:text-slate-100 text-xs truncate">HTTP & REST</div>
-                <div className="text-[10px] font-mono text-slate-400">.http, .rest</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 text-left">
+            {/* Feature 1: Office & Docs */}
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:shadow-md transition-all space-y-2">
+              <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-semibold text-xs">
+                <FileSpreadsheet className="w-4 h-4" />
+                <span>Office & Documents</span>
               </div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                PDF, Word, Excel, PPTX & EPUB
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                Full document viewing with page navigation, text search, spreadsheet sheet tabs, PowerPoint slide previews, and customizable e-book typography.
+              </p>
             </div>
 
-            {/* Binary & PE/DLL */}
-            <div
-              onClick={onOpenSupportedFormats}
-              className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800/80 text-slate-700 dark:text-slate-300 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-900/60 transition-all cursor-pointer text-left"
-            >
-              <Cpu className="w-4 h-4 text-purple-500 shrink-0" />
-              <div className="min-w-0">
-                <div className="font-semibold text-slate-900 dark:text-slate-100 text-xs truncate">PE / DLL Binaries</div>
-                <div className="text-[10px] font-mono text-slate-400">.dll, .exe, .wasm</div>
+            {/* Feature 2: Code Studio */}
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:shadow-md transition-all space-y-2">
+              <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400 font-semibold text-xs">
+                <Code2 className="w-4 h-4" />
+                <span>Developer Code Studio</span>
               </div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                50+ Syntax Highlighting & Runners
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                Source code editor with line numbers, search/replace, live HTML/JS web preview, and in-memory CDN NPM package tester.
+              </p>
             </div>
 
-            {/* Typography & Fonts */}
-            <div
-              onClick={onOpenSupportedFormats}
-              className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800/80 text-slate-700 dark:text-slate-300 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-900/60 transition-all cursor-pointer text-left"
-            >
-              <Type className="w-4 h-4 text-pink-500 shrink-0" />
-              <div className="min-w-0">
-                <div className="font-semibold text-slate-900 dark:text-slate-100 text-xs truncate">Font Specimen</div>
-                <div className="text-[10px] font-mono text-slate-400">.ttf, .otf, .woff</div>
+            {/* Feature 3: Database & SQL */}
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:shadow-md transition-all space-y-2">
+              <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold text-xs">
+                <Database className="w-4 h-4" />
+                <span>Databases & Structured Data</span>
               </div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                SQLite, CSV, JSON, XML & GeoJSON
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                Inspect SQLite database files with real-time SQL querying, CSV data sorting, JSON interactive tree expansion, and GeoJSON map visualizer.
+              </p>
             </div>
 
-            {/* Databases & SQL */}
-            <div
-              onClick={onOpenSupportedFormats}
-              className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800/80 text-slate-700 dark:text-slate-300 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-900/60 transition-all cursor-pointer text-left"
-            >
-              <Database className="w-4 h-4 text-teal-500 shrink-0" />
-              <div className="min-w-0">
-                <div className="font-semibold text-slate-900 dark:text-slate-100 text-xs truncate">Databases & SQL</div>
-                <div className="text-[10px] font-mono text-slate-400">.sqlite, .db, .sql</div>
+            {/* Feature 4: Media Studio */}
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:shadow-md transition-all space-y-2">
+              <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 font-semibold text-xs">
+                <Music className="w-4 h-4" />
+                <span>Media & Audio Studio</span>
               </div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                Images, Audio, Video & EXIF
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                Image zoom & EXIF inspection, audio studio with waveforms & playback rate controls, and full video playback with stream specs.
+              </p>
             </div>
 
-            {/* Documents & Office */}
-            <div
-              onClick={onOpenSupportedFormats}
-              className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800/80 text-slate-700 dark:text-slate-300 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-900/60 transition-all cursor-pointer text-left"
-            >
-              <FileText className="w-4 h-4 text-red-500 shrink-0" />
-              <div className="min-w-0">
-                <div className="font-semibold text-slate-900 dark:text-slate-100 text-xs truncate">Documents</div>
-                <div className="text-[10px] font-mono text-slate-400">.pdf, .docx, .epub</div>
+            {/* Feature 5: Archives & Binary */}
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:shadow-md transition-all space-y-2">
+              <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-semibold text-xs">
+                <Archive className="w-4 h-4" />
+                <span>Archives & Hex Inspection</span>
               </div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                ZIP, TAR, GZ & Raw Hex Bytes
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                Inspect archive contents without unzipping to disk, and examine raw binary hex bytes for unknown or corrupted file analysis.
+              </p>
             </div>
 
-            {/* Spreadsheets */}
-            <div
-              onClick={onOpenSupportedFormats}
-              className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800/80 text-slate-700 dark:text-slate-300 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-900/60 transition-all cursor-pointer text-left"
-            >
-              <Table className="w-4 h-4 text-emerald-500 shrink-0" />
-              <div className="min-w-0">
-                <div className="font-semibold text-slate-900 dark:text-slate-100 text-xs truncate">Spreadsheets</div>
-                <div className="text-[10px] font-mono text-slate-400">.xlsx, .csv, .tsv</div>
+            {/* Feature 6: WebAssembly Sandboxes */}
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:shadow-md transition-all space-y-2">
+              <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-semibold text-xs">
+                <Terminal className="w-4 h-4" />
+                <span>WebAssembly Code Sandboxes</span>
               </div>
-            </div>
-
-            {/* Code & Config */}
-            <div
-              onClick={onOpenSupportedFormats}
-              className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800/80 text-slate-700 dark:text-slate-300 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-900/60 transition-all cursor-pointer text-left"
-            >
-              <Code className="w-4 h-4 text-blue-500 shrink-0" />
-              <div className="min-w-0">
-                <div className="font-semibold text-slate-900 dark:text-slate-100 text-xs truncate">Code & Config</div>
-                <div className="text-[10px] font-mono text-slate-400">.json, .yaml, .ts, .py</div>
-              </div>
-            </div>
-
-            {/* Media & Archives */}
-            <div
-              onClick={onOpenSupportedFormats}
-              className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800/80 text-slate-700 dark:text-slate-300 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-900/60 transition-all cursor-pointer text-left"
-            >
-              <Archive className="w-4 h-4 text-amber-500 shrink-0" />
-              <div className="min-w-0">
-                <div className="font-semibold text-slate-900 dark:text-slate-100 text-xs truncate">Media & Archives</div>
-                <div className="text-[10px] font-mono text-slate-400">.mp4, .zip, .geojson</div>
-              </div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                Python Pyodide, TSX & SQL
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                Run Python 3.12 scripts locally via WebAssembly, execute TypeScript snippets, and build SQLite tables in-memory.
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Security badge footer */}
-        <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400 bg-white dark:bg-[#0f172a] px-3.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs">
-          <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-          <span>Privacy Guaranteed: Files remain entirely in local browser memory and never contact remote servers.</span>
+        {/* Feature Scratchpads (TS, Python, SQLite, Markdown) */}
+        {onNewScratchpad && (
+          <div className="w-full space-y-3 pt-2">
+            <div className="flex items-center justify-between text-left border-b border-slate-200 dark:border-slate-800 pb-2">
+              <span className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider font-mono">
+                Instant In-Memory Code Scratchpads
+              </span>
+              <button
+                onClick={onLoadSamples}
+                className="text-xs text-purple-600 dark:text-purple-400 hover:underline font-semibold cursor-pointer flex items-center gap-1"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Load Sample Files</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <button
+                onClick={() => onNewScratchpad('ts')}
+                className="flex flex-col p-4 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800 hover:border-blue-500 text-left transition-all group cursor-pointer shadow-2xs hover:shadow-md"
+              >
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 shrink-0">
+                    <Code2 className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                    TypeScript & NPM
+                  </h3>
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                  TSX code execution with dynamic CDN package imports
+                </p>
+              </button>
+
+              <button
+                onClick={() => onNewScratchpad('python')}
+                className="flex flex-col p-4 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800 hover:border-amber-500 text-left transition-all group cursor-pointer shadow-2xs hover:shadow-md"
+              >
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 shrink-0">
+                    <Terminal className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-amber-600 dark:group-hover:text-amber-400">
+                    Python 3.12 (Wasm)
+                  </h3>
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Pyodide WebAssembly runtime for algorithms & math
+                </p>
+              </button>
+
+              <button
+                onClick={() => onNewScratchpad('sql')}
+                className="flex flex-col p-4 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800 hover:border-emerald-500 text-left transition-all group cursor-pointer shadow-2xs hover:shadow-md"
+              >
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 shrink-0">
+                    <Database className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
+                    SQLite Database
+                  </h3>
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Interactive schema creator & query executor
+                </p>
+              </button>
+
+              <button
+                onClick={() => onNewScratchpad('markdown')}
+                className="flex flex-col p-4 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800 hover:border-purple-500 text-left transition-all group cursor-pointer shadow-2xs hover:shadow-md"
+              >
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className="p-2 rounded-xl bg-purple-50 dark:bg-purple-950/80 text-purple-600 dark:text-purple-400 shrink-0">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-purple-600 dark:group-hover:text-purple-400">
+                    Markdown Notes
+                  </h3>
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Live GFM notes with formatted preview
+                </p>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Footer & Privacy Guarantee */}
+        <div className="w-full pt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400 bg-white dark:bg-[#0f172a] p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="flex items-center gap-2 text-left">
+            <ShieldCheck className="w-5 h-5 text-emerald-500 shrink-0" />
+            <span>
+              <strong className="text-slate-800 dark:text-slate-200 font-semibold">100% Offline & Private:</strong> Your files never leave your browser memory.
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3 font-mono text-[11px]">
+            <span className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">Ctrl+K: Spotlight</span>
+            <span className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">Ctrl+B: Sidebar</span>
+            <a
+              href="https://suhail.top"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 dark:text-blue-400 hover:underline font-semibold"
+            >
+              Suhail Akhtar
+            </a>
+          </div>
         </div>
       </div>
     </div>
   );
 };
-

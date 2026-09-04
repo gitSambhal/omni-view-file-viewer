@@ -42,10 +42,23 @@ import {
   HelpCircle,
   ExternalLink,
   ShieldCheck,
-  HardDrive
+  HardDrive,
+  Zap,
+  Package
 } from 'lucide-react';
 import { getFileExtension } from '../../services/fileDetector';
 import { formatCode } from '../../services/codeFormatter';
+import {
+  ConsoleLogItem,
+  SupportedRunner,
+  RUNNERS_REGISTRY,
+  detectRunner,
+  runJavaScript,
+  runPython,
+  runSQL,
+  runBash,
+  runBrainfuck
+} from '../../services/codeRunners';
 
 export interface CodeViewerProps {
   textContent?: string;
@@ -61,13 +74,8 @@ export interface CodeViewerProps {
   onToggleLiveSync?: () => void;
   onSwitchToLivePreview?: () => void;
   onSwitchToDatabase?: () => void;
-}
-
-interface ConsoleLogItem {
-  id: string;
-  type: 'log' | 'info' | 'warn' | 'error' | 'return';
-  content: string;
-  time: string;
+  onOpenRunnersGuide?: () => void;
+  onOpenNpmTester?: () => void;
 }
 
 type LineHeightOption = 'compact' | 'normal' | 'relaxed' | 'spacious';
@@ -85,10 +93,10 @@ export type FontFamilyOption =
 
 const EXT_LANG_MAP: Record<string, string> = {
   js: 'javascript', jsx: 'javascript', ts: 'typescript', tsx: 'typescript',
-  mjs: 'javascript', cjs: 'javascript',
+  mts: 'typescript', cts: 'typescript', mjs: 'javascript', cjs: 'javascript',
   html: 'html', htm: 'html', svg: 'xml', xml: 'xml', css: 'css', scss: 'scss',
   py: 'python', pyw: 'python', java: 'java',
-  cpp: 'cpp', c: 'c', h: 'c', cs: 'csharp', php: 'php', rb: 'ruby', rs: 'rust',
+  cpp: 'cpp', c: 'c', h: 'c', hpp: 'cpp', cs: 'csharp', php: 'php', rb: 'ruby', rs: 'rust',
   go: 'go', sql: 'sql', sh: 'bash', bash: 'bash', zsh: 'bash', env: 'bash',
   json: 'json', yaml: 'yaml', yml: 'yaml', md: 'markdown',
   dockerfile: 'dockerfile', makefile: 'makefile', toml: 'ini', ini: 'ini'
@@ -127,7 +135,9 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
   onReloadFromDisk,
   onToggleLiveSync,
   onSwitchToLivePreview,
-  onSwitchToDatabase
+  onSwitchToDatabase,
+  onOpenRunnersGuide,
+  onOpenNpmTester
 }) => {
   const ext = getFileExtension(filename);
   const defaultLang = EXT_LANG_MAP[ext] || 'plaintext';
@@ -140,13 +150,22 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
   const [isReloading, setIsReloading] = useState<boolean>(false);
   const [isReadOnly, setIsReadOnly] = useState<boolean>(false);
 
+  // Code Editor Preferences (stored locally)
+  const [language, setLanguage] = useState<string>(defaultLang);
+
+  // Active Runner State & Auto-detection
+  const [selectedRunner, setSelectedRunner] = useState<SupportedRunner>(() => detectRunner(filename, defaultLang));
+
   // Sync internal state when external textContent updates (e.g. from disk live sync)
   useEffect(() => {
     setCode(textContent);
   }, [textContent]);
 
-  // Code Editor Preferences (stored locally)
-  const [language, setLanguage] = useState<string>(defaultLang);
+  // Synchronize runner when filename or language changes
+  useEffect(() => {
+    setSelectedRunner(detectRunner(filename, language));
+  }, [filename, language]);
+
   const [wordWrap, setWordWrap] = useState<boolean>(false);
   const [fontSize, setFontSize] = useState<number>(() => {
     const saved = localStorage.getItem('omni_editor_fontsize');
@@ -547,14 +566,10 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
     showFormatNotice(`Replaced ${count} occurrence(s).`);
   };
 
-  // Safe Code Execution Runner
-  const handleRunCode = () => {
-    if (isHtmlCapable && onSwitchToLivePreview) {
+  // Safe Universal Code Execution Runner
+  const handleRunCode = async () => {
+    if (isHtmlCapable && onSwitchToLivePreview && selectedRunner === 'javascript' && !['javascript', 'typescript'].includes(language)) {
       onSwitchToLivePreview();
-      return;
-    }
-    if (isSqlCapable && onSwitchToDatabase) {
-      onSwitchToDatabase();
       return;
     }
 
@@ -566,7 +581,7 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
     const startTime = performance.now();
     const logs: ConsoleLogItem[] = [];
 
-    const addLog = (type: ConsoleLogItem['type'], content: any) => {
+    const addLog = (type: ConsoleLogItem['type'], content: any, tableData?: any) => {
       const now = new Date();
       const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}.${now.getMilliseconds().toString().padStart(3, '0')}`;
       let str = '';
@@ -583,109 +598,84 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
         id: Math.random().toString(36).substring(2, 9),
         type,
         content: str,
+        tableData,
         time: timeStr
       });
+      setConsoleLogs([...logs]);
     };
 
-    setTimeout(() => {
-      try {
-        const langLower = language.toLowerCase();
-
-        if (langLower.includes('javascript') || langLower.includes('typescript') || ['js', 'ts', 'jsx', 'tsx'].includes(ext)) {
-          // Clean TypeScript type annotations
-          const codeToRun = code
-            .replace(/:\s*[A-Za-z0-9_<>\[\]|&\s]+(?=[=,\)\{;])/g, '')
-            .replace(/interface\s+[A-Za-z0-9_]+\s*\{[^}]*\}/g, '')
-            .replace(/type\s+[A-Za-z0-9_]+\s*=[^;]+;/g, '');
-
-          // Sandbox custom console
-          const sandboxedConsole = {
-            log: (...args: any[]) => addLog('log', args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ')),
-            info: (...args: any[]) => addLog('info', args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ')),
-            warn: (...args: any[]) => addLog('warn', args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ')),
-            error: (...args: any[]) => addLog('error', args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ')),
-            table: (data: any) => addLog('log', `[TABLE Output]\n${JSON.stringify(data, null, 2)}`)
-          };
-
-          const runner = new Function('console', 'require', 'window', 'document', `
-            try {
-              ${codeToRun}
-            } catch (err) {
-              console.error(err.stack || err.message || String(err));
-              throw err;
-            }
-          `);
-
-          const result = runner(sandboxedConsole, () => ({}), undefined, undefined);
-          if (result !== undefined) {
-            addLog('return', result);
-          }
-          if (logs.length === 0) {
-            addLog('info', 'Code executed successfully with 0 console logs.');
-          }
-          setExecutionStatus('success');
-        } else if (langLower.includes('python') || ext === 'py') {
-          // Python execution emulator
-          const pyLines = code.split('\n');
-          let outputCount = 0;
-          pyLines.forEach(line => {
-            const printMatch = line.match(/^\s*print\s*\((.*)\)\s*$/);
-            if (printMatch) {
-              try {
-                const rawArgs = printMatch[1];
-                const evaluated = rawArgs.replace(/f"([^"]*)"/g, (_, inner) => inner).replace(/f'([^']*)'/g, (_, inner) => inner);
-                addLog('log', evaluated.replace(/^['"]|['"]$/g, ''));
-                outputCount++;
-              } catch (_) {
-                addLog('log', printMatch[1]);
-                outputCount++;
-              }
-            }
-          });
-          if (outputCount === 0) {
-            addLog('info', `Python script parsed (${pyLines.length} lines). Execution environment ready.`);
-          }
-          setExecutionStatus('success');
-        } else if (langLower.includes('bash') || ['sh', 'bash', 'zsh'].includes(ext)) {
-          // Shell script output
-          const shLines = code.split('\n');
-          shLines.forEach(line => {
-            const trimmed = line.trim();
-            if (trimmed.startsWith('echo ')) {
-              addLog('log', trimmed.substring(5).replace(/^['"]|['"]$/g, ''));
-            } else if (trimmed && !trimmed.startsWith('#')) {
-              addLog('info', `$ ${trimmed}`);
-            }
-          });
-          setExecutionStatus('success');
-        } else if (langLower.includes('json') || ext === 'json') {
+    try {
+      if (selectedRunner === 'python') {
+        await runPython(code, addLog);
+      } else if (selectedRunner === 'sql') {
+        await runSQL(code, addLog);
+      } else if (selectedRunner === 'bash') {
+        await runBash(code, addLog);
+      } else if (selectedRunner === 'brainfuck') {
+        runBrainfuck(code, addLog);
+      } else if (selectedRunner === 'json') {
+        try {
           const parsed = JSON.parse(code);
-          addLog('info', `Valid JSON Document (${Object.keys(parsed).length} top-level keys).`);
+          addLog('info', `Valid JSON Document (${Object.keys(parsed).length} root keys).`);
           addLog('return', parsed);
-          setExecutionStatus('success');
-        } else {
-          addLog('info', `Preview ready for ${filename} (${language}).`);
-          setExecutionStatus('success');
+        } catch (e: any) {
+          addLog('error', `JSON Syntax Error: ${e.message}`);
         }
-      } catch (err: any) {
-        addLog('error', err.message || String(err));
-        setExecutionStatus('error');
-      } finally {
-        const endTime = performance.now();
-        setExecutionTime(endTime - startTime);
-        setConsoleLogs([...logs]);
-        setIsRunning(false);
+      } else if (selectedRunner === 'regex') {
+        const lines = code.split('\n');
+        let patternStr = '([A-Za-z0-9_]+)';
+        let flags = 'g';
+        const matchRegexLine = lines[0].match(/(?:\/\/\s*)?\/([^/]+)\/([gimsuy]*)/);
+        if (matchRegexLine) {
+          patternStr = matchRegexLine[1];
+          flags = matchRegexLine[2] || 'g';
+        }
+        const textToSearch = lines.slice(matchRegexLine ? 1 : 0).join('\n');
+        const re = new RegExp(patternStr, flags);
+        const matches = [...textToSearch.matchAll(re)];
+        addLog('info', `Regex /${patternStr}/${flags}: found ${matches.length} match(es).`);
+        if (matches.length > 0) {
+          const matchRows = matches.slice(0, 50).map((m, idx) => ({
+            '#': String(idx + 1),
+            'Match': m[0],
+            'Index': String(m.index),
+            'Groups': m.slice(1).join(', ') || '-'
+          }));
+          addLog('table', `Found ${matches.length} matches:`, {
+            columns: ['#', 'Match', 'Index', 'Groups'],
+            rows: matchRows.map(r => [r['#'], r['Match'], r['Index'], r['Groups']])
+          });
+        }
+      } else {
+        // javascript / typescript default
+        const result = await runJavaScript(code, addLog);
+        if (result !== undefined) {
+          addLog('return', result);
+        }
+        if (logs.length === 0) {
+          addLog('info', 'Execution finished with 0 console logs.');
+        }
       }
-    }, 40);
+      setExecutionStatus('success');
+    } catch (err: any) {
+      if (logs.length === 0 || logs[logs.length - 1]?.type !== 'error') {
+        addLog('error', err.message || String(err));
+      }
+      setExecutionStatus('error');
+    } finally {
+      const endTime = performance.now();
+      setExecutionTime(endTime - startTime);
+      setIsRunning(false);
+    }
   };
 
   const currentLineHeight = LINE_HEIGHT_VALUES[lineHeight];
   const currentFontFamily = FONT_FAMILY_CLASSES[fontFamily];
 
   return (
-    <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 bg-[#1e2227] text-slate-100 font-mono overflow-hidden transition-colors relative select-text">
+    <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 bg-white dark:bg-[#1e2227] text-slate-800 dark:text-slate-100 font-mono overflow-hidden transition-colors relative select-text">
       {/* 1. Editor Main Header Toolbar */}
-      <div className="flex flex-wrap items-center justify-between px-3 py-2 bg-[#21252b] border-b border-slate-700/80 gap-2 z-20 shrink-0 select-none shadow-2xs">
+      <div className="flex flex-wrap items-center justify-between px-3 py-2 bg-slate-100 dark:bg-[#21252b] border-b border-slate-200 dark:border-slate-700/80 gap-2 z-20 shrink-0 select-none shadow-2xs">
         {/* Left: Language, Format, Run, Live View */}
         <div className="flex items-center gap-1.5 flex-wrap">
           {/* File Badge */}
@@ -762,16 +752,53 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
             <span>{isFormatting ? 'Formatting...' : 'Format'}</span>
           </button>
 
-          {/* Run Code Sandbox Button */}
-          {isRunnable && (
+          {/* Run Code Sandbox Button & Runner Selector */}
+          <div className="flex items-center gap-1 bg-slate-800/80 p-0.5 rounded-lg border border-slate-700/70">
             <button
               onClick={handleRunCode}
               disabled={isRunning}
-              className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg text-xs font-semibold shadow-2xs transition-all cursor-pointer disabled:opacity-40"
-              title="Run Code in In-Browser Sandbox (Ctrl+Enter)"
+              className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-md text-xs font-semibold shadow-2xs transition-all cursor-pointer disabled:opacity-40"
+              title={`Run in ${selectedRunner.toUpperCase()} Sandbox (Ctrl+Enter)`}
             >
               <Play className={`w-3.5 h-3.5 fill-current ${isRunning ? 'animate-spin' : ''}`} />
               <span>{isRunning ? 'Running...' : 'Run'}</span>
+            </button>
+
+            {/* Quick Runner Selector Dropdown */}
+            <select
+              value={selectedRunner}
+              onChange={e => setSelectedRunner(e.target.value as SupportedRunner)}
+              className="bg-transparent text-slate-200 text-xs px-1.5 py-0.5 rounded focus:outline-none cursor-pointer border-none font-medium hover:text-white"
+              title="Select Execution Engine"
+            >
+              {RUNNERS_REGISTRY.map(r => (
+                <option key={r.id} value={r.id} className="bg-slate-900 text-slate-100">
+                  {r.name.split(' (')[0]}
+                </option>
+              ))}
+            </select>
+
+            {/* Code Runners Directory / Guide Button */}
+            {onOpenRunnersGuide && (
+              <button
+                onClick={onOpenRunnersGuide}
+                className="p-1 text-slate-400 hover:text-emerald-400 hover:bg-slate-700/60 rounded transition-colors cursor-pointer"
+                title="Supported Code Runners Guide & Engine Specs"
+              >
+                <HelpCircle className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* NPM Package Tester & Live CDN Playground */}
+          {onOpenNpmTester && (
+            <button
+              onClick={onOpenNpmTester}
+              className="flex items-center gap-1.5 bg-amber-600/90 hover:bg-amber-500 text-white px-2.5 py-1 rounded-lg text-xs font-semibold shadow-2xs transition-all cursor-pointer"
+              title="Open NPM Package Tester & Live CDN Playground (test any package directly)"
+            >
+              <Package className="w-3.5 h-3.5 text-amber-200" />
+              <span>NPM Tester</span>
             </button>
           )}
 
@@ -1163,12 +1190,12 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
       )}
 
       {/* 3. Main Synchronized Code Editor Area */}
-      <div className="flex-1 flex min-h-0 min-w-0 relative overflow-hidden bg-[#282c34]">
+      <div className="flex-1 flex min-h-0 min-w-0 relative overflow-hidden bg-white dark:bg-[#282c34]">
         {/* Line Numbers Gutter */}
         {showLineNumbers && (
           <div
             ref={gutterRef}
-            className="select-none text-right pr-3 pl-2 py-3 text-slate-500 border-r border-slate-700/60 font-mono overflow-hidden shrink-0 bg-[#21252b] z-10"
+            className="select-none text-right pr-3 pl-2 py-3 text-slate-400 dark:text-slate-500 border-r border-slate-200 dark:border-slate-700/60 font-mono overflow-hidden shrink-0 bg-slate-100 dark:bg-[#21252b] z-10"
             style={{
               fontSize: `${fontSize}px`,
               lineHeight: currentLineHeight,
@@ -1261,6 +1288,10 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
               <Terminal className="w-3.5 h-3.5 text-emerald-400" />
               <span className="font-semibold text-slate-200">Execution Output</span>
 
+              <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                {selectedRunner}
+              </span>
+
               {executionTime !== null && (
                 <span className="flex items-center gap-1 text-[10px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded">
                   <Clock className="w-3 h-3 text-emerald-400" />
@@ -1305,7 +1336,7 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
             </div>
           </div>
 
-          <div className="p-3 overflow-y-auto max-h-56 font-mono text-xs space-y-1.5 select-text">
+          <div className="p-3 overflow-y-auto max-h-56 font-mono text-xs space-y-2 select-text">
             {consoleLogs.length === 0 ? (
               <div className="text-slate-500 italic">No output. Press "Run Code" to execute.</div>
             ) : (
@@ -1315,18 +1346,49 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
                   info: 'bg-blue-900/40 text-blue-300 border-blue-700',
                   warn: 'bg-amber-900/40 text-amber-300 border-amber-700',
                   error: 'bg-red-900/40 text-red-300 border-red-700',
-                  return: 'bg-emerald-900/40 text-emerald-300 border-emerald-700'
-                }[log.type];
+                  return: 'bg-emerald-900/40 text-emerald-300 border-emerald-700',
+                  table: 'bg-purple-900/40 text-purple-300 border-purple-700'
+                }[log.type] || 'bg-slate-800 text-slate-300 border-slate-700';
 
                 return (
-                  <div key={log.id} className="flex items-start gap-2 leading-relaxed">
-                    <span className="text-[10px] text-slate-500 shrink-0 select-none pt-0.5">{log.time}</span>
-                    <span className={`text-[9px] uppercase px-1.5 py-0.2 rounded border font-semibold shrink-0 select-none ${badgeColor}`}>
-                      {log.type}
-                    </span>
-                    <pre className="text-slate-200 whitespace-pre-wrap break-all flex-1 font-mono text-xs m-0">
-                      {log.content}
-                    </pre>
+                  <div key={log.id} className="space-y-1">
+                    <div className="flex items-start gap-2 leading-relaxed">
+                      <span className="text-[10px] text-slate-500 shrink-0 select-none pt-0.5">{log.time}</span>
+                      <span className={`text-[9px] uppercase px-1.5 py-0.2 rounded border font-semibold shrink-0 select-none ${badgeColor}`}>
+                        {log.type}
+                      </span>
+                      <pre className="text-slate-200 whitespace-pre-wrap break-all flex-1 font-mono text-xs m-0">
+                        {log.content}
+                      </pre>
+                    </div>
+
+                    {/* Rich Data Table Rendering (if tableData provided) */}
+                    {log.tableData && log.tableData.columns && (
+                      <div className="ml-16 my-1.5 overflow-x-auto border border-slate-800 rounded-lg max-h-48">
+                        <table className="w-full text-left border-collapse text-[11px] font-mono">
+                          <thead>
+                            <tr className="bg-slate-900 text-slate-300 border-b border-slate-800">
+                              {log.tableData.columns.map((col: string, i: number) => (
+                                <th key={i} className="p-1.5 px-2.5 font-semibold text-slate-400">
+                                  {col}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {log.tableData.rows.map((row: string[], ri: number) => (
+                              <tr key={ri} className="border-b border-slate-800/60 hover:bg-slate-900/50">
+                                {row.map((cell: string, ci: number) => (
+                                  <td key={ci} className="p-1.5 px-2.5 text-slate-200">
+                                    {cell}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
                   </div>
                 );
               })
@@ -1336,7 +1398,7 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
       )}
 
       {/* 5. Status Bar Footer */}
-      <footer className="flex items-center justify-between px-3 py-1 bg-[#1e2227] border-t border-slate-700/80 text-[11px] text-slate-400 select-none shrink-0 font-mono z-20">
+      <footer className="flex items-center justify-between px-3 py-1 bg-slate-100 dark:bg-[#1e2227] border-t border-slate-200 dark:border-slate-700/80 text-[11px] text-slate-500 dark:text-slate-400 select-none shrink-0 font-mono z-20">
         <div className="flex items-center gap-3">
           <span>Ln {cursorPos.line}, Col {cursorPos.col}</span>
           {cursorPos.selectionLength > 0 && (

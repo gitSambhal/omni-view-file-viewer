@@ -117,6 +117,11 @@ export function detectFileCategory(filename: string, mimeType: string = ''): Fil
     return 'image';
   }
 
+  // TypeScript and Code file extensions (prioritized over browser video/mp2t default MIME)
+  if (['ts', 'tsx', 'mts', 'cts'].includes(ext) || lowerName.endsWith('.d.ts')) {
+    return 'code';
+  }
+
   // Audio files (MP3, WAV, FLAC, M4A, AAC, Opus, Ogg, WMA, AIFF, ALAC, AC3, APE, MIDI, AMR, etc.)
   const audioExtensions = [
     'mp3', 'wav', 'ogg', 'oga', 'opus', 'flac', 'm4a', 'm4b', 'm4p', 'alac',
@@ -127,13 +132,17 @@ export function detectFileCategory(filename: string, mimeType: string = ''): Fil
     return 'audio';
   }
 
-  // Video files (MKV, MP4, WebM, MOV, AVI, WMV, FLV, M4V, 3GP, TS/MTS, OGV, VOB, etc.)
+  // Video files (MKV, MP4, WebM, MOV, AVI, WMV, FLV, M4V, 3GP, M2TS, OGV, VOB, etc.)
+  // Note: 'ts' and 'mts' are handled intelligently via probeAmbiguousCategory to avoid mistaking TypeScript for video
   const videoExtensions = [
     'mp4', 'm4v', 'webm', 'mkv', 'mov', 'qt', 'avi', 'wmv', 'asf', 'flv', 'f4v',
-    '3gp', '3g2', 'ts', 'mts', 'm2ts', 'ogv', 'vob', 'divx', 'xvid', 'rm', 'rmvb',
+    '3gp', '3g2', 'm2ts', 'ogv', 'vob', 'divx', 'xvid', 'rm', 'rmvb',
     'm2v', 'mpg', 'mpeg'
   ];
-  if (videoExtensions.includes(ext) || mimeType.startsWith('video/')) {
+  if (
+    videoExtensions.includes(ext) ||
+    (mimeType.startsWith('video/') && !['ts', 'tsx', 'mts', 'cts'].includes(ext))
+  ) {
     return 'video';
   }
 
@@ -180,4 +189,61 @@ export function formatFileSize(bytes: number): string {
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+/**
+ * Intelligently inspects the leading bytes of a file to disambiguate ambiguous file types,
+ * particularly .ts / .mts (TypeScript source code vs MPEG-2 Transport Stream binary video).
+ */
+export function probeAmbiguousCategory(
+  filename: string,
+  initialCategory: FileCategory,
+  sampleBytes?: Uint8Array | ArrayBuffer | null
+): FileCategory {
+  if (!sampleBytes) return initialCategory;
+
+  const bytes = sampleBytes instanceof Uint8Array ? sampleBytes : new Uint8Array(sampleBytes);
+  const ext = getFileExtension(filename);
+
+  if (['ts', 'mts'].includes(ext)) {
+    if (bytes.length === 0) return 'code';
+
+    // 1. Check for MPEG-2 Transport Stream sync packet signatures
+    // Standard MPEG-TS packets are 188 bytes long and always start with sync byte 0x47 ('G').
+    if (bytes.length >= 188) {
+      if (bytes[0] === 0x47) {
+        if (bytes.length >= 376 && bytes[188] === 0x47 && bytes[376] === 0x47) {
+          return 'video'; // Unambiguous MPEG-TS packet sync pattern at 0, 188, 376
+        }
+        if (bytes.length >= 188 && bytes[188] === 0x47) {
+          return 'video';
+        }
+      }
+    }
+
+    // 2. Count null bytes (0x00) and binary control characters
+    // Plain text source code (TypeScript) does not contain null bytes.
+    let nullBytes = 0;
+    let nonPrintableCount = 0;
+    const checkLength = Math.min(bytes.length, 1024);
+
+    for (let i = 0; i < checkLength; i++) {
+      const b = bytes[i];
+      if (b === 0) {
+        nullBytes++;
+      } else if (b < 9 || (b > 13 && b < 32 && b !== 27)) {
+        nonPrintableCount++;
+      }
+    }
+
+    // If there are multiple null bytes or substantial non-printable binary control bytes, it's binary media
+    if (nullBytes > 1 || nonPrintableCount > 20) {
+      return 'video';
+    }
+
+    // Otherwise, it is clean UTF-8 text -> TypeScript code
+    return 'code';
+  }
+
+  return initialCategory;
 }

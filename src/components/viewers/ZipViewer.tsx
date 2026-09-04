@@ -92,22 +92,22 @@ export const ZipViewer: React.FC<ZipViewerProps> = ({ arrayBuffer, filename, onP
   };
 
   return (
-    <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 bg-slate-900 text-slate-100 overflow-hidden">
+    <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 overflow-hidden transition-colors">
       {/* Header */}
-      <div className="flex items-center justify-between p-3 bg-slate-800 border-b border-slate-700">
-        <div className="flex items-center gap-2 text-xs font-semibold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded border border-amber-500/20">
+      <div className="flex items-center justify-between p-3 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+        <div className="flex items-center gap-2 text-xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-2.5 py-1 rounded border border-amber-200 dark:border-amber-500/20">
           <Archive className="w-3.5 h-3.5" />
           Archive Explorer ({zipItems.length} files)
         </div>
 
-        <div className="flex items-center bg-slate-950 px-2 py-1 rounded border border-slate-700 text-xs">
+        <div className="flex items-center bg-white dark:bg-slate-950 px-2 py-1 rounded border border-slate-200 dark:border-slate-700 text-xs">
           <Search className="w-3.5 h-3.5 text-slate-400 mr-1.5" />
           <input
             type="text"
             placeholder="Search files inside archive..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="bg-transparent text-slate-200 focus:outline-none w-44 text-xs"
+            className="bg-transparent text-slate-800 dark:text-slate-200 focus:outline-none w-44 text-xs"
           />
         </div>
       </div>
@@ -184,7 +184,7 @@ export const ZipViewer: React.FC<ZipViewerProps> = ({ arrayBuffer, filename, onP
 
             <div className="flex-1 overflow-auto bg-slate-900 rounded p-3 border border-slate-800">
               {previewContent.isImage ? (
-                <img src={previewContent.url} alt="Zip File preview" className="max-w-full max-h-full object-contain mx-auto" />
+                <img src={previewContent.url || undefined} alt="Zip File preview" className="max-w-full max-h-full object-contain mx-auto" />
               ) : (
                 <pre className="text-xs font-mono text-slate-200 whitespace-pre-wrap">{previewContent.text}</pre>
               )}

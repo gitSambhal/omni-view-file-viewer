@@ -58,6 +58,7 @@ export interface TabFile {
   textContent?: string;
   dataUrl?: string;
   objectUrl?: string;
+  sourceUrl?: string; // Originating remote URL if opened from URL
 
   // Live Sync state
   liveSyncActive: boolean;

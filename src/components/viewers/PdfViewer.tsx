@@ -284,7 +284,7 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({ objectUrl, arrayBuffer, fi
               {pdfBlobUrl && (
                 <div className="pt-2">
                   <iframe
-                    src={pdfBlobUrl}
+                    src={pdfBlobUrl || undefined}
                     title={filename}
                     className="w-full h-64 rounded border border-slate-300 dark:border-slate-800 mb-3"
                   />
