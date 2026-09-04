@@ -649,5 +649,48 @@ export function getSampleTabFiles(): TabFile[] {
     zoomLevel: 100
   };
 
-  return [sampleMd, sampleEpub, sampleHtml, sampleHttp, sampleDll, sampleCode, sampleLog, sampleCsv, sampleSql, sampleGeoJson, sampleCert, sampleJson];
+  const sampleVideo: TabFile = {
+    id: 'sample-video',
+    name: 'OmniView_Cinema_Intro.webm',
+    size: 524288,
+    type: 'video/webm',
+    lastModified: now - 120000,
+    extension: 'webm',
+    category: 'video',
+    liveSyncActive: false,
+    syncStatus: 'synced',
+    viewMode: 'preview',
+    zoomLevel: 100
+  };
+
+  const sampleAudio: TabFile = {
+    id: 'sample-audio',
+    name: 'Ambient_Chords_Loop.wav',
+    size: 529244,
+    type: 'audio/wav',
+    lastModified: now - 60000,
+    extension: 'wav',
+    category: 'audio',
+    liveSyncActive: false,
+    syncStatus: 'synced',
+    viewMode: 'preview',
+    zoomLevel: 100
+  };
+
+  return [
+    sampleMd,
+    sampleVideo,
+    sampleAudio,
+    sampleEpub,
+    sampleHtml,
+    sampleHttp,
+    sampleDll,
+    sampleCode,
+    sampleLog,
+    sampleCsv,
+    sampleSql,
+    sampleGeoJson,
+    sampleCert,
+    sampleJson
+  ];
 }

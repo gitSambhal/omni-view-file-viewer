@@ -13,6 +13,7 @@ import { TabFile, FileCategory } from './types/file';
 import { detectFileCategory, getFileExtension } from './services/fileDetector';
 import { getSampleTabFiles } from './services/sampleFiles';
 import { generateSampleEpubBuffer } from './services/sampleEpub';
+import { generateSampleWavBlob, generateSampleVideoBlob } from './services/sampleMedia';
 
 import { Header } from './components/Header';
 import { TabBar } from './components/TabBar';
@@ -54,7 +55,7 @@ export default function App() {
   const [tabs, setTabs] = useState<TabFile[]>(() => getSampleTabFiles());
   const [activeTabId, setActiveTabId] = useState<string | null>('sample-md');
 
-  // Lazily populate sample EPUB ArrayBuffer on initial mount
+  // Lazily populate sample EPUB ArrayBuffer and sample media Blobs on initial mount
   useEffect(() => {
     const epubTab = tabs.find(t => t.id === 'sample-epub');
     if (epubTab && !epubTab.arrayBuffer) {
@@ -64,6 +65,37 @@ export default function App() {
             t.id === 'sample-epub' ? { ...t, arrayBuffer: buf, size: buf.byteLength } : t
           )
         );
+      });
+    }
+
+    const audioTab = tabs.find(t => t.id === 'sample-audio');
+    if (audioTab && !audioTab.objectUrl) {
+      try {
+        const wavBlob = generateSampleWavBlob();
+        const url = URL.createObjectURL(wavBlob);
+        setTabs(prev =>
+          prev.map(t =>
+            t.id === 'sample-audio' ? { ...t, objectUrl: url, size: wavBlob.size } : t
+          )
+        );
+      } catch (err) {
+        console.warn('Could not generate sample audio:', err);
+      }
+    }
+
+    const videoTab = tabs.find(t => t.id === 'sample-video');
+    if (videoTab && !videoTab.objectUrl) {
+      generateSampleVideoBlob().then(vidBlob => {
+        if (vidBlob && vidBlob.size > 0) {
+          const url = URL.createObjectURL(vidBlob);
+          setTabs(prev =>
+            prev.map(t =>
+              t.id === 'sample-video' ? { ...t, objectUrl: url, size: vidBlob.size } : t
+            )
+          );
+        }
+      }).catch(err => {
+        console.warn('Could not generate sample video:', err);
       });
     }
   }, []);
@@ -842,6 +874,7 @@ export default function App() {
                     objectUrl={activeTab.objectUrl}
                     dataUrl={activeTab.dataUrl}
                     arrayBuffer={activeTab.arrayBuffer}
+                    fileRaw={activeTab.fileRaw}
                     filename={activeTab.name}
                     isAudio={currentCategory === 'audio'}
                   />

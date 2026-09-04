@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.9.0] - 2026-09-04
+
+### Added
+- **True Fullscreen Video Cinema Studio Player (`MediaViewer`)**:
+  - **Full-Viewport Cinema Mode**: Edge-to-edge video canvas eliminating fixed max-width constraints, outer container borders, and padding.
+  - **Black Bar Eliminator / Aspect Fit Controls**: Instant toggle between *Fit Screen* (`object-contain`), *Fill / No Bars* (`object-cover` with smooth centered crop), and *Stretch* (`object-fill`).
+  - **Auto-Hiding Floating Overlay Controls**: Controls float over the video stream with subtle radial/linear gradients and smoothly auto-hide after 2.5s of inactivity while playing. The cursor is hidden when controls are dismissed for a clean cinematic view.
+  - **Dual Fullscreen Engine**: Native Fullscreen API with graceful fallback to In-Window Theater Mode (`fixed inset-0 z-[99999]`) ensuring full-screen playback works flawlessly even within restricted iframe containers.
+  - **Interactive Scrubbing & Time Tooltip**: Responsive timeline scrubber displaying live hover timestamp tooltips and remaining/elapsed time display.
+  - **Keyboard Shortcuts**: Complete desktop hotkeys (`Space`/`K` to play/pause, `F` for fullscreen, `T` for theater mode, `M` for mute, `J`/`L` or `Left`/`Right` for 5s jumps, and `Up`/`Down` for volume).
+  - **Animated Splash Feedback**: Visual pulse indicator on play/pause clicks directly on the video.
+- **Offline Video & Audio Synthesis Engine (`sampleMedia.ts`)**:
+  - Built-in canvas and WebM/MP4 generator creating offline video loops with animated geometry, real-time timecodes, and dynamic visualizer bars.
+  - Synthesized 16-bit stereo PCM WAV generator creating smooth ambient chords for offline audio testing without network dependencies.
+
+### Fixed
+- **DocxViewer Infinite Loading**: Resolved bug where files without binary ArrayBuffer or text fallback remained locked in an infinite loading spinner.
+- **PptxViewer Error Handling**: Added dedicated error boundary state and empty slide fallback preventing silent failures on corrupted or non-standard PPTX archives.
+- **MediaViewer Prop Synchronization**: Connected `fileRaw` direct object URL fallback to prevent broken media src issues.
+
+---
+
 ## [1.8.0] - 2026-09-02
 
 ### Added

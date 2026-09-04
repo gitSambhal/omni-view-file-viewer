@@ -40,8 +40,10 @@ export const DocxViewer: React.FC<DocxViewerProps> = ({ arrayBuffer, textContent
         if (textContent) {
           setRawText(textContent);
           setHtmlContent(`<pre class="whitespace-pre-wrap font-sans text-sm">${textContent}</pre>`);
-          setLoading(false);
+        } else {
+          setError('No document data available to display.');
         }
+        setLoading(false);
         return;
       }
 

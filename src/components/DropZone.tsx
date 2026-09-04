@@ -57,6 +57,9 @@ export const DropZone: React.FC<DropZoneProps> = ({
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      onFilesSelected(e.dataTransfer.files);
+    }
   };
 
   return (

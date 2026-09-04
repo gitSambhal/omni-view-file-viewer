@@ -117,19 +117,23 @@ export function detectFileCategory(filename: string, mimeType: string = ''): Fil
     return 'image';
   }
 
-  // Audio files
-  if (
-    ['mp3', 'wav', 'ogg', 'flac', 'm4a', 'aac', 'wma', 'opus', 'mid', 'midi'].includes(ext) ||
-    mimeType.startsWith('audio/')
-  ) {
+  // Audio files (MP3, WAV, FLAC, M4A, AAC, Opus, Ogg, WMA, AIFF, ALAC, AC3, APE, MIDI, AMR, etc.)
+  const audioExtensions = [
+    'mp3', 'wav', 'ogg', 'oga', 'opus', 'flac', 'm4a', 'm4b', 'm4p', 'alac',
+    'aac', 'wma', 'aiff', 'aif', 'aifc', 'ac3', 'eac3', 'ape', 'mid', 'midi',
+    'amr', 'weba', 'mka', 'mp2', 'mpa'
+  ];
+  if (audioExtensions.includes(ext) || mimeType.startsWith('audio/')) {
     return 'audio';
   }
 
-  // Video files
-  if (
-    ['mp4', 'webm', 'mkv', 'mov', 'avi', 'wmv', 'flv', 'm4v', '3gp'].includes(ext) ||
-    mimeType.startsWith('video/')
-  ) {
+  // Video files (MKV, MP4, WebM, MOV, AVI, WMV, FLV, M4V, 3GP, TS/MTS, OGV, VOB, etc.)
+  const videoExtensions = [
+    'mp4', 'm4v', 'webm', 'mkv', 'mov', 'qt', 'avi', 'wmv', 'asf', 'flv', 'f4v',
+    '3gp', '3g2', 'ts', 'mts', 'm2ts', 'ogv', 'vob', 'divx', 'xvid', 'rm', 'rmvb',
+    'm2v', 'mpg', 'mpeg'
+  ];
+  if (videoExtensions.includes(ext) || mimeType.startsWith('video/')) {
     return 'video';
   }
 

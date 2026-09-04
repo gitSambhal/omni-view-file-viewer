@@ -623,27 +623,63 @@ export const SUPPORTED_FORMATS: FormatDefinition[] = [
     badgeBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30'
   },
 
-  // 12. Media (Video & Audio)
+  // 12. Media (Video & Audio Studio Pro)
   {
-    extension: '.mp4 / .webm',
-    name: 'High-Definition Video',
+    extension: '.mkv',
+    name: 'Matroska Media Container (MKV)',
+    category: 'video',
+    categoryName: 'Media & Video',
+    mimeType: 'video/x-matroska',
+    description: 'Extensible Matroska container with EBML header parsing, multi-track audio/video stream inspection, subtitle detection, WebM compatibility profile, and zero-copy streaming.',
+    capabilities: ['EBML Header Inspector', 'Multi-Track Audio/Video', 'Subtitle Stream Extraction', 'WebM Compatibility Mode', 'Zero-Copy Streaming'],
+    icon: Video,
+    color: 'text-purple-500 dark:text-purple-400',
+    badgeBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30'
+  },
+  {
+    extension: '.mp4 / .webm / .m4v',
+    name: 'High-Definition & 4K Video',
     category: 'video',
     categoryName: 'Media & Video',
     mimeType: 'video/mp4',
-    description: 'Zero-copy direct stream video player supporting multi-gigabyte files without browser memory exhaustion.',
-    capabilities: ['Zero-Copy Blob Streaming', 'Fullscreen', 'Speed Controls (0.25x-2x)', 'Picture-in-Picture'],
+    description: 'Hardware-accelerated edge-to-edge cinema video player supporting 4K UHD, theater mode, aspect fit/fill zoom, speed scaling (0.5x-2x), and PiP.',
+    capabilities: ['Zero-Copy Blob Streaming', 'Edge-to-Edge Cinema Mode', 'Aspect Ratio Fit/Fill (No Black Bars)', 'Speed Controls (0.5x-2x)', 'Picture-in-Picture'],
     icon: Video,
     color: 'text-rose-500 dark:text-rose-400',
     badgeBg: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30'
   },
   {
-    extension: '.mp3 / .wav / .ogg',
-    name: 'Audio Track',
+    extension: '.mov / .avi / .wmv / .flv / .3gp / .ts',
+    name: 'Expanded Video Containers',
+    category: 'video',
+    categoryName: 'Media & Video',
+    mimeType: 'video/quicktime',
+    description: 'Universal video container support with RIFF/AVI chunk parsing, Apple QuickTime box parsing, MPEG transport stream detection, and stream spec analyzer.',
+    capabilities: ['Container Header Inspector', 'Codec FourCC Extraction', 'Native Stream Fallback', 'VLC/MPV Export'],
+    icon: Video,
+    color: 'text-indigo-500 dark:text-indigo-400',
+    badgeBg: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/30'
+  },
+  {
+    extension: '.flac / .alac / .wav / .aiff',
+    name: 'Lossless Hi-Res Studio Audio',
+    category: 'audio',
+    categoryName: 'Media & Video',
+    mimeType: 'audio/flac',
+    description: 'High-resolution lossless master audio with 24-bit/32-bit sample depth inspector, stereo/multichannel analysis, live frequency waveform visualizer, and vinyl record turntable HUD.',
+    capabilities: ['24-Bit Studio Master Support', 'Lossless Header Inspector', 'Frequency Visualizer Canvas', 'Vinyl Record Studio Player'],
+    icon: Music,
+    color: 'text-emerald-500 dark:text-emerald-400',
+    badgeBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+  },
+  {
+    extension: '.mp3 / .m4a / .aac / .ogg / .opus / .wma',
+    name: 'Universal Audio Formats',
     category: 'audio',
     categoryName: 'Media & Video',
     mimeType: 'audio/mpeg',
-    description: 'Local audio player with waveform visualizer, scrubber, volume boost, and playback controls.',
-    capabilities: ['Audio Playback', 'Timeline Scrubber', 'Volume Controls', 'Metadata ID3'],
+    description: 'Standard lossy audio playback supporting MP3, AAC, Apple M4A, Opus, and Ogg Vorbis with interactive scrubber, volume boost, and playback specs.',
+    capabilities: ['Audio Playback', 'Timeline Scrubber', 'Volume Controls', 'Bitrate & Sample Rate Inspector'],
     icon: Music,
     color: 'text-cyan-500 dark:text-cyan-400',
     badgeBg: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/30'

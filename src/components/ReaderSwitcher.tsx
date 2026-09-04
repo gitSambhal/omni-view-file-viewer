@@ -187,23 +187,23 @@ export const READER_OPTIONS: ReaderOption[] = [
   },
   {
     id: 'video',
-    label: 'Video Player Studio',
-    description: 'HTML5 video player with playback speeds, volume booster, and frame navigation',
+    label: 'Cinema Video Player Studio',
+    description: 'Hardware-accelerated cinema player with full-screen edge-to-edge mode, aspect fit/fill, stream inspector & speeds',
     icon: Video,
     color: 'text-purple-400',
     categoryGroup: 'Documents & Media',
-    supportedExtensions: ['mp4', 'webm', 'mov', 'mkv', 'avi', 'm4v'],
-    keywords: ['movie', 'clip', 'video', 'player', 'media', 'mp4']
+    supportedExtensions: ['mp4', 'webm', 'mov', 'mkv', 'avi', 'wmv', 'flv', 'm4v', '3gp', 'ts', 'mts', 'ogv', 'vob'],
+    keywords: ['movie', 'clip', 'video', 'player', 'media', 'mp4', 'mkv', 'matroska', 'cinema', 'stream']
   },
   {
     id: 'audio',
-    label: 'Audio Player & Visualizer',
-    description: 'Interactive audio player with waveform visualizer, frequency spectrum & controls',
+    label: 'Studio Audio Player & Turntable',
+    description: 'Interactive vinyl turntable, waveform visualizer, 24-bit lossless FLAC inspector, and timeline scrubber',
     icon: Music,
     color: 'text-violet-400',
     categoryGroup: 'Documents & Media',
-    supportedExtensions: ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac'],
-    keywords: ['sound', 'song', 'music', 'track', 'audio', 'waveform']
+    supportedExtensions: ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac', 'opus', 'wma', 'aiff', 'alac', 'ac3', 'ape', 'mid', 'midi'],
+    keywords: ['sound', 'song', 'music', 'track', 'audio', 'waveform', 'lossless', 'flac', 'opus', 'hi-res', 'turntable']
   },
   {
     id: 'subtitle',

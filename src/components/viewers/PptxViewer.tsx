@@ -23,16 +23,19 @@ export const PptxViewer: React.FC<PptxViewerProps> = ({ arrayBuffer, filename })
   const [currentSlideIndex, setCurrentSlideIndex] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [viewMode, setViewMode] = useState<'slide' | 'grid'>('slide');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function parsePptx() {
-      if (!arrayBuffer) {
+      if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+        setError('No presentation file data available.');
         setLoading(false);
         return;
       }
 
       try {
         setLoading(true);
+        setError(null);
         const zip = await JSZip.loadAsync(arrayBuffer);
         const slideFiles: { name: string; file: JSZip.JSZipObject }[] = [];
 
@@ -80,8 +83,9 @@ export const PptxViewer: React.FC<PptxViewerProps> = ({ arrayBuffer, filename })
         }
 
         setSlides(parsedSlides);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error parsing PPTX presentation:', err);
+        setError(err.message || 'Could not parse PPTX archive. Ensure the presentation is a valid PowerPoint file.');
       } finally {
         setLoading(false);
       }
@@ -101,26 +105,28 @@ export const PptxViewer: React.FC<PptxViewerProps> = ({ arrayBuffer, filename })
           PowerPoint Presentation (.pptx)
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setViewMode('slide')}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs transition-colors ${
-              viewMode === 'slide' ? 'bg-amber-600 text-white font-medium' : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
-            }`}
-          >
-            <Eye className="w-3.5 h-3.5" />
-            Slide View
-          </button>
-          <button
-            onClick={() => setViewMode('grid')}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs transition-colors ${
-              viewMode === 'grid' ? 'bg-amber-600 text-white font-medium' : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
-            }`}
-          >
-            <Grid className="w-3.5 h-3.5" />
-            All Slides ({slides.length})
-          </button>
-        </div>
+        {slides.length > 0 && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setViewMode('slide')}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs transition-colors ${
+                viewMode === 'slide' ? 'bg-amber-600 text-white font-medium' : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+              }`}
+            >
+              <Eye className="w-3.5 h-3.5" />
+              Slide View
+            </button>
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs transition-colors ${
+                viewMode === 'grid' ? 'bg-amber-600 text-white font-medium' : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+              }`}
+            >
+              <Grid className="w-3.5 h-3.5" />
+              All Slides ({slides.length})
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Content Area */}
@@ -129,6 +135,14 @@ export const PptxViewer: React.FC<PptxViewerProps> = ({ arrayBuffer, filename })
           <div className="flex flex-col items-center justify-center text-slate-400">
             <div className="w-8 h-8 border-3 border-amber-500 border-t-transparent rounded-full animate-spin mb-3"></div>
             <p className="text-sm">Extracting presentation slides...</p>
+          </div>
+        ) : error || slides.length === 0 ? (
+          <div className="flex flex-col items-center justify-center text-center p-8 max-w-md bg-slate-900 border border-slate-800 rounded-2xl">
+            <Presentation className="w-12 h-12 text-amber-500/80 mb-3" />
+            <h3 className="text-base font-semibold text-slate-200 mb-1">Unable to Load Slides</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              {error || 'No readable XML slides were detected inside this PPTX archive.'}
+            </p>
           </div>
         ) : viewMode === 'slide' && currentSlide ? (
           <div className="w-full max-w-4xl flex flex-col items-center space-y-4">
