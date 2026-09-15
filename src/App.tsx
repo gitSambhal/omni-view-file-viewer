@@ -1130,10 +1130,10 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
             ) : activeTab.viewMode === 'hex' ? (
           <div className="w-full flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden relative">
             {/* Top Reader Subheader Bar */}
-            <div className="flex items-center justify-between px-3 py-1 bg-white/90 dark:bg-[#0c121e]/90 backdrop-blur-xs border-b border-slate-200/80 dark:border-slate-800/80 text-xs text-slate-600 dark:text-slate-400 select-none shrink-0 relative z-30">
+            <div className="h-9 px-3 bg-card/60 backdrop-blur-md border-b border-border text-xs text-muted-foreground select-none shrink-0 relative z-30 flex items-center justify-between">
               <div className="flex items-center gap-2 min-w-0">
-                <span className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-xs">{activeTab.name}</span>
-                <span className="text-[11px] font-mono text-slate-400">({(activeTab.size / 1024).toFixed(1)} KB)</span>
+                <span className="font-medium text-foreground truncate max-w-xs">{activeTab.name}</span>
+                <span className="text-[11px] font-mono text-muted-foreground">({(activeTab.size / 1024).toFixed(1)} KB)</span>
               </div>
               <ReaderSwitcher
                 activeTab={activeTab}
@@ -1150,16 +1150,16 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
           /* Render category specific viewer with dynamic Reader Switcher */
           <div className="w-full flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden relative">
             {/* Top Reader Subheader Bar */}
-            <div className="flex items-center justify-between px-3 py-1 bg-white/90 dark:bg-[#0c121e]/90 backdrop-blur-xs border-b border-slate-200/80 dark:border-slate-800/80 text-xs text-slate-600 dark:text-slate-400 select-none shrink-0 relative z-30">
+            <div className="h-9 px-3 bg-card/60 backdrop-blur-md border-b border-border text-xs text-muted-foreground select-none shrink-0 relative z-30 flex items-center justify-between">
               <div className="flex items-center gap-2 min-w-0">
-                <span className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-xs">{activeTab.name}</span>
-                <span className="text-[11px] font-mono text-slate-400">
+                <span className="font-medium text-foreground truncate max-w-xs">{activeTab.name}</span>
+                <span className="text-[11px] font-mono text-muted-foreground">
                   {activeTab.size > 1024 * 1024
                     ? `${(activeTab.size / (1024 * 1024)).toFixed(2)} MB`
                     : `${(activeTab.size / 1024).toFixed(1)} KB`}
                 </span>
                 {activeTab.liveSyncActive && (
-                  <span className="hidden sm:inline-flex items-center gap-1 text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-1.5 py-0.2 rounded font-mono">
+                  <span className="hidden sm:inline-flex items-center gap-1 text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded font-mono">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live Sync
                   </span>
                 )}

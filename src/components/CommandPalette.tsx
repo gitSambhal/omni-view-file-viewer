@@ -1,7 +1,7 @@
 /**
  * @license Apache-2.0
  * Developer: Suhail Akhtar (https://suhail.top)
- * OmniView File Studio - Command Palette & Quick Search
+ * OmniView File Studio - Command Palette & Quick Search (shadcn/ui)
  */
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
@@ -22,15 +22,15 @@ import {
   Terminal,
   FileText,
   Trash2,
-  Download,
-  X,
-  Keyboard,
   ArrowRight,
-  Plus,
-  ClipboardPaste
+  ClipboardPaste,
+  X
 } from 'lucide-react';
-import { TabFile, FileCategory } from '../types/file';
+import { TabFile } from '../types/file';
 import { Theme } from '../hooks/useTheme';
+import { Dialog, DialogContent, DialogTitle } from './ui/dialog';
+import { Badge } from './ui/badge';
+import { ScrollArea } from './ui/scroll-area';
 
 export interface CommandPaletteProps {
   isOpen: boolean;
@@ -70,7 +70,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   tabs,
   activeTabId,
   onSelectTab,
-  onCloseTab,
   onCloseAllTabs,
   onOpenFilePicker,
   onOpenUrlModal,
@@ -90,7 +89,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Focus input when opened
   useEffect(() => {
     if (isOpen) {
       setQuery('');
@@ -101,7 +99,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     }
   }, [isOpen]);
 
-  // Build command items dynamically
   const commands: CommandItem[] = useMemo(() => {
     const list: CommandItem[] = [];
 
@@ -209,28 +206,12 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       {
         id: 'tool-open-file',
         title: 'Open Local Files from Storage',
-        description: 'Select files from your computer (PDF, Excel, SQLite, Code, Media, Archives)',
+        description: 'Select files from your computer (PDF, Excel, SQLite, DBF, Code, Media, Archives)',
         category: 'Tools & Utilities',
         icon: <FolderOpen className="w-4 h-4 text-blue-600" />,
         shortcut: 'Ctrl+O',
         action: () => {
           onOpenFilePicker();
-          onClose();
-        }
-      },
-      {
-        id: 'tool-sample-pdf',
-        title: 'Open Encrypted PDF & HiDPI Studio',
-        description: 'Test password-protected document decryption (sample pass: omniview) and Ultra HD HiDPI rendering',
-        category: 'Tools & Utilities',
-        icon: <FileText className="w-4 h-4 text-red-500" />,
-        action: () => {
-          const encTab = tabs.find(t => t.id === 'sample-encrypted-pdf');
-          if (encTab) {
-            onSelectTab(encTab.id);
-          } else {
-            onLoadSampleFiles();
-          }
           onClose();
         }
       },
@@ -281,8 +262,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       },
       {
         id: 'tool-formats',
-        title: 'Supported Formats Directory (60+ Types)',
-        description: 'View document, data, media, and archive format compatibility list',
+        title: 'Supported Formats Directory (65+ Types)',
+        description: 'View document, data, media, database, and archive format compatibility list',
         category: 'Tools & Utilities',
         icon: <Layers className="w-4 h-4 text-indigo-500" />,
         action: () => {
@@ -293,7 +274,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       {
         id: 'tool-demos',
         title: 'Load Interactive Demo Files',
-        description: 'Load sample PDF, Markdown, Excel, SQLite, Python, Audio, and Video files',
+        description: 'Load sample PDF, DBF, MDB, Markdown, Excel, SQLite, Python, Audio, and Video files',
         category: 'Tools & Utilities',
         icon: <Sparkles className="w-4 h-4 text-purple-500" />,
         action: () => {
@@ -350,7 +331,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     onCloseAllTabs
   ]);
 
-  // Filter commands by query
   const filteredCommands = useMemo(() => {
     if (!query.trim()) return commands;
     const lower = query.toLowerCase().trim();
@@ -362,7 +342,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     );
   }, [commands, query]);
 
-  // Keyboard navigation
   useEffect(() => {
     if (!isOpen) return;
 
@@ -388,7 +367,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, filteredCommands, selectedIndex, onClose]);
 
-  // Keep selected item visible in list
   useEffect(() => {
     if (listRef.current) {
       const selectedEl = listRef.current.querySelector(`[data-index="${selectedIndex}"]`);
@@ -398,23 +376,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     }
   }, [selectedIndex]);
 
-  if (!isOpen) return null;
-
   return (
-    <div
-      id="command-palette-backdrop"
-      className="fixed inset-0 z-[100000] bg-slate-950/60 backdrop-blur-xs flex items-start justify-center pt-[10vh] p-4 animate-in fade-in duration-150"
-      onClick={e => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <div
-        id="command-palette-modal"
-        className="w-full max-w-2xl bg-white dark:bg-[#0c121e] rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[75vh] animate-in zoom-in-95 duration-150"
-      >
+    <Dialog open={isOpen} onOpenChange={open => !open && onClose()}>
+      <DialogContent className="p-0 gap-0 max-w-2xl overflow-hidden border bg-background shadow-2xl rounded-2xl">
+        <DialogTitle className="sr-only">Command Palette</DialogTitle>
+
         {/* Search Header */}
-        <div className="flex items-center px-4 py-3.5 border-b border-slate-200 dark:border-slate-800 gap-3">
-          <Search className="w-5 h-5 text-slate-400 shrink-0" />
+        <div className="flex items-center px-4 py-3.5 border-b border-border gap-3">
+          <Search className="w-5 h-5 text-muted-foreground shrink-0" />
           <input
             ref={inputRef}
             type="text"
@@ -424,7 +393,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
               setSelectedIndex(0);
             }}
             placeholder="Type a command, tool name, or search open files..."
-            className="flex-1 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none"
+            className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
           />
           {query && (
             <button
@@ -432,93 +401,89 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                 setQuery('');
                 inputRef.current?.focus();
               }}
-              className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              className="p-1 rounded-md text-muted-foreground hover:text-foreground"
             >
               <X className="w-4 h-4" />
             </button>
           )}
-          <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700">
+          <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground bg-muted rounded border border-border">
             ESC
           </kbd>
         </div>
 
         {/* Results List */}
-        <div ref={listRef} className="flex-1 overflow-y-auto p-2 divide-y divide-slate-100 dark:divide-slate-800/40">
-          {filteredCommands.length === 0 ? (
-            <div className="py-12 text-center text-slate-500 dark:text-slate-400">
-              <p className="text-sm font-medium">No matching commands or files found</p>
-              <p className="text-xs mt-1 text-slate-400 dark:text-slate-500">
-                Try searching for "NPM", "Python", "SQL", "Open", "Theme", or file extensions.
-              </p>
-            </div>
-          ) : (
-            filteredCommands.map((cmd, idx) => {
-              const isSelected = idx === selectedIndex;
-              return (
-                <div
-                  key={cmd.id}
-                  data-index={idx}
-                  onClick={cmd.action}
-                  onMouseEnter={() => setSelectedIndex(idx)}
-                  className={`flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${
-                    isSelected
-                      ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-900 dark:text-blue-100'
-                      : 'hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-200'
-                  }`}
-                >
-                  <div className="flex items-center gap-3 min-w-0 pr-2">
-                    <div
-                      className={`p-2 rounded-lg shrink-0 ${
-                        isSelected
-                          ? 'bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-300'
-                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-                      }`}
-                    >
-                      {cmd.icon}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold truncate">{cmd.title}</span>
-                        <span className="text-[10px] uppercase font-mono tracking-wider text-slate-400 dark:text-slate-500 shrink-0">
-                          {cmd.category}
-                        </span>
+        <ScrollArea className="max-h-[60vh]">
+          <div ref={listRef} className="p-2 space-y-1">
+            {filteredCommands.length === 0 ? (
+              <div className="py-12 text-center text-muted-foreground">
+                <p className="text-sm font-medium">No matching commands or files found</p>
+                <p className="text-xs mt-1 opacity-70">
+                  Try searching for "NPM", "Python", "SQL", "DBF", "Theme", or file names.
+                </p>
+              </div>
+            ) : (
+              filteredCommands.map((cmd, idx) => {
+                const isSelected = idx === selectedIndex;
+                return (
+                  <div
+                    key={cmd.id}
+                    data-index={idx}
+                    onClick={cmd.action}
+                    onMouseEnter={() => setSelectedIndex(idx)}
+                    className={`flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${
+                      isSelected
+                        ? 'bg-accent text-accent-foreground'
+                        : 'hover:bg-muted/60 text-foreground'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0 pr-2">
+                      <div
+                        className={`p-2 rounded-lg shrink-0 ${
+                          isSelected
+                            ? 'bg-primary/10 text-primary'
+                            : 'bg-muted text-muted-foreground'
+                        }`}
+                      >
+                        {cmd.icon}
                       </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                        {cmd.description}
-                      </p>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-semibold truncate">{cmd.title}</span>
+                          <span className="text-[10px] uppercase font-mono tracking-wider text-muted-foreground shrink-0">
+                            {cmd.category}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+                          {cmd.description}
+                        </p>
+                      </div>
                     </div>
-                  </div>
 
-                  {cmd.shortcut ? (
-                    <span
-                      className={`text-[10px] font-mono px-2 py-0.5 rounded border shrink-0 ${
-                        isSelected
-                          ? 'bg-blue-200/60 dark:bg-blue-800/80 text-blue-800 dark:text-blue-200 border-blue-300 dark:border-blue-700'
-                          : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700'
-                      }`}
-                    >
-                      {cmd.shortcut}
-                    </span>
-                  ) : (
-                    isSelected && <ArrowRight className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                  )}
-                </div>
-              );
-            })
-          )}
-        </div>
+                    {cmd.shortcut ? (
+                      <Badge variant="outline" className="text-[10px] font-mono shrink-0">
+                        {cmd.shortcut}
+                      </Badge>
+                    ) : (
+                      isSelected && <ArrowRight className="w-3.5 h-3.5 text-primary shrink-0" />
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </ScrollArea>
 
         {/* Footer info bar */}
-        <div className="flex items-center justify-between px-4 py-2 bg-slate-50 dark:bg-slate-900/80 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400">
+        <div className="flex items-center justify-between px-4 py-2 bg-muted/50 border-t border-border text-[11px] text-muted-foreground">
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1">
-              <kbd className="px-1 py-0.5 bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 font-mono text-[10px]">
+              <kbd className="px-1 py-0.5 bg-background rounded border border-border font-mono text-[10px]">
                 ↑↓
               </kbd>{' '}
               Navigate
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="px-1 py-0.5 bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 font-mono text-[10px]">
+              <kbd className="px-1 py-0.5 bg-background rounded border border-border font-mono text-[10px]">
                 ↵
               </kbd>{' '}
               Select
@@ -526,7 +491,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           </div>
           <span className="text-[10px]">OmniView Command Hub</span>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };

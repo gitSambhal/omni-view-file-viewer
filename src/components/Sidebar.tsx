@@ -1,10 +1,10 @@
 /**
  * @license Apache-2.0
  * Developer: Suhail Akhtar (https://suhail.top)
- * OmniView File Studio - Workspace Sidebar & File Explorer
+ * OmniView File Studio - Workspace Sidebar & File Explorer (shadcn/ui)
  */
 
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Plus,
   Search,
@@ -36,6 +36,19 @@ import {
   ClipboardPaste
 } from 'lucide-react';
 import { TabFile, FileCategory } from '../types/file';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { ScrollArea } from './ui/scroll-area';
+import { Input } from './ui/input';
+import { Separator } from './ui/separator';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
 
 export interface SidebarProps {
   isOpen: boolean;
@@ -71,26 +84,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenUrlModal,
   onOpenPasteModal,
   onNewScratchpad,
-  onDownloadTabFile,
-  liveSyncCount
+  onDownloadTabFile
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
-  const [isNewMenuOpen, setIsNewMenuOpen] = useState(false);
-  const newMenuRef = useRef<HTMLDivElement>(null);
 
-  // Close new menu when clicked outside
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (newMenuRef.current && !newMenuRef.current.contains(e.target as Node)) {
-        setIsNewMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Compute total memory footprint of open files
   const totalMemoryBytes = useMemo(() => {
     return tabs.reduce((acc, tab) => acc + (tab.size || 0), 0);
   }, [tabs]);
@@ -138,16 +136,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
         return <BookOpen className="w-3.5 h-3.5 text-orange-500 shrink-0" />;
       case 'binary':
       case 'hex':
-        return <Binary className="w-3.5 h-3.5 text-slate-500 shrink-0" />;
+        return <Binary className="w-3.5 h-3.5 text-muted-foreground shrink-0" />;
       default:
-        return <FileText className="w-3.5 h-3.5 text-slate-500 shrink-0" />;
+        return <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" />;
     }
   };
 
-  // Filter tabs
   const filteredTabs = useMemo(() => {
     return tabs.filter(tab => {
-      // Query filter
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchesName = tab.name.toLowerCase().includes(q);
@@ -156,7 +152,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         if (!matchesName && !matchesExt && !matchesCat) return false;
       }
 
-      // Category filter
       if (categoryFilter === 'all') return true;
       if (categoryFilter === 'documents') {
         return ['pdf', 'docx', 'pptx', 'text', 'markdown', 'ebook'].includes(tab.category);
@@ -181,145 +176,96 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside
       id="workspace-sidebar"
-      className="w-64 sm:w-72 bg-slate-50/95 dark:bg-[#0c121e]/95 backdrop-blur-md border-r border-slate-200/80 dark:border-slate-800/80 flex flex-col shrink-0 h-full select-none z-10 transition-all text-slate-800 dark:text-slate-200"
+      className="w-64 sm:w-72 bg-card border-r border-border flex flex-col shrink-0 h-full select-none z-10 transition-colors text-card-foreground"
     >
       {/* Sidebar Header */}
-      <div className="p-3 border-b border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between gap-2">
+      <div className="h-11 px-3 border-b border-border flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
-          <Layers className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 truncate">
+          <Layers className="w-3.5 h-3.5 text-primary shrink-0" />
+          <h2 className="text-xs font-semibold tracking-wide text-foreground truncate">
             Workspace
           </h2>
-          <span className="text-[10px] font-mono bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-1.5 py-0.2 rounded-full font-medium">
+          <Badge variant="secondary" className="px-1.5 py-0 text-[10px] font-mono font-medium">
             {tabs.length}
-          </span>
+          </Badge>
         </div>
 
         <div className="flex items-center gap-1">
           {/* New Item Dropdown */}
-          <div className="relative" ref={newMenuRef}>
-            <button
-              onClick={() => setIsNewMenuOpen(!isNewMenuOpen)}
-              className="p-1 rounded-md text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-              title="Add New File or Scratchpad"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                className="text-muted-foreground hover:text-foreground"
+                title="Add New File or Scratchpad"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={onOpenFilePicker}>
+                <FolderOpen className="w-3.5 h-3.5 text-blue-500 mr-2" />
+                <span>Open Local File</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onOpenUrlModal}>
+                <Link2 className="w-3.5 h-3.5 text-cyan-500 mr-2" />
+                <span>Open from URL</span>
+              </DropdownMenuItem>
+              {onOpenPasteModal && (
+                <DropdownMenuItem onClick={onOpenPasteModal}>
+                  <ClipboardPaste className="w-3.5 h-3.5 text-emerald-500 mr-2" />
+                  <span>Paste from Clipboard</span>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>New Scratchpad</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => onNewScratchpad('ts')}>
+                <Code2 className="w-3.5 h-3.5 text-blue-500 mr-2" />
+                <span>TypeScript & NPM</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onNewScratchpad('python')}>
+                <Terminal className="w-3.5 h-3.5 text-amber-500 mr-2" />
+                <span>Python 3.12 (Wasm)</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onNewScratchpad('sql')}>
+                <Database className="w-3.5 h-3.5 text-emerald-500 mr-2" />
+                <span>SQLite Query</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onNewScratchpad('markdown')}>
+                <FileText className="w-3.5 h-3.5 text-purple-500 mr-2" />
+                <span>Markdown Notes</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-            {isNewMenuOpen && (
-              <div className="absolute right-0 mt-1 w-48 bg-white dark:bg-[#0c121e] rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 py-1 z-[9999] text-xs animate-in fade-in duration-100">
-                <button
-                  onClick={() => {
-                    onOpenFilePicker();
-                    setIsNewMenuOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-left transition-colors cursor-pointer"
-                >
-                  <FolderOpen className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                  <span>Open Local File</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    onOpenUrlModal();
-                    setIsNewMenuOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-left transition-colors cursor-pointer"
-                >
-                  <Link2 className="w-3.5 h-3.5 text-cyan-500 shrink-0" />
-                  <span>Open from URL</span>
-                </button>
-
-                {onOpenPasteModal && (
-                  <button
-                    onClick={() => {
-                      onOpenPasteModal();
-                      setIsNewMenuOpen(false);
-                    }}
-                    className="w-full flex items-center gap-2 px-3 py-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-left transition-colors cursor-pointer"
-                  >
-                    <ClipboardPaste className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                    <span>Paste from Clipboard</span>
-                  </button>
-                )}
-
-                <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
-                <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                  New Scratchpad
-                </div>
-
-                <button
-                  onClick={() => {
-                    onNewScratchpad('ts');
-                    setIsNewMenuOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-left transition-colors cursor-pointer"
-                >
-                  <Code2 className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                  <span>TypeScript & NPM</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    onNewScratchpad('python');
-                    setIsNewMenuOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-left transition-colors cursor-pointer"
-                >
-                  <Terminal className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                  <span>Python 3.12 (Wasm)</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    onNewScratchpad('sql');
-                    setIsNewMenuOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-left transition-colors cursor-pointer"
-                >
-                  <Database className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                  <span>SQLite Query</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    onNewScratchpad('markdown');
-                    setIsNewMenuOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-left transition-colors cursor-pointer"
-                >
-                  <FileText className="w-3.5 h-3.5 text-purple-500 shrink-0" />
-                  <span>Markdown Notes</span>
-                </button>
-              </div>
-            )}
-          </div>
-
-          <button
+          <Button
+            variant="ghost"
+            size="icon-xs"
             onClick={onToggleOpen}
-            className="p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="text-muted-foreground hover:text-foreground"
             title="Collapse Sidebar"
           >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
+            <ChevronLeft className="w-3.5 h-3.5" />
+          </Button>
         </div>
       </div>
 
       {/* Search & Category Filter */}
-      <div className="p-2 space-y-2 border-b border-slate-200/60 dark:border-slate-800/60">
+      <div className="p-2 space-y-2 border-b border-border">
         <div className="relative">
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-          <input
+          <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2" />
+          <Input
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Filter open files..."
-            className="w-full bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-lg pl-8 pr-2.5 py-1 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-blue-500"
+            placeholder="Filter files..."
+            className="h-8 pl-8 pr-7 text-xs bg-background"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
             >
               <X className="w-3 h-3" />
             </button>
@@ -334,8 +280,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onClick={() => setCategoryFilter(cat)}
               className={`text-[10px] font-medium capitalize px-2 py-0.5 rounded-md shrink-0 transition-colors cursor-pointer ${
                 categoryFilter === cat
-                  ? 'bg-blue-600 text-white shadow-2xs'
-                  : 'bg-slate-200/60 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  ? 'bg-primary text-primary-foreground shadow-2xs font-semibold'
+                  : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground'
               }`}
             >
               {cat}
@@ -345,101 +291,111 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Files List */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
+      <ScrollArea className="flex-1 p-2">
         <button
           onClick={() => onSelectTab('welcome')}
-          className={`w-full flex items-center gap-2 px-2.5 py-1.5 mb-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+          className={`w-full flex items-center gap-2 px-2.5 py-1.5 mb-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${
             activeTabId === 'welcome' || activeTabId === null
-              ? 'bg-blue-600 text-white shadow-xs'
-              : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+              ? 'bg-primary text-primary-foreground shadow-xs'
+              : 'bg-card border border-border text-foreground hover:bg-muted'
           }`}
         >
-          <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+          <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
           <span>App Overview & Landing</span>
         </button>
 
         {filteredTabs.length === 0 ? (
-          <div className="text-center py-10 text-slate-400 dark:text-slate-500 text-xs">
+          <div className="text-center py-10 text-muted-foreground text-xs">
             {searchQuery ? 'No matching files' : 'No open files in workspace'}
           </div>
         ) : (
-          filteredTabs.map(tab => {
-            const isActive = tab.id === activeTabId;
-            return (
-              <div
-                key={tab.id}
-                onClick={() => onSelectTab(tab.id)}
-                className={`group flex items-center justify-between px-2.5 py-2 rounded-lg cursor-pointer transition-all ${
-                  isActive
-                    ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-900 dark:text-blue-100 border border-blue-200 dark:border-blue-800/60 shadow-2xs'
-                    : 'hover:bg-slate-200/50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300 border border-transparent'
-                }`}
-              >
-                <div className="flex items-center gap-2 min-w-0 pr-1">
-                  {getCategoryIcon(tab.category)}
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium truncate leading-tight">{tab.name}</p>
-                    <div className="flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
-                      <span className="font-mono">{formatFileSize(tab.size)}</span>
-                      {tab.liveSyncActive && (
-                        <span className="flex items-center gap-0.5 text-emerald-600 dark:text-emerald-400 font-semibold">
-                          <RefreshCw className="w-2.5 h-2.5" />
-                          <span>Sync</span>
-                        </span>
-                      )}
+          <div className="space-y-0.5">
+            {filteredTabs.map(tab => {
+              const isActive = tab.id === activeTabId;
+              return (
+                <div
+                  key={tab.id}
+                  onClick={() => onSelectTab(tab.id)}
+                  className={`group flex items-center justify-between px-2.5 py-1.5 rounded-md cursor-pointer transition-all ${
+                    isActive
+                      ? 'bg-accent text-accent-foreground border border-border shadow-2xs font-medium'
+                      : 'hover:bg-muted text-foreground border border-transparent'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 min-w-0 pr-1">
+                    {getCategoryIcon(tab.category)}
+                    <div className="min-w-0">
+                      <p className="text-xs truncate leading-tight">{tab.name}</p>
+                      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mt-0.5">
+                        <span className="font-mono">{formatFileSize(tab.size)}</span>
+                        {tab.liveSyncActive && (
+                          <span className="flex items-center gap-0.5 text-emerald-600 dark:text-emerald-400 font-semibold">
+                            <RefreshCw className="w-2.5 h-2.5 animate-spin" />
+                            <span>Sync</span>
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {onDownloadTabFile && (
-                    <button
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {onDownloadTabFile && (
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        onClick={e => {
+                          e.stopPropagation();
+                          onDownloadTabFile(tab.id);
+                        }}
+                        className="text-muted-foreground hover:text-foreground"
+                        title="Download file"
+                      >
+                        <Download className="w-3 h-3" />
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
                       onClick={e => {
                         e.stopPropagation();
-                        onDownloadTabFile(tab.id);
+                        onCloseTab(tab.id);
                       }}
-                      className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded hover:bg-slate-200 dark:hover:bg-slate-700"
-                      title="Download file"
+                      className="text-muted-foreground hover:text-destructive"
+                      title="Close file"
                     >
-                      <Download className="w-3 h-3" />
-                    </button>
-                  )}
-                  <button
-                    onClick={e => {
-                      e.stopPropagation();
-                      onCloseTab(tab.id);
-                    }}
-                    className="p-1 text-slate-400 hover:text-rose-600 rounded hover:bg-rose-50 dark:hover:bg-rose-950/40"
-                    title="Close file"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            );
-          })
+              );
+            })}
+          </div>
         )}
-      </div>
+      </ScrollArea>
+
+      <Separator />
 
       {/* Footer Storage / Memory Usage */}
-      <div className="p-2.5 bg-slate-100/80 dark:bg-[#090d16] border-t border-slate-200/80 dark:border-slate-800/80 text-[11px] text-slate-500 dark:text-slate-400 space-y-1.5 shrink-0">
+      <div className="p-2.5 bg-muted/40 border-t border-border text-[11px] text-muted-foreground space-y-1.5 shrink-0">
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-1">
-            <HardDrive className="w-3 h-3 text-slate-400" />
+            <HardDrive className="w-3 h-3 text-muted-foreground" />
             <span>RAM Footprint:</span>
           </span>
-          <span className="font-mono font-medium text-slate-700 dark:text-slate-300">
+          <span className="font-mono font-medium text-foreground">
             {formatFileSize(totalMemoryBytes)}
           </span>
         </div>
 
         {tabs.length > 0 && (
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onCloseAllTabs}
-            className="w-full text-center py-1 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded text-[10px] font-medium transition-colors cursor-pointer"
+            className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive h-7 text-xs font-medium"
           >
             Close All Files
-          </button>
+          </Button>
         )}
       </div>
     </aside>

@@ -99,8 +99,41 @@ export function detectFileCategory(filename: string, mimeType: string = ''): Fil
     return 'markdown';
   }
 
-  // Database files (.db, .sqlite, .sqlite3, .sql, .accdb, .mdb, .ndjson)
-  if (['db', 'sqlite', 'sqlite3', 'sql', 'accdb', 'mdb'].includes(ext)) {
+  // Database files (.dbf, .mdb, .accdb, .db, .sqlite, .sqlite3, .s3db, .sl3, .db3, .sql, .dump, .ddl, .fdb, .gdb, .myd, .myi, .ibd, .frm, .sdf, .duckdb, .bdb, .gdbm)
+  if (
+    [
+      'dbf',
+      'mdb',
+      'accdb',
+      'mde',
+      'accde',
+      'db',
+      'sqlite',
+      'sqlite3',
+      's3db',
+      'sl3',
+      'db3',
+      'sql',
+      'dump',
+      'ddl',
+      'fdb',
+      'gdb',
+      'myd',
+      'myi',
+      'ibd',
+      'frm',
+      'sdf',
+      'duckdb',
+      'bdb',
+      'gdbm'
+    ].includes(ext) ||
+    mimeType.includes('sqlite') ||
+    mimeType.includes('ms-access') ||
+    mimeType.includes('msaccess') ||
+    mimeType.includes('dbf') ||
+    mimeType.includes('x-dbf') ||
+    mimeType.includes('sql')
+  ) {
     return 'database';
   }
 
@@ -208,6 +241,33 @@ export function probeAmbiguousCategory(
   // Check for PDF magic bytes (%PDF-) regardless of extension
   if (bytes.length >= 4 && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) {
     return 'pdf';
+  }
+
+  // Check for SQLite 3 magic header ("SQLite format 3\0")
+  if (
+    bytes.length >= 16 &&
+    bytes[0] === 0x53 && bytes[1] === 0x51 && bytes[2] === 0x4c && bytes[3] === 0x69 &&
+    bytes[4] === 0x74 && bytes[5] === 0x65 && bytes[6] === 0x20 && bytes[7] === 0x66
+  ) {
+    return 'database';
+  }
+
+  // Check for Microsoft Access Jet / ACE DB magic bytes (\x00\x01\x00\x00Standard Jet/ACE DB)
+  if (
+    bytes.length >= 20 &&
+    bytes[0] === 0x00 && bytes[1] === 0x01 && bytes[2] === 0x00 && bytes[3] === 0x00 &&
+    bytes[4] === 0x53 && bytes[5] === 0x74 && bytes[6] === 0x61 && bytes[7] === 0x6e
+  ) {
+    return 'database';
+  }
+
+  // Check for dBASE III / IV / Visual FoxPro signature (.dbf)
+  if (
+    bytes.length >= 32 &&
+    (bytes[0] === 0x03 || bytes[0] === 0x30 || bytes[0] === 0x83 || bytes[0] === 0x8b || bytes[0] === 0xf5 || bytes[0] === 0x02) &&
+    ext === 'dbf'
+  ) {
+    return 'database';
   }
 
   if (['ts', 'mts'].includes(ext)) {

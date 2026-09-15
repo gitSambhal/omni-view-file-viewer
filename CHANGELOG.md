@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.6.1] - 2026-09-15
+
+### Changed
+- **UI/UX Decluttering & Layout Streamlining**:
+  - **Minimalist Welcome & Drop Zone (`DropZone.tsx`)**: Replaced overcrowded multi-box landing layout with a clean, centered card with generous whitespace, crisp action triggers (Browse Local, Sample Files, Paste, From URL), and an uncluttered scratchpad strip.
+  - **Subheader Bar Token Harmonization (`App.tsx`)**: Upgraded active file reader bar to use backdrop blur and semantic theme tokens, eliminating duplicated text and visual noise.
+  - **Visual Hierarchy & Noise Reduction**: Streamlined header badges and explorer toolbar elements to focus on primary workspace tasks.
+
+## [2.6.0] - 2026-09-15
+
+### Added
+- **Complete UI/UX Overhaul with shadcn/ui Design System**:
+  - **Component Library (`src/components/ui/*`)**: Added Radix UI-backed accessible primitives including `Button`, `Badge`, `Card`, `Dialog`, `DropdownMenu`, `Tabs`, `Tooltip`, `Popover`, `Separator`, `Input`, `Textarea`, `Slider`, `Switch`, `ScrollArea`, and `Sonner`.
+  - **Semantic CSS Variable Tokens (`src/index.css`)**: Implemented clean design tokens for background, foreground, primary, secondary, muted, accent, card, popover, border, and ring across light and dark themes.
+  - **Refactored Application Views**:
+    - `DatabaseViewer.tsx`: Migrated table browser, SQL console, schema inspector, and metadata viewer to use shadcn `Card`, `Tabs`, `Button`, `Badge`, `Input`, and `ScrollArea`.
+    - `Header.tsx` & `TabBar.tsx`: Refactored toolbars and menus with shadcn `DropdownMenu`, `Button`, and `Badge`.
+    - `Sidebar.tsx`: Elevated file explorer, search, and scratchpad launcher with `ScrollArea`, `Button`, `Badge`, and `DropdownMenu`.
+    - `CommandPalette.tsx`: Redesigned quick launcher with shadcn `Dialog`, `Input`, and `ScrollArea`.
+    - `ReaderSwitcher.tsx`: Replaced tab toggles with shadcn `Button` and `Badge` variants.
+    - Modals (`ChangelogModal.tsx`, `SupportedFormatsModal.tsx`, `OpenFileFromUrlModal.tsx`): Refactored with shadcn `Dialog` and `ScrollArea`.
+
+## [2.5.0] - 2026-09-15
+
+### Added
+- **Universal Database Engine & Binary Format Support (`dbParser.ts`, `DatabaseViewer.tsx`)**:
+  - **dBASE / FoxPro (.dbf)**: Full binary decoding of dBase III, IV, and Visual FoxPro tables, extracting field descriptors (Character, Numeric, Date, Logical, Memo), record counts, and record rows into structured tables.
+  - **Microsoft Access Database (.mdb, .accdb)**: Binary Jet 3.x/4.0 and ACE engine parser extracting catalog metadata, page allocations, table definitions, and row data.
+  - **SQLite Binary Databases (.db, .sqlite, .sqlite3, .s3db, .sl3, .db3)**: Client-side header and page analysis extracting schema definitions, page sizes, and table rows.
+  - **Firebird / InterBase (.fdb, .gdb)** & **MySQL Storage Engines (.myd, .ibd, .frm)** & **Embedded DBs (.duckdb, .sdf)**: Header inspection, schema synthesis, and record extraction.
+  - **SQL Scripts & DDL Dumps (.sql, .dump, .ddl)**: Multi-statement clean parser splitting and sanitizing DDL/DQL for browser-based SQL execution.
+- **In-Memory Interactive SQL Engine (AlaSQL)**:
+  - Automatically loads and seeds parsed tables into an isolated in-memory SQL database.
+  - Execute arbitrary queries: `SELECT`, `WHERE`, `ORDER BY`, `GROUP BY`, `JOIN`, `COUNT(*)`, and mathematical aggregations.
+  - Query execution timers, syntax formatters (`Format SQL`), code snippet chips, and table name/column quick-insert buttons.
+- **Multi-Tab Database Workspace (`DatabaseViewer.tsx`)**:
+  - **Table Browser**: Fast data grid with search filter across all records, column sorting (asc/desc), pagination (10/25/50/100/500/all), and export to CSV/JSON/SQL.
+  - **SQL Console**: Interactive query editor with line numbers, error alerts, execution history with 1-click re-run, and clipboard copying.
+  - **Schema & DDL Inspector**: Visual table cards, column data types and lengths, row counts, and copyable `CREATE TABLE` DDL scripts.
+  - **Database Metadata Inspector**: Engine type, signature, page sizes, record lengths, total pages, and text encoding info.
+- **Sample Database Files (`sampleDbData.ts`, `sampleFiles.ts`)**:
+  - `inventory_legacy.dbf`: Real dBASE III binary database with products, stock levels, unit prices, and restock dates.
+  - `northwind_corp.mdb`: Microsoft Access Jet 4.0 binary database with corporate accounts and employee directories.
+  - `analytics_production.sqlite`: SQLite 3 binary database with website analytics and visitor logs.
+
 ## [2.4.1] - 2026-09-15
 
 ### Changed

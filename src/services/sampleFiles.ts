@@ -5,6 +5,7 @@
 
 import { TabFile } from '../types/file';
 import { getSampleStandardPdfBuffer, getSampleEncryptedPdfBuffer } from './samplePdfData';
+import { generateSampleDbfBuffer, generateSampleMdbBuffer, generateSampleSqliteBuffer } from './sampleDbData';
 
 export const SAMPLE_MARKDOWN = `# 🚀 OmniView File Studio Overview
 
@@ -710,9 +711,60 @@ export function getSampleTabFiles(): TabFile[] {
     zoomLevel: 100
   };
 
+  const dbfBuf = generateSampleDbfBuffer();
+  const sampleDbf: TabFile = {
+    id: 'sample-dbf',
+    name: 'inventory_legacy.dbf',
+    size: dbfBuf.byteLength,
+    type: 'application/x-dbf',
+    lastModified: now - 45000,
+    extension: 'dbf',
+    category: 'database',
+    arrayBuffer: dbfBuf,
+    liveSyncActive: false,
+    syncStatus: 'synced',
+    viewMode: 'preview',
+    zoomLevel: 100
+  };
+
+  const mdbBuf = generateSampleMdbBuffer();
+  const sampleMdb: TabFile = {
+    id: 'sample-mdb',
+    name: 'northwind_corp.mdb',
+    size: mdbBuf.byteLength,
+    type: 'application/x-msaccess',
+    lastModified: now - 35000,
+    extension: 'mdb',
+    category: 'database',
+    arrayBuffer: mdbBuf,
+    liveSyncActive: false,
+    syncStatus: 'synced',
+    viewMode: 'preview',
+    zoomLevel: 100
+  };
+
+  const sqliteBuf = generateSampleSqliteBuffer();
+  const sampleSqlite: TabFile = {
+    id: 'sample-sqlite',
+    name: 'analytics_production.sqlite',
+    size: sqliteBuf.byteLength,
+    type: 'application/x-sqlite3',
+    lastModified: now - 25000,
+    extension: 'sqlite',
+    category: 'database',
+    arrayBuffer: sqliteBuf,
+    liveSyncActive: false,
+    syncStatus: 'synced',
+    viewMode: 'preview',
+    zoomLevel: 100
+  };
+
   return [
     sampleMd,
     samplePdf,
+    sampleDbf,
+    sampleMdb,
+    sampleSqlite,
     sampleEncryptedPdf,
     sampleVideo,
     sampleAudio,

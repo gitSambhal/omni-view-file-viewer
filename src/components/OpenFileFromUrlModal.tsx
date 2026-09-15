@@ -1,7 +1,7 @@
 /**
  * @license Apache-2.0
  * Developer: Suhail Akhtar (https://suhail.top)
- * OmniView Open File From URL Dialog
+ * OmniView Open File From URL Dialog (shadcn/ui)
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -9,22 +9,29 @@ import {
   Globe,
   Download,
   AlertCircle,
-  CheckCircle2,
   X,
   Sparkles,
   Link2,
   FileCode,
   FileText,
   Music,
-  Video,
   Table,
   Image as ImageIcon,
   ShieldCheck,
   RefreshCw,
-  ExternalLink,
-  HelpCircle,
-  Copy
 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from './ui/dialog';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Badge } from './ui/badge';
+import { Switch } from './ui/switch';
+import { ScrollArea } from './ui/scroll-area';
 
 export interface OpenFileFromUrlModalProps {
   isOpen: boolean;
@@ -86,19 +93,16 @@ const PRESET_URLS: PresetUrl[] = [
   }
 ];
 
-// Helper to convert GitHub blob URLs to direct raw links
 export function normalizeFileUrl(url: string): { normalizedUrl: string; wasConverted: boolean } {
   let trimmed = url.trim();
   let wasConverted = false;
 
-  // GitHub: https://github.com/{owner}/{repo}/blob/{branch}/{path} -> https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{path}
   const ghMatch = trimmed.match(/^https?:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+)$/i);
   if (ghMatch) {
     trimmed = `https://raw.githubusercontent.com/${ghMatch[1]}/${ghMatch[2]}/${ghMatch[3]}/${ghMatch[4]}`;
     wasConverted = true;
   }
 
-  // GitLab: https://gitlab.com/{owner}/{repo}/-/blob/{branch}/{path} -> https://gitlab.com/{owner}/{repo}/-/raw/{branch}/{path}
   const glMatch = trimmed.match(/^https?:\/\/gitlab\.com\/([^/]+)\/([^/]+)\/-\/blob\/([^/]+)\/(.+)$/i);
   if (glMatch) {
     trimmed = `https://gitlab.com/${glMatch[1]}/${glMatch[2]}/-/raw/${glMatch[3]}/${glMatch[4]}`;
@@ -108,7 +112,6 @@ export function normalizeFileUrl(url: string): { normalizedUrl: string; wasConve
   return { normalizedUrl: trimmed, wasConverted };
 }
 
-// Map content types to extensions
 const MIME_EXT_MAP: Record<string, string> = {
   'application/json': '.json',
   'application/pdf': '.pdf',
@@ -156,8 +159,6 @@ export const OpenFileFromUrlModal: React.FC<OpenFileFromUrlModalProps> = ({
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
   const handleUrlChange = (val: string) => {
     setUrl(val);
     setErrorMessage(null);
@@ -187,7 +188,6 @@ export const OpenFileFromUrlModal: React.FC<OpenFileFromUrlModalProps> = ({
       let response: Response | null = null;
       let usedProxy = false;
 
-      // 1. First attempt: Direct fetch
       try {
         setStatusMessage(`Fetching: ${normalizedUrl.substring(0, 60)}...`);
         response = await fetch(normalizedUrl, {
@@ -199,14 +199,12 @@ export const OpenFileFromUrlModal: React.FC<OpenFileFromUrlModalProps> = ({
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
       } catch (directErr: any) {
-        // If direct fetch fails and CORS proxy is allowed, try fallback
         if (useCorsProxy) {
           setStatusMessage('Direct fetch blocked by CORS. Retrying via secure CORS proxy...');
           usedProxy = true;
           const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(normalizedUrl)}`;
           response = await fetch(proxyUrl);
           if (!response.ok) {
-            // Second proxy attempt
             const fallbackProxy = `https://corsproxy.io/?url=${encodeURIComponent(normalizedUrl)}`;
             response = await fetch(fallbackProxy);
           }
@@ -222,11 +220,6 @@ export const OpenFileFromUrlModal: React.FC<OpenFileFromUrlModalProps> = ({
       setStatusMessage('Downloading stream into local memory...');
       const blob = await response.blob();
 
-      // Extract filename from:
-      // 1. Custom input if provided
-      // 2. Content-Disposition header
-      // 3. URL pathname
-      // 4. Content-Type extension
       let filename = customFilename.trim();
 
       if (!filename) {
@@ -252,7 +245,6 @@ export const OpenFileFromUrlModal: React.FC<OpenFileFromUrlModalProps> = ({
         } catch (_) {}
       }
 
-      // Check extension & fallback from MIME
       const contentType = (response.headers.get('content-type') || blob.type || '').split(';')[0].trim().toLowerCase();
       if (!filename) {
         const ext = MIME_EXT_MAP[contentType] || '.bin';
@@ -276,7 +268,7 @@ export const OpenFileFromUrlModal: React.FC<OpenFileFromUrlModalProps> = ({
     } catch (err: any) {
       setErrorMessage(
         err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError')
-          ? 'Network / CORS error: The remote server prohibits cross-origin browser downloads. Ensure "Use CORS Proxy" is checked to bypass origin restrictions.'
+          ? 'Network / CORS error: The remote server prohibits cross-origin browser downloads. Ensure "Use CORS Proxy" is enabled to bypass origin restrictions.'
           : err.message || 'Unknown network error occurred.'
       );
     } finally {
@@ -291,47 +283,38 @@ export const OpenFileFromUrlModal: React.FC<OpenFileFromUrlModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl bg-white dark:bg-[#0f172a] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] text-slate-800 dark:text-slate-100">
+    <Dialog open={isOpen} onOpenChange={open => !open && onClose()}>
+      <DialogContent className="max-w-xl p-0 gap-0 overflow-hidden">
         {/* Header */}
-        <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/40">
+        <DialogHeader className="p-4 border-b border-border bg-muted/40 text-left">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+            <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
               <Globe className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white flex items-center gap-2">
-                <span>Open File from URL</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
-                  HTTP / HTTPS
-                </span>
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <div className="flex items-center gap-2">
+                <DialogTitle className="text-base font-bold">Open File from URL</DialogTitle>
+                <Badge variant="outline" className="font-mono text-[10px]">HTTP / HTTPS</Badge>
+              </div>
+              <DialogDescription className="text-xs mt-0.5">
                 Directly stream code, documents, media, or datasets into OmniView.
-              </p>
+              </DialogDescription>
             </div>
           </div>
-
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+        </DialogHeader>
 
         {/* Modal Body */}
-        <div className="p-5 overflow-y-auto space-y-4 text-xs">
+        <ScrollArea className="max-h-[60vh] p-4 sm:p-5 space-y-4 text-xs">
           {/* URL Input Form */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+            <label className="block text-xs font-semibold text-foreground">
               Web Address / Direct File URL
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-foreground">
                 <Link2 className="w-4 h-4" />
               </div>
-              <input
+              <Input
                 ref={inputRef}
                 type="url"
                 value={url}
@@ -342,23 +325,27 @@ export const OpenFileFromUrlModal: React.FC<OpenFileFromUrlModalProps> = ({
                   }
                 }}
                 placeholder="https://raw.githubusercontent.com/... or https://api.example.com/data.json"
-                className="w-full pl-9 pr-24 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 font-mono transition-all"
+                className="pl-9 pr-20 text-xs font-mono bg-background"
               />
               <div className="absolute inset-y-0 right-1 flex items-center gap-1">
                 {url && (
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
                     onClick={() => {
                       setUrl('');
                       setDetectedConversion(false);
                       setErrorMessage(null);
                     }}
-                    className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer"
+                    className="text-muted-foreground hover:text-foreground"
                     title="Clear input"
                   >
                     <X className="w-3.5 h-3.5" />
-                  </button>
+                  </Button>
                 )}
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={async () => {
                     try {
                       const clip = await navigator.clipboard.readText();
@@ -368,18 +355,17 @@ export const OpenFileFromUrlModal: React.FC<OpenFileFromUrlModalProps> = ({
                       }
                     } catch (_) {}
                   }}
-                  className="px-2 py-1 text-[11px] font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg cursor-pointer transition-colors"
+                  className="h-6 px-2 text-[11px] text-primary"
                 >
                   Paste
-                </button>
+                </Button>
               </div>
             </div>
 
-            {/* Smart GitHub Converter Notice */}
             {detectedConversion && (
-              <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-700 dark:text-purple-300 flex items-center gap-2 text-[11px]">
-                <Sparkles className="w-3.5 h-3.5 text-purple-500 shrink-0" />
-                <span>Detected GitHub / GitLab web link! Automatically converted to raw direct stream URL.</span>
+              <div className="p-2.5 rounded-lg bg-primary/10 border border-primary/20 text-foreground flex items-center gap-2 text-[11px]">
+                <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
+                <span>Detected GitHub / GitLab link! Converted to direct raw URL automatically.</span>
               </div>
             )}
           </div>
@@ -387,50 +373,45 @@ export const OpenFileFromUrlModal: React.FC<OpenFileFromUrlModalProps> = ({
           {/* Optional Custom Filename */}
           <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Custom Tab Name <span className="text-slate-400 font-normal">(optional)</span>
+              <label className="text-xs font-semibold text-foreground">
+                Custom Tab Name <span className="text-muted-foreground font-normal">(optional)</span>
               </label>
-              <span className="text-[11px] text-slate-400">Leave blank to auto-detect from headers</span>
+              <span className="text-[10px] text-muted-foreground">Leave blank to auto-detect from headers</span>
             </div>
-            <input
+            <Input
               type="text"
               value={customFilename}
               onChange={e => setCustomFilename(e.target.value)}
               placeholder="e.g. script.py or dataset.json"
-              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-mono transition-colors"
+              className="text-xs font-mono bg-background h-8"
             />
           </div>
 
           {/* Options: CORS Proxy */}
-          <div className="p-3 bg-slate-50 dark:bg-slate-900/60 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <div className="p-3 bg-card rounded-xl border border-border flex items-center justify-between">
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
               <div>
-                <span className="font-semibold text-xs text-slate-900 dark:text-white block">
+                <span className="font-medium text-xs text-foreground block">
                   Automatic CORS Proxy Fallback
                 </span>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 block">
-                  Bypasses browser cross-origin limits if host server blocks direct browser fetch
+                <span className="text-[11px] text-muted-foreground block">
+                  Bypasses browser cross-origin restrictions for public files
                 </span>
               </div>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={useCorsProxy}
-                onChange={e => setUseCorsProxy(e.target.checked)}
-                className="sr-only peer"
-              />
-              <div className="w-9 h-5 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-            </label>
+            <Switch
+              checked={useCorsProxy}
+              onCheckedChange={setUseCorsProxy}
+            />
           </div>
 
           {/* Error Banner */}
           {errorMessage && (
-            <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200 flex items-start gap-2.5">
-              <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-              <div className="space-y-1">
-                <span className="font-bold text-xs block">Fetch Notice</span>
+            <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <span className="font-semibold text-xs block">Fetch Notice</span>
                 <p className="text-[11px] leading-relaxed">{errorMessage}</p>
               </div>
             </div>
@@ -438,16 +419,16 @@ export const OpenFileFromUrlModal: React.FC<OpenFileFromUrlModalProps> = ({
 
           {/* Loading Progress State */}
           {isLoading && (
-            <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-300 flex items-center gap-3">
-              <RefreshCw className="w-4 h-4 text-blue-500 animate-spin shrink-0" />
+            <div className="p-3.5 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center gap-3">
+              <RefreshCw className="w-4 h-4 animate-spin shrink-0" />
               <span className="text-xs font-medium">{statusMessage || 'Loading remote file...'}</span>
             </div>
           )}
 
           {/* Preset Quick Samples */}
           <div className="space-y-2 pt-1">
-            <div className="text-[11px] uppercase font-semibold tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+            <div className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-primary" />
               <span>Or Try Live Sample Datasets & Code</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -457,16 +438,16 @@ export const OpenFileFromUrlModal: React.FC<OpenFileFromUrlModalProps> = ({
                   <button
                     key={preset.name}
                     onClick={() => handleApplyPreset(preset)}
-                    className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500/60 bg-white dark:bg-slate-900/60 hover:bg-blue-50/40 dark:hover:bg-blue-950/20 text-left transition-all cursor-pointer group flex items-start gap-2.5"
+                    className="p-2.5 rounded-xl border border-border hover:border-primary/50 bg-card hover:bg-muted text-left transition-all cursor-pointer group flex items-start gap-2.5"
                   >
-                    <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 group-hover:text-blue-500 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/40 transition-colors shrink-0">
+                    <div className="p-1.5 rounded-lg bg-muted text-muted-foreground group-hover:text-primary transition-colors shrink-0">
                       <IconComponent className="w-3.5 h-3.5" />
                     </div>
                     <div className="truncate flex-1">
-                      <div className="font-semibold text-xs text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      <div className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors truncate">
                         {preset.name}
                       </div>
-                      <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                      <div className="text-[10px] text-muted-foreground truncate">
                         {preset.category}
                       </div>
                     </div>
@@ -475,26 +456,30 @@ export const OpenFileFromUrlModal: React.FC<OpenFileFromUrlModalProps> = ({
               })}
             </div>
           </div>
-        </div>
+        </ScrollArea>
 
         {/* Modal Footer */}
-        <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 flex items-center justify-between">
-          <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
+        <div className="p-3 border-t border-border bg-muted/40 flex items-center justify-between">
+          <div className="text-[11px] text-muted-foreground flex items-center gap-1">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-            <span>Files stream safely into client browser memory only</span>
+            <span>Files stream safely into local browser memory</span>
           </div>
 
           <div className="flex items-center gap-2">
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={onClose}
-              className="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="text-xs h-8"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
               onClick={handleFetch}
               disabled={isLoading || !url.trim()}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl text-xs font-semibold shadow-md transition-all cursor-pointer"
+              className="text-xs h-8 gap-1.5"
             >
               {isLoading ? (
                 <>
@@ -504,13 +489,13 @@ export const OpenFileFromUrlModal: React.FC<OpenFileFromUrlModalProps> = ({
               ) : (
                 <>
                   <Download className="w-3.5 h-3.5" />
-                  <span>Fetch & Open File</span>
+                  <span>Fetch & Open</span>
                 </>
               )}
-            </button>
+            </Button>
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };

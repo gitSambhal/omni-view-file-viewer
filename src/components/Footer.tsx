@@ -1,12 +1,16 @@
 /**
  * @license Apache-2.0
  * Developer: Suhail Akhtar (https://suhail.top)
+ * OmniView File Studio - Footer & System Status Bar (shadcn/ui)
  */
 
 import React from 'react';
 import { TabFile } from '../types/file';
 import { formatFileSize } from '../services/fileDetector';
-import { RefreshCw, FileText, ShieldCheck, Sparkles } from 'lucide-react';
+import { RefreshCw, FileText, ShieldCheck } from 'lucide-react';
+import { Badge } from './ui/badge';
+import { Button } from './ui/button';
+import { Separator } from './ui/separator';
 
 interface FooterProps {
   activeTab: TabFile | null;
@@ -18,34 +22,37 @@ interface FooterProps {
 export const Footer: React.FC<FooterProps> = ({
   activeTab,
   onOpenChangelog,
-  onToggleViewMode,
   onOpenLiveSyncDashboard
 }) => {
   return (
-    <footer className="flex flex-wrap items-center justify-between px-3 py-1.5 bg-white/95 dark:bg-[#0c121e]/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800/80 text-xs text-slate-500 dark:text-slate-400 font-mono select-none gap-2 transition-colors z-20">
+    <footer className="flex flex-wrap items-center justify-between px-3 py-1.5 bg-background/95 backdrop-blur-md border-t border-border text-xs text-muted-foreground font-mono select-none gap-2 transition-colors z-20">
       {/* Active Tab File Details */}
-      <div className="flex items-center gap-2.5 min-w-0">
+      <div className="flex items-center gap-2 min-w-0">
         {activeTab ? (
           <>
-            <div className="flex items-center gap-1.5 text-slate-800 dark:text-slate-200 font-sans font-medium text-[11px] truncate">
-              <FileText className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+            <div className="flex items-center gap-1.5 text-foreground font-sans font-medium text-[11px] truncate">
+              <FileText className="w-3.5 h-3.5 text-primary shrink-0" />
               <span className="truncate max-w-[180px]">{activeTab.name}</span>
             </div>
 
-            <span className="text-slate-300 dark:text-slate-700">/</span>
+            <span className="text-border">/</span>
 
-            <span className="text-[11px]"><strong className="text-slate-700 dark:text-slate-300 font-semibold">{formatFileSize(activeTab.size)}</strong></span>
+            <span className="text-[11px] font-medium text-foreground">
+              {formatFileSize(activeTab.size)}
+            </span>
 
-            <span className="text-slate-300 dark:text-slate-700">/</span>
+            <span className="text-border">/</span>
 
-            <span className="text-[11px] uppercase bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-1.5 py-0.2 rounded font-medium">{activeTab.extension || activeTab.category}</span>
+            <Badge variant="secondary" className="px-1.5 py-0 text-[10px] uppercase font-mono">
+              {activeTab.extension || activeTab.category}
+            </Badge>
 
             {activeTab.liveSyncActive && (
               <>
-                <span className="text-slate-300 dark:text-slate-700">/</span>
+                <span className="text-border">/</span>
                 <button
                   onClick={onOpenLiveSyncDashboard}
-                  className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20 font-medium border border-emerald-500/20 transition-colors cursor-pointer text-[11px]"
+                  className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 font-medium border border-emerald-500/20 transition-colors cursor-pointer text-[11px]"
                   title="Click to view Live Sync telemetry"
                 >
                   <RefreshCw className={`w-3 h-3 ${activeTab.syncStatus === 'syncing' ? 'animate-spin text-emerald-500' : 'text-emerald-500'}`} />
@@ -58,33 +65,37 @@ export const Footer: React.FC<FooterProps> = ({
             )}
           </>
         ) : (
-          <span className="text-slate-400 dark:text-slate-500 text-[11px]">No active workspace tab</span>
+          <span className="text-muted-foreground text-[11px]">No active workspace tab</span>
         )}
       </div>
 
       {/* Center / Right Attribution & Version */}
       <div className="flex items-center gap-3 shrink-0">
-        <div className="flex items-center gap-1 text-[11px] font-sans text-slate-500 dark:text-slate-400">
+        <div className="flex items-center gap-1 text-[11px] font-sans text-muted-foreground">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-          <span>Created by <a
-            href="https://suhail.top"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors"
-          >
-            Suhail Akhtar
-          </a></span>
+          <span>
+            Created by{' '}
+            <a
+              href="https://suhail.top"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-foreground hover:text-primary font-medium transition-colors"
+            >
+              Suhail Akhtar
+            </a>
+          </span>
         </div>
 
-        <button
+        <Button
+          variant="outline"
+          size="sm"
           onClick={onOpenChangelog}
-          className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded text-[10px] font-mono border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+          className="h-6 px-2 text-[10px] font-mono text-muted-foreground hover:text-foreground"
           title="View Changelog & Release Notes"
         >
-          v2.4.1
-        </button>
+          v2.6.0
+        </Button>
       </div>
     </footer>
   );
 };
-
