@@ -155,8 +155,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       },
       {
         id: 'scratchpad-md',
-        title: 'New Markdown Notes Document',
-        description: 'Formatted document with GFM tables, syntax blocks, and live preview',
+        title: 'New Markdown Document',
+        description: 'Live interactive Markdown editor with GitHub GFM, math & diagrams',
         category: 'Scratchpads & Sandboxes',
         icon: <FileText className="w-4 h-4 text-purple-500" />,
         action: () => {
@@ -166,49 +166,36 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       },
       {
         id: 'scratchpad-html',
-        title: 'New HTML5 & Canvas Sandbox',
-        description: 'Live interactive web document with JS script runner and preview',
+        title: 'New HTML5 Live Canvas Sandbox',
+        description: 'Rich HTML, CSS, and JS runner with live iframe renderer',
         category: 'Scratchpads & Sandboxes',
-        icon: <Layers className="w-4 h-4 text-rose-500" />,
+        icon: <Layers className="w-4 h-4 text-orange-500" />,
         action: () => {
           onNewScratchpad('html');
+          onClose();
+        }
+      },
+      {
+        id: 'scratchpad-json',
+        title: 'New JSON / REST Data Buffer',
+        description: 'Structured JSON data editor and parser scratchpad',
+        category: 'Scratchpads & Sandboxes',
+        icon: <FileCode className="w-4 h-4 text-cyan-500" />,
+        action: () => {
+          onNewScratchpad('json');
           onClose();
         }
       }
     );
 
-    // 3. Tools & Utilities
+    // 3. Tools & Modals
     list.push(
       {
-        id: 'tool-npm',
-        title: 'NPM Package Tester & Live CDN Playground',
-        description: 'Search, import, and test any arbitrary npm package directly in browser',
-        category: 'Tools & Utilities',
-        icon: <Package className="w-4 h-4 text-amber-500" />,
-        shortcut: 'NPM',
-        action: () => {
-          onOpenNpmTester();
-          onClose();
-        }
-      },
-      {
-        id: 'tool-url',
-        title: 'Open File from Direct URL / GitHub',
-        description: 'Fetch and view remote files, APIs, or GitHub raw links via client CORS',
-        category: 'Tools & Utilities',
-        icon: <Link2 className="w-4 h-4 text-blue-500" />,
-        shortcut: 'URL',
-        action: () => {
-          onOpenUrlModal();
-          onClose();
-        }
-      },
-      {
         id: 'tool-open-file',
-        title: 'Open Local Files from Storage',
-        description: 'Select files from your computer (PDF, Excel, SQLite, DBF, Code, Media, Archives)',
+        title: 'Open Local File...',
+        description: 'Pick file from local disk via native system file picker (Ctrl+O)',
         category: 'Tools & Utilities',
-        icon: <FolderOpen className="w-4 h-4 text-blue-600" />,
+        icon: <FolderOpen className="w-4 h-4 text-blue-500" />,
         shortcut: 'Ctrl+O',
         action: () => {
           onOpenFilePicker();
@@ -217,13 +204,35 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       },
       {
         id: 'tool-paste-file',
-        title: 'Paste & Open File from Clipboard',
-        description: 'Create and open a new file tab from clipboard text, code, JSON, or images',
+        title: 'Create File from Clipboard / Text Paste...',
+        description: 'Paste text or raw code into a new recognized file tab (Ctrl+V)',
         category: 'Tools & Utilities',
-        icon: <ClipboardPaste className="w-4 h-4 text-emerald-500" />,
+        icon: <ClipboardPaste className="w-4 h-4 text-purple-500" />,
         shortcut: 'Ctrl+V',
         action: () => {
           if (onOpenPasteModal) onOpenPasteModal();
+          onClose();
+        }
+      },
+      {
+        id: 'tool-url-file',
+        title: 'Open File from Remote URL / CORS Proxy...',
+        description: 'Fetch remote document, data file, or raw code directly into tabs',
+        category: 'Tools & Utilities',
+        icon: <Link2 className="w-4 h-4 text-teal-500" />,
+        action: () => {
+          onOpenUrlModal();
+          onClose();
+        }
+      },
+      {
+        id: 'tool-npm-tester',
+        title: 'NPM Package Tester & Playground',
+        description: 'Test any npm package with zero backend via esm.sh CDN runner',
+        category: 'Tools & Utilities',
+        icon: <Package className="w-4 h-4 text-rose-500" />,
+        action: () => {
+          onOpenNpmTester();
           onClose();
         }
       },
@@ -411,85 +420,75 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           </kbd>
         </div>
 
-        {/* Results List */}
-        <ScrollArea className="max-h-[60vh]">
-          <div ref={listRef} className="p-2 space-y-1">
-            {filteredCommands.length === 0 ? (
-              <div className="py-12 text-center text-muted-foreground">
-                <p className="text-sm font-medium">No matching commands or files found</p>
-                <p className="text-xs mt-1 opacity-70">
-                  Try searching for "NPM", "Python", "SQL", "DBF", "Theme", or file names.
-                </p>
-              </div>
-            ) : (
-              filteredCommands.map((cmd, idx) => {
-                const isSelected = idx === selectedIndex;
+        {/* Command Items List */}
+        <ScrollArea className="max-h-[380px] p-2">
+          {filteredCommands.length === 0 ? (
+            <div className="py-12 text-center text-sm text-muted-foreground">
+              No matching commands, tools, or files found.
+            </div>
+          ) : (
+            <div ref={listRef} className="space-y-1">
+              {filteredCommands.map((item, index) => {
+                const isSelected = index === selectedIndex;
                 return (
                   <div
-                    key={cmd.id}
-                    data-index={idx}
-                    onClick={cmd.action}
-                    onMouseEnter={() => setSelectedIndex(idx)}
-                    className={`flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${
+                    key={item.id}
+                    data-index={index}
+                    onClick={() => item.action()}
+                    onMouseEnter={() => setSelectedIndex(index)}
+                    className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-xs cursor-pointer transition-colors ${
                       isSelected
-                        ? 'bg-accent text-accent-foreground'
-                        : 'hover:bg-muted/60 text-foreground'
+                        ? 'bg-accent text-accent-foreground font-medium'
+                        : 'text-foreground hover:bg-muted/50'
                     }`}
                   >
-                    <div className="flex items-center gap-3 min-w-0 pr-2">
-                      <div
-                        className={`p-2 rounded-lg shrink-0 ${
-                          isSelected
-                            ? 'bg-primary/10 text-primary'
-                            : 'bg-muted text-muted-foreground'
-                        }`}
-                      >
-                        {cmd.icon}
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="p-1.5 rounded-md bg-muted/80 text-foreground shrink-0">
+                        {item.icon}
                       </div>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-semibold truncate">{cmd.title}</span>
-                          <span className="text-[10px] uppercase font-mono tracking-wider text-muted-foreground shrink-0">
-                            {cmd.category}
+                          <span className="font-medium truncate">{item.title}</span>
+                          <span className="text-[10px] text-muted-foreground font-normal px-1.5 py-0.2 rounded bg-muted/60 shrink-0">
+                            {item.category}
                           </span>
                         </div>
                         <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-                          {cmd.description}
+                          {item.description}
                         </p>
                       </div>
                     </div>
 
-                    {cmd.shortcut ? (
-                      <Badge variant="outline" className="text-[10px] font-mono shrink-0">
-                        {cmd.shortcut}
-                      </Badge>
-                    ) : (
-                      isSelected && <ArrowRight className="w-3.5 h-3.5 text-primary shrink-0" />
-                    )}
+                    <div className="flex items-center gap-2 shrink-0 ml-3">
+                      {item.shortcut && (
+                        <Badge variant="outline" className="text-[10px] font-mono py-0 px-1.5">
+                          {item.shortcut}
+                        </Badge>
+                      )}
+                      <ArrowRight className={`w-3.5 h-3.5 transition-opacity ${isSelected ? 'opacity-100 text-foreground' : 'opacity-0'}`} />
+                    </div>
                   </div>
                 );
-              })
-            )}
-          </div>
+              })}
+            </div>
+          )}
         </ScrollArea>
 
-        {/* Footer info bar */}
-        <div className="flex items-center justify-between px-4 py-2 bg-muted/50 border-t border-border text-[11px] text-muted-foreground">
+        {/* Footer Instructions */}
+        <div className="flex items-center justify-between px-4 py-2 border-t border-border bg-muted/30 text-[11px] text-muted-foreground">
           <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1">
-              <kbd className="px-1 py-0.5 bg-background rounded border border-border font-mono text-[10px]">
-                ↑↓
-              </kbd>{' '}
-              Navigate
+            <span>
+              <kbd className="font-mono bg-muted px-1 py-0.5 rounded border border-border">↑</kbd>{' '}
+              <kbd className="font-mono bg-muted px-1 py-0.5 rounded border border-border">↓</kbd> navigate
             </span>
-            <span className="flex items-center gap-1">
-              <kbd className="px-1 py-0.5 bg-background rounded border border-border font-mono text-[10px]">
-                ↵
-              </kbd>{' '}
-              Select
+            <span>
+              <kbd className="font-mono bg-muted px-1 py-0.5 rounded border border-border">↵</kbd> select
+            </span>
+            <span>
+              <kbd className="font-mono bg-muted px-1 py-0.5 rounded border border-border">esc</kbd> close
             </span>
           </div>
-          <span className="text-[10px]">OmniView Command Hub</span>
+          <span className="font-mono">{filteredCommands.length} commands</span>
         </div>
       </DialogContent>
     </Dialog>

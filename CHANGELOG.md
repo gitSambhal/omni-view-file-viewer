@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.8.0] - 2026-09-15
+
+### Changed
+- **Pure shadcn/ui Design & Clean Architecture**:
+  - Removed multi-theme studio and extra theme selections to focus strictly on pure **shadcn/ui** styling.
+  - Retained accessible Dark and Light theme toggle with persisted user preferences.
+  - Streamlined Header, Command Palette, and Global navigation controls.
+
+## [2.7.1] - 2026-09-15
+
+### Changed
+- **Deep Multi-Dimensional Design System Architecture (`src/index.css`, `src/services/designSystems.ts`, `src/types/designSystem.ts`)**:
+  - **Authentic Corner Radii & Geometry Transformations**:
+    - **IBM Carbon**: Strictly 0px sharp rectangular corners applied across all buttons, cards, dialogs, badges, tabs, and menus.
+    - **HeroUI (NextUI)**: High pill-shaped 9999px / 16px fluid rounded curves on buttons, badges, and cards with smooth cubic-bezier transitions.
+    - **Cyberpunk Amber**: Precision 2px industrial tech edges with electric glowing amber outlines.
+    - **Ant Design & GitHub Primer**: Classic 6px enterprise curves with subtle borders.
+    - **Nordic Arctic**: Generous 10px-12px rounded arctic curves.
+  - **Dynamic Typography & Font Stacks**:
+    - Embedded dedicated Google Fonts (`IBM Plex Sans` for Carbon, `Plus Jakarta Sans` for HeroUI, `Share Tech Mono` for Cyberpunk, and `Inter` for modern systems).
+    - Added dynamic letter-spacing and monospaced typography mapping.
+  - **Elevation, Shadows & Active Tab Indicators**:
+    - Carbon active tabs feature iconic IBM Blue (`#0f62fe`) solid 3px top indicator bars with flat 0px shadow.
+    - GitHub Primer and Ant Design feature bottom indicator border underlines.
+    - HeroUI features soft violet glow shadows (`rgba(147, 83, 211, 0.3)`) and floating pill tab highlights.
+    - Cyberpunk features glowing phosphor box shadows (`rgba(245, 158, 11, 0.35)`).
+    - Catalyst features Tailwind UI top inset highlight bevels (`box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.2)`).
+
+## [2.7.0] - 2026-09-15
+
+### Added
+- **Universal Design Systems Theme Engine (`src/services/designSystems.ts`, `src/types/designSystem.ts`)**:
+  - Added support for 10 iconic enterprise, modern, and developer UI design systems:
+    - **shadcn/ui (Default Modern)**: Minimalist zinc surfaces, high-contrast typography, and balanced 8px curves.
+    - **IBM Carbon (Enterprise Sharp)**: Precision industrial geometry, sharp 0px corners, IBM Blue (`#0f62fe`), and gray-10/100 scales.
+    - **Ant Design (Enterprise Classic)**: Daybreak Blue (`#1677ff`), corporate high-productivity workflows, and 6px corners.
+    - **HeroUI / NextUI (Vibrant Modern)**: Futuristic violet (`#9353d3`), rich surface depths, and generous 14px pill curves.
+    - **Mantine UI (Fluid SaaS)**: Ocean Azure (`#228be6`), balanced slate surfaces, and high-legibility components.
+    - **Shopify Polaris (Commerce & Trust)**: Merchant Emerald (`#008060` / `#10b981`) and soft warm high-trust surfaces.
+    - **Catalyst UI (Developer Pro)**: Precision Tailwind UI styling with sharp indigo tones (`#6366f1`) and developer surfaces.
+    - **GitHub Primer (GitHub Classic)**: Octocat Blue (`#0969da` / `#2f81f7`) and iconic GitHub Dark surfaces.
+    - **Cyberpunk Amber (High Contrast)**: Electric glowing amber (`#f59e0b`) on OLED obsidian pure black with 2px industrial edges.
+    - **Nordic Arctic (Arctic Minimal)**: Calm arctic ice teal (`#88c0d0`), deep slate navy, and generous 10px rounded corners.
+  - **Dynamic Zero-Runtime CSS Token Injection**: Updates CSS custom variables (`--background`, `--foreground`, `--primary`, `--radius`, `--border`, `--card`, etc.) on `:root` without DOM remounts or layout shifts.
+  - **Design Systems Studio & Live Preview Modal (`ThemeSelectorModal.tsx`)**: Interactive modal showcasing each design system's interactive live controls, color swatches, radius metrics, and philosophy.
+  - **Header & Command Palette Quick Switchers**: Switch themes in 1 click from the header dropdown menu or the `Ctrl+K` command palette.
+
 ## [2.6.1] - 2026-09-15
 
 ### Changed

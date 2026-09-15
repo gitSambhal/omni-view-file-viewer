@@ -1,26 +1,32 @@
 /**
  * @license Apache-2.0
  * Developer: Suhail Akhtar (https://suhail.top)
- * Localhost & Private Network Access Permission Gateway Modal
+ * Localhost & Private Network Access Permission Gateway Modal (shadcn/ui + Radix UI)
  */
 
 import React, { useState } from 'react';
 import {
   ShieldAlert,
-  Globe,
-  Lock,
   Check,
-  Copy,
   Terminal,
-  ExternalLink,
   Info,
   Server,
   Code2,
   ChevronDown,
   ChevronUp,
-  X,
   Play
 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from './ui/dialog';
+import { Button } from './ui/button';
+import { Card } from './ui/card';
+import { Badge } from './ui/badge';
+import { ScrollArea } from './ui/scroll-area';
 
 interface LocalhostPermissionModalProps {
   isOpen: boolean;
@@ -44,8 +50,6 @@ export const LocalhostPermissionModal: React.FC<LocalhostPermissionModalProps> =
   const [showCorsGuide, setShowCorsGuide] = useState<boolean>(false);
   const [selectedGuideLang, setSelectedGuideLang] = useState<'express' | 'python' | 'go'>('express');
 
-  if (!isOpen) return null;
-
   const handleCopyCurl = () => {
     navigator.clipboard.writeText(curlCommand);
     setCopiedCurl(true);
@@ -58,121 +62,118 @@ export const LocalhostPermissionModal: React.FC<LocalhostPermissionModalProps> =
   };
 
   return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden text-slate-100 font-sans">
+    <Dialog open={isOpen} onOpenChange={open => !open && onClose()}>
+      <DialogContent className="max-w-xl p-0 gap-0 overflow-hidden font-sans">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-slate-950 border-b border-slate-800 shrink-0">
+        <DialogHeader className="p-4 border-b border-border bg-muted/40 text-left">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-2xl">
+            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
               <ShieldAlert className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-100 text-base flex items-center gap-2">
-                <span>Localhost Network Request</span>
-                <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              <div className="flex items-center gap-2">
+                <DialogTitle className="text-base font-bold">Localhost Network Request</DialogTitle>
+                <Badge variant="secondary" className="font-mono text-[10px] text-amber-600 dark:text-amber-400">
                   Permission Required
-                </span>
-              </h3>
-              <p className="text-xs text-slate-400">Target host: Private / Localhost Gateway</p>
+                </Badge>
+              </div>
+              <DialogDescription className="text-xs mt-0.5">
+                Target host: Private / Localhost Gateway
+              </DialogDescription>
             </div>
           </div>
-
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+        </DialogHeader>
 
         {/* Modal Body */}
-        <div className="p-6 space-y-5 overflow-y-auto text-sm text-slate-300 leading-relaxed font-sans">
+        <ScrollArea className="max-h-[60vh] p-5 space-y-4 text-xs">
           {/* Target URL Banner */}
-          <div className="p-3.5 bg-slate-950 rounded-2xl border border-slate-800 space-y-2">
-            <div className="flex items-center justify-between text-xs text-slate-400">
+          <Card className="p-3.5 bg-muted/40 border-border space-y-2">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span className="font-medium flex items-center gap-1.5">
-                <Server className="w-3.5 h-3.5 text-blue-400" />
+                <Server className="w-3.5 h-3.5 text-primary" />
                 Target Local Endpoint
               </span>
-              <span className="font-mono text-[11px] font-bold text-emerald-400">{method}</span>
+              <Badge variant="outline" className="font-mono text-[10px] font-bold text-emerald-500">
+                {method}
+              </Badge>
             </div>
-            <div className="p-2.5 bg-slate-900 rounded-xl border border-slate-800 font-mono text-xs text-amber-300 break-all select-all">
+            <div className="p-2 bg-background rounded-lg border border-border font-mono text-xs text-amber-500 break-all select-all">
               {targetUrl}
             </div>
-          </div>
+          </Card>
 
           {/* Explanation info */}
-          <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 space-y-2 text-xs text-slate-300">
-            <div className="flex items-center gap-2 font-semibold text-blue-300">
-              <Info className="w-4 h-4 text-blue-400 shrink-0" />
+          <Card className="bg-primary/5 border-primary/20 p-4 space-y-2 text-xs text-muted-foreground mt-3">
+            <div className="flex items-center gap-2 font-semibold text-foreground">
+              <Info className="w-4 h-4 text-primary shrink-0" />
               <span>Why is permission required?</span>
             </div>
-            <p className="text-slate-300 leading-relaxed">
+            <p className="leading-relaxed">
               Modern web browsers enforce <strong>Private Network Access (PNA)</strong> and <strong>Cross-Origin Resource Sharing (CORS)</strong> specifications when a web app communicates with your computer&apos;s local daemon (<code>localhost</code>, <code>127.0.0.1</code>, or <code>192.168.x.x</code>).
             </p>
-            <ul className="list-disc list-inside space-y-1 text-slate-400 pl-1">
+            <ul className="list-disc list-inside space-y-1 text-muted-foreground pl-1">
               <li>Your local service must permit CORS headers (<code>Access-Control-Allow-Origin: *</code>).</li>
               <li>Requests run strictly from your browser to your machine without any external telemetry.</li>
             </ul>
-          </div>
+          </Card>
 
           {/* Remember option */}
-          <div className="flex items-center gap-3 p-3 bg-slate-950/60 rounded-xl border border-slate-800/80">
+          <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-xl border border-border mt-3">
             <input
               type="checkbox"
               id="remember-session"
               checked={rememberSession}
               onChange={e => setRememberSession(e.target.checked)}
-              className="w-4 h-4 rounded text-blue-600 bg-slate-900 border-slate-700 accent-blue-500 cursor-pointer"
+              className="w-4 h-4 rounded text-primary accent-primary cursor-pointer"
             />
-            <label htmlFor="remember-session" className="text-xs text-slate-300 font-medium cursor-pointer select-none">
+            <label htmlFor="remember-session" className="text-xs text-foreground font-medium cursor-pointer select-none">
               Remember my permission for localhost requests during this session
             </label>
           </div>
 
           {/* Collapsible Local CORS Guide */}
-          <div className="border border-slate-800 rounded-2xl overflow-hidden bg-slate-950">
+          <Card className="overflow-hidden border border-border mt-3">
             <button
               onClick={() => setShowCorsGuide(!showCorsGuide)}
-              className="w-full flex items-center justify-between p-3.5 text-xs font-semibold text-slate-300 hover:bg-slate-900/80 transition-colors cursor-pointer"
+              className="w-full flex items-center justify-between p-3 text-xs font-semibold text-foreground hover:bg-muted/50 transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-2">
-                <Code2 className="w-4 h-4 text-emerald-400" />
+                <Code2 className="w-4 h-4 text-emerald-500" />
                 <span>Need help configuring CORS on your local server?</span>
               </div>
               {showCorsGuide ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </button>
 
             {showCorsGuide && (
-              <div className="p-4 border-t border-slate-800 space-y-3 bg-slate-900/50">
+              <div className="p-3.5 border-t border-border space-y-3 bg-muted/20">
                 <div className="flex items-center gap-2 text-xs">
-                  <button
+                  <Button
+                    variant={selectedGuideLang === 'express' ? "default" : "outline"}
+                    size="sm"
                     onClick={() => setSelectedGuideLang('express')}
-                    className={`px-2.5 py-1 rounded-lg font-medium transition-colors cursor-pointer ${
-                      selectedGuideLang === 'express' ? 'bg-blue-600 text-white font-bold' : 'bg-slate-800 text-slate-400'
-                    }`}
+                    className="h-6 text-[11px]"
                   >
                     Node.js Express
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant={selectedGuideLang === 'python' ? "default" : "outline"}
+                    size="sm"
                     onClick={() => setSelectedGuideLang('python')}
-                    className={`px-2.5 py-1 rounded-lg font-medium transition-colors cursor-pointer ${
-                      selectedGuideLang === 'python' ? 'bg-blue-600 text-white font-bold' : 'bg-slate-800 text-slate-400'
-                    }`}
+                    className="h-6 text-[11px]"
                   >
                     Python FastAPI
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant={selectedGuideLang === 'go' ? "default" : "outline"}
+                    size="sm"
                     onClick={() => setSelectedGuideLang('go')}
-                    className={`px-2.5 py-1 rounded-lg font-medium transition-colors cursor-pointer ${
-                      selectedGuideLang === 'go' ? 'bg-blue-600 text-white font-bold' : 'bg-slate-800 text-slate-400'
-                    }`}
+                    className="h-6 text-[11px]"
                   >
                     Go (net/http)
-                  </button>
+                  </Button>
                 </div>
 
-                <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 font-mono text-[11px] text-emerald-400 overflow-x-auto">
+                <div className="p-3 bg-background rounded-lg border border-border font-mono text-[11px] text-emerald-600 dark:text-emerald-400 overflow-x-auto">
                   {selectedGuideLang === 'express' && (
                     <pre>{`// In your local Express server:
 const cors = require('cors');
@@ -196,38 +197,44 @@ w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS"
                 </div>
               </div>
             )}
-          </div>
-        </div>
+          </Card>
+        </ScrollArea>
 
         {/* Footer Actions */}
-        <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 bg-slate-950 border-t border-slate-800 shrink-0">
-          <button
+        <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 bg-muted/40 border-t border-border">
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleCopyCurl}
-            className="flex items-center gap-1.5 px-3 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-semibold rounded-xl border border-slate-700 transition-colors cursor-pointer"
+            className="text-xs h-8 gap-1.5"
             title="Copy command to run in your Terminal / Command Prompt"
           >
-            {copiedCurl ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Terminal className="w-3.5 h-3.5" />}
+            {copiedCurl ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Terminal className="w-3.5 h-3.5" />}
             <span>{copiedCurl ? 'cURL Copied!' : 'Copy cURL Command'}</span>
-          </button>
+          </Button>
 
           <div className="flex items-center gap-2">
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={onClose}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
+              className="text-xs h-8"
             >
               Cancel
-            </button>
+            </Button>
 
-            <button
+            <Button
+              variant="default"
+              size="sm"
               onClick={handleGrant}
-              className="flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-600/25 transition-all active:scale-95 cursor-pointer"
+              className="text-xs h-8 gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white"
             >
               <Play className="w-3.5 h-3.5 fill-current" />
               <span>Allow & Run Request</span>
-            </button>
+            </Button>
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };

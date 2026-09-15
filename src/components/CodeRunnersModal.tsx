@@ -1,12 +1,11 @@
 /**
  * @license Apache-2.0
  * Developer: Suhail Akhtar (https://suhail.top)
- * OmniView Supported Code Runners & In-Browser Execution Guide
+ * OmniView Supported Code Runners & In-Browser Execution Guide (shadcn/ui + Radix UI)
  */
 
 import React, { useState } from 'react';
 import {
-  X,
   Play,
   Terminal,
   Database,
@@ -18,6 +17,17 @@ import {
   Sparkles
 } from 'lucide-react';
 import { RUNNERS_REGISTRY, SupportedRunner } from '../services/codeRunners';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from './ui/dialog';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { Card } from './ui/card';
+import { ScrollArea } from './ui/scroll-area';
 
 export interface CodeRunnersModalProps {
   isOpen: boolean;
@@ -117,7 +127,7 @@ echo "=== Environment Diagnostics ==="
 export APP_NAME="OmniView File Studio"
 echo "Application: $APP_NAME"
 
-echo "lemon\napple\nbanana\ncherry" | sort | head -n 3`
+echo "lemon\\napple\\nbanana\\ncherry" | sort | head -n 3`
   },
   json: {
     title: 'JSON Data Workspace',
@@ -125,7 +135,7 @@ echo "lemon\napple\nbanana\ncherry" | sort | head -n 3`
     language: 'json',
     code: `{
   "workspace": "OmniView File Studio",
-  "version": "2.4.0",
+  "version": "2.6.0",
   "features": ["100% Offline", "Code Runners", "Live Disk Sync"],
   "engine": "In-Browser Execution"
 }`
@@ -134,7 +144,7 @@ echo "lemon\napple\nbanana\ncherry" | sort | head -n 3`
     title: 'Regex Pattern Matcher',
     filename: 'log_parser.txt',
     language: 'plaintext',
-    code: `// Regex Tester Pattern: /([A-Z]+)\s+\[(\d{4}-\d{2}-\d{2})\]\s+(.*)/gi
+    code: `// Regex Tester Pattern: /([A-Z]+)\\s+\\[(\\d{4}-\\d{2}-\\d{2})\\]\\s+(.*)/gi
 INFO [2026-09-04] Application initialized in 12ms
 WARN [2026-09-04] High memory threshold detected: 82%
 ERROR [2026-09-04] Connection port 3001 busy`
@@ -155,8 +165,6 @@ export const CodeRunnersModal: React.FC<CodeRunnersModalProps> = ({
   const [selectedRunner, setSelectedRunner] = useState<SupportedRunner>('python');
   const [copied, setCopied] = useState<boolean>(false);
 
-  if (!isOpen) return null;
-
   const currentSample = RUNNER_SAMPLES[selectedRunner];
   const activeRunnerMeta = RUNNERS_REGISTRY.find(r => r.id === selectedRunner) || RUNNERS_REGISTRY[0];
 
@@ -167,40 +175,33 @@ export const CodeRunnersModal: React.FC<CodeRunnersModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="relative w-full max-w-4xl bg-white dark:bg-[#0c121e] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden flex flex-col max-h-[90vh] text-slate-800 dark:text-slate-100">
+    <Dialog open={isOpen} onOpenChange={open => !open && onClose()}>
+      <DialogContent className="max-w-4xl p-0 gap-0 overflow-hidden">
         {/* Header */}
-        <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between bg-slate-50 dark:bg-slate-900/60">
+        <DialogHeader className="p-4 border-b border-border bg-muted/40 text-left">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
-              <Code2 className="w-4 h-4" />
+            <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500 font-bold">
+              <Code2 className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <span>Code Execution Engines</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold border border-emerald-500/20">
+              <div className="flex items-center gap-2">
+                <DialogTitle className="text-base font-bold">Code Execution Engines</DialogTitle>
+                <Badge variant="secondary" className="font-mono text-[10px] text-emerald-600 dark:text-emerald-400">
                   100% Client-Side
-                </span>
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+                </Badge>
+              </div>
+              <DialogDescription className="text-xs mt-0.5">
                 Run scripts locally in browser memory without sending data to any server.
-              </p>
+              </DialogDescription>
             </div>
           </div>
-
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+        </DialogHeader>
 
         {/* Modal Body */}
-        <div className="flex-1 overflow-y-auto flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-slate-200 dark:divide-slate-800 min-h-0">
-          {/* Left Navigation Tabs */}
-          <div className="w-full md:w-60 shrink-0 p-3 space-y-1 bg-slate-50/50 dark:bg-slate-950/40 overflow-y-auto">
-            <div className="text-[10px] font-mono uppercase font-bold tracking-wider text-slate-400 px-2 py-1">
+        <div className="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-border max-h-[65vh]">
+          {/* Left Navigation List */}
+          <div className="w-full md:w-60 shrink-0 p-3 space-y-1 bg-muted/20 overflow-y-auto">
+            <div className="text-[10px] font-mono uppercase font-bold tracking-wider text-muted-foreground px-2 py-1">
               Select Engine ({RUNNERS_REGISTRY.length})
             </div>
             {RUNNERS_REGISTRY.map(runner => {
@@ -209,18 +210,18 @@ export const CodeRunnersModal: React.FC<CodeRunnersModalProps> = ({
                 <button
                   key={runner.id}
                   onClick={() => setSelectedRunner(runner.id)}
-                  className={`w-full text-left px-3 py-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-between ${
+                  className={`w-full text-left px-3 py-2 rounded-lg transition-all cursor-pointer flex items-center justify-between text-xs ${
                     isSelected
-                      ? 'bg-blue-600 text-white font-semibold shadow-xs'
-                      : 'hover:bg-slate-200/60 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300'
+                      ? 'bg-primary text-primary-foreground font-semibold shadow-xs'
+                      : 'hover:bg-muted text-foreground'
                   }`}
                 >
-                  <span className="text-xs">{runner.name}</span>
+                  <span>{runner.name}</span>
                   <span
                     className={`text-[9px] font-mono px-1.5 py-0.5 rounded border ${
                       isSelected
-                        ? 'bg-white/20 text-white border-white/30'
-                        : 'bg-slate-200/60 dark:bg-slate-800 text-slate-500 border-slate-300 dark:border-slate-700'
+                        ? 'bg-primary-foreground/20 text-primary-foreground border-primary-foreground/30'
+                        : 'bg-muted text-muted-foreground border-border'
                     }`}
                   >
                     .{runner.fileExtensions[0]}
@@ -230,48 +231,50 @@ export const CodeRunnersModal: React.FC<CodeRunnersModalProps> = ({
             })}
           </div>
 
-          {/* Right Main Details & Code Area */}
-          <div className="flex-1 p-5 overflow-y-auto space-y-4 text-xs">
-            {/* Selected Runner Overview */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800">
+          {/* Right Details & Code Area */}
+          <ScrollArea className="flex-1 p-5 space-y-4 text-xs">
+            {/* Selected Runner Overview Card */}
+            <Card className="p-4 bg-muted/30 border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                  <h4 className="font-bold text-sm text-foreground">
                     {activeRunnerMeta.name}
                   </h4>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium">
+                  <Badge variant="outline" className="text-[10px] font-mono text-primary">
                     {activeRunnerMeta.engine}
-                  </span>
+                  </Badge>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                <p className="text-xs text-muted-foreground leading-relaxed">
                   {activeRunnerMeta.description}
                 </p>
               </div>
 
               {onLoadSampleSnippet && (
-                <button
+                <Button
+                  variant="default"
+                  size="sm"
                   onClick={() => {
                     onLoadSampleSnippet(currentSample.code, currentSample.filename, currentSample.language);
                     onClose();
                   }}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold shadow-xs shrink-0 cursor-pointer transition-all self-start sm:self-auto"
+                  className="gap-1.5 text-xs h-8 shrink-0 self-start sm:self-auto"
                 >
                   <Play className="w-3.5 h-3.5 fill-current" />
                   <span>Run in Workspace</span>
-                </button>
+                </Button>
               )}
-            </div>
+            </Card>
 
             {/* Key Capabilities */}
-            <div className="space-y-1.5">
-              <span className="text-[10px] font-mono uppercase font-bold tracking-wider text-slate-400">
+            <div className="space-y-1.5 mt-4">
+              <span className="text-[10px] font-mono uppercase font-bold tracking-wider text-muted-foreground">
                 Capabilities
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {activeRunnerMeta.capabilities.map((cap, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-[#070b12] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs"
+                    className="flex items-center gap-2 p-2 rounded-lg bg-card border border-border text-foreground text-xs"
                   >
                     <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                     <span>{cap}</span>
@@ -281,14 +284,16 @@ export const CodeRunnersModal: React.FC<CodeRunnersModalProps> = ({
             </div>
 
             {/* Sample Snippet Preview */}
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 mt-4">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-mono uppercase font-bold tracking-wider text-slate-400">
+                <span className="text-[10px] font-mono uppercase font-bold tracking-wider text-muted-foreground">
                   Sample Code ({currentSample.filename})
                 </span>
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={handleCopy}
-                  className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer font-medium"
+                  className="h-6 px-2 text-[11px] gap-1 text-primary"
                 >
                   {copied ? (
                     <>
@@ -301,31 +306,33 @@ export const CodeRunnersModal: React.FC<CodeRunnersModalProps> = ({
                       <span>Copy</span>
                     </>
                   )}
-                </button>
+                </Button>
               </div>
 
-              <div className="bg-[#111827] text-slate-200 p-3.5 rounded-xl font-mono text-xs overflow-x-auto border border-slate-800 max-h-56">
+              <div className="bg-muted/80 text-foreground p-3.5 rounded-xl font-mono text-xs overflow-x-auto border border-border max-h-56">
                 <pre className="m-0 whitespace-pre leading-relaxed">{currentSample.code}</pre>
               </div>
             </div>
-          </div>
+          </ScrollArea>
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-          <div className="flex items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-            <span>Client-Side Sandbox: Zero server dependencies or data transmission.</span>
+        <div className="px-5 py-3 border-t border-border bg-muted/40 flex items-center justify-between text-xs text-muted-foreground">
+          <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+            <ShieldCheck className="w-4 h-4 shrink-0" />
+            <span className="text-[11px]">Client-Side Sandbox: Zero server dependencies or data transmission.</span>
           </div>
 
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={onClose}
-            className="px-4 py-1.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-medium transition-colors cursor-pointer text-xs"
+            className="text-xs h-8"
           >
             Close
-          </button>
+          </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };

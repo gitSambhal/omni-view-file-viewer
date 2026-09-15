@@ -1,12 +1,11 @@
 /**
  * @license Apache-2.0
  * Developer: Suhail Akhtar (https://suhail.top)
- * OmniView Dynamic NPM Package Tester & Live CDN Playground
+ * OmniView Dynamic NPM Package Tester & Live CDN Playground (shadcn/ui + Radix UI)
  */
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  X,
   Package,
   Play,
   Copy,
@@ -26,6 +25,17 @@ import {
   runJavaScript,
   ConsoleLogItem
 } from '../services/codeRunners';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from './ui/dialog';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Badge } from './ui/badge';
+import { ScrollArea } from './ui/scroll-area';
 
 export interface NpmTesterModalProps {
   isOpen: boolean;
@@ -399,7 +409,6 @@ export const NpmTesterModal: React.FC<NpmTesterModalProps> = ({
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Close suggestions on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
@@ -409,8 +418,6 @@ export const NpmTesterModal: React.FC<NpmTesterModalProps> = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  if (!isOpen) return null;
 
   const currentTheme = EDITOR_THEMES.find(t => t.id === selectedThemeId) || EDITOR_THEMES[0];
   const lines = code.split('\n');
@@ -500,43 +507,34 @@ console.log("Members:", members.slice(0, 20));`);
   };
 
   return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-in fade-in duration-150">
-      <div className="bg-white dark:bg-[#0c121e] border border-slate-200 dark:border-slate-800 rounded-2xl max-w-5xl w-full max-h-[90vh] flex flex-col shadow-xl overflow-hidden text-slate-800 dark:text-slate-100 font-sans">
+    <Dialog open={isOpen} onOpenChange={open => !open && onClose()}>
+      <DialogContent className="max-w-5xl p-0 gap-0 overflow-hidden font-sans">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800 shrink-0">
+        <DialogHeader className="p-4 border-b border-border bg-muted/40 text-left">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
-              <Package className="w-4 h-4" />
+            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500 font-bold">
+              <Package className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">
-                  NPM CDN Playground
-                </h3>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold border border-emerald-500/20">
+                <DialogTitle className="text-base font-bold">NPM CDN Playground</DialogTitle>
+                <Badge variant="secondary" className="font-mono text-[10px] text-emerald-600 dark:text-emerald-400">
                   Zero Install
-                </span>
+                </Badge>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <DialogDescription className="text-xs mt-0.5">
                 Live package search & instant in-memory TypeScript execution.
-              </p>
+              </DialogDescription>
             </div>
           </div>
-
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+        </DialogHeader>
 
         {/* Live Search & Package Auto-Suggest Bar */}
-        <div className="p-3.5 bg-slate-100/60 dark:bg-slate-950/40 border-b border-slate-200 dark:border-slate-800 space-y-2 shrink-0">
+        <div className="p-3 bg-muted/20 border-b border-border space-y-2">
           <div className="relative" ref={searchContainerRef}>
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
+              <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+              <Input
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
@@ -549,26 +547,28 @@ console.log("Members:", members.slice(0, 20));`);
                   }
                 }}
                 placeholder="Search live NPM registry (e.g. axios, lodash, zod, three, chart.js, dayjs)..."
-                className="w-full pl-9 pr-24 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-mono"
+                className="pl-9 pr-20 h-8 text-xs font-mono bg-background"
               />
               {isLoadingSuggestions ? (
                 <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
-                  <Loader2 className="w-3.5 h-3.5 text-blue-500 animate-spin" />
+                  <Loader2 className="w-3.5 h-3.5 text-primary animate-spin" />
                 </div>
               ) : searchQuery.trim() ? (
-                <button
+                <Button
+                  variant="default"
+                  size="sm"
                   onClick={() => handleLoadCustomPackage(searchQuery.trim())}
-                  className="absolute right-1 top-1/2 -translate-y-1/2 px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-semibold cursor-pointer transition-colors"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-6 px-2.5 text-[11px]"
                 >
                   Load
-                </button>
+                </Button>
               ) : null}
             </div>
 
             {/* Floating Live NPM Suggestions Dropdown */}
             {showSuggestions && suggestions.length > 0 && (
-              <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-[#0c121e] border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl z-[99999] overflow-hidden max-h-64 overflow-y-auto animate-in fade-in duration-100 divide-y divide-slate-100 dark:divide-slate-800/60">
-                <div className="px-3 py-1.5 bg-slate-50 dark:bg-slate-900 text-[10px] font-mono uppercase font-bold text-slate-400 flex items-center justify-between">
+              <div className="absolute left-0 right-0 top-full mt-1 bg-popover text-popover-foreground border border-border rounded-xl shadow-2xl z-[99999] overflow-hidden max-h-64 overflow-y-auto divide-y divide-border">
+                <div className="px-3 py-1.5 bg-muted/50 text-[10px] font-mono uppercase font-bold text-muted-foreground flex items-center justify-between">
                   <span>Live NPM Search Results</span>
                   <span>registry.npmjs.org</span>
                 </div>
@@ -579,22 +579,22 @@ console.log("Members:", members.slice(0, 20));`);
                       setSearchQuery(item.name);
                       handleLoadCustomPackage(item.name);
                     }}
-                    className="w-full text-left p-2.5 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors cursor-pointer flex items-center justify-between group"
+                    className="w-full text-left p-2.5 hover:bg-muted transition-colors cursor-pointer flex items-center justify-between group"
                   >
                     <div className="min-w-0 pr-2">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-xs text-blue-600 dark:text-blue-400 group-hover:underline">
+                        <span className="font-mono font-bold text-xs text-primary group-hover:underline">
                           {item.name}
                         </span>
-                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-muted text-muted-foreground">
                           v{item.version}
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                      <p className="text-[11px] text-muted-foreground truncate mt-0.5">
                         {item.description || 'NPM package'}
                       </p>
                     </div>
-                    <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                    <span className="text-[10px] font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                       Load →
                     </span>
                   </button>
@@ -605,7 +605,7 @@ console.log("Members:", members.slice(0, 20));`);
 
           {/* Quick Popular Package Chips */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
-            <span className="text-[10px] font-mono text-slate-400 uppercase font-semibold shrink-0">
+            <span className="text-[10px] font-mono text-muted-foreground uppercase font-semibold shrink-0">
               Popular:
             </span>
             {POPULAR_PACKAGES.map(pkg => {
@@ -614,10 +614,10 @@ console.log("Members:", members.slice(0, 20));`);
                 <button
                   key={pkg.name}
                   onClick={() => handleSelectPackage(pkg)}
-                  className={`px-2.5 py-1 rounded-md text-xs font-mono transition-all cursor-pointer whitespace-nowrap ${
+                  className={`px-2 py-0.5 rounded text-xs font-mono transition-all cursor-pointer whitespace-nowrap ${
                     isSelected
                       ? 'bg-amber-500 text-slate-950 font-semibold shadow-xs'
-                      : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-slate-300'
+                      : 'bg-background text-muted-foreground border border-border hover:text-foreground'
                   }`}
                 >
                   {pkg.name}
@@ -628,17 +628,17 @@ console.log("Members:", members.slice(0, 20));`);
         </div>
 
         {/* Main Grid Area */}
-        <div className="flex-1 overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-12 gap-4 min-h-0">
-          {/* Left Column: Theme-Aware Editor & Actions (7 cols) */}
+        <div className="p-4 grid grid-cols-1 md:grid-cols-12 gap-4 max-h-[60vh] overflow-y-auto">
+          {/* Left Column: Theme-Aware Editor & Actions */}
           <div className="md:col-span-7 flex flex-col space-y-2">
             <div className="flex items-center justify-between text-xs px-1">
               <div className="flex items-center gap-2">
-                <span className="font-mono font-bold text-amber-600 dark:text-amber-400">{activePackageName}</span>
+                <span className="font-mono font-bold text-amber-500">{activePackageName}</span>
                 <a
                   href={`https://www.npmjs.com/package/${activePackageName}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[10px] text-slate-400 hover:text-blue-500 flex items-center gap-0.5"
+                  className="text-[10px] text-muted-foreground hover:text-primary flex items-center gap-0.5"
                 >
                   <span>npm</span>
                   <ExternalLink className="w-2.5 h-2.5" />
@@ -646,17 +646,17 @@ console.log("Members:", members.slice(0, 20));`);
               </div>
 
               {/* Theme & Format Toolbar */}
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700/80 text-[10px] font-mono">
-                  <Palette className="w-3 h-3 text-slate-400 ml-1" />
+              <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-0.5 bg-muted/60 p-0.5 rounded-md border border-border text-[10px] font-mono">
+                  <Palette className="w-3 h-3 text-muted-foreground ml-1 mr-0.5" />
                   {EDITOR_THEMES.map(theme => (
                     <button
                       key={theme.id}
                       onClick={() => setSelectedThemeId(theme.id)}
                       className={`px-1.5 py-0.5 rounded transition-all cursor-pointer ${
                         selectedThemeId === theme.id
-                          ? 'bg-blue-600 text-white font-semibold shadow-xs'
-                          : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                          ? 'bg-primary text-primary-foreground font-semibold'
+                          : 'text-muted-foreground hover:text-foreground'
                       }`}
                     >
                       {theme.name}
@@ -664,26 +664,30 @@ console.log("Members:", members.slice(0, 20));`);
                   ))}
                 </div>
 
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={handleFormatCode}
-                  className="flex items-center gap-1 px-2 py-1 bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-500/20 rounded-lg text-xs font-medium cursor-pointer transition-colors"
+                  className="h-6 px-2 text-[11px] gap-1"
                   title="Format Code"
                 >
                   <Wand2 className="w-3 h-3 text-purple-500" />
                   <span>{formattedMessage ? 'Formatted!' : 'Format'}</span>
-                </button>
+                </Button>
 
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={handleCopyCode}
-                  className="text-[11px] text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center gap-1 cursor-pointer"
+                  className="h-6 px-2 text-[11px] gap-1 text-muted-foreground"
                 >
                   {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
                   <span>{copied ? 'Copied' : 'Copy'}</span>
-                </button>
+                </Button>
               </div>
             </div>
 
-            {/* Synchronized Theme-Aware Pixel-Perfect Code Editor */}
+            {/* Synchronized Theme-Aware Code Editor */}
             <div className={`flex-1 flex flex-col border rounded-xl overflow-hidden min-h-[260px] ${currentTheme.bg} ${currentTheme.border}`}>
               <div className="flex-1 flex min-h-0 relative">
                 {/* Synchronized Line Numbers Gutter */}
@@ -699,9 +703,8 @@ console.log("Members:", members.slice(0, 20));`);
                   ))}
                 </div>
 
-                {/* Editor Container with Pixel-Perfect Syntax Highlight Backdrop */}
+                {/* Editor Container with Syntax Highlight Backdrop */}
                 <div className="relative flex-1 min-h-0 overflow-hidden font-mono text-xs leading-relaxed">
-                  {/* Theme Syntax Highlight Backdrop */}
                   <div
                     ref={backdropRef}
                     className="absolute inset-0 p-3.5 font-mono text-xs leading-relaxed pointer-events-none overflow-hidden whitespace-pre"
@@ -715,7 +718,6 @@ console.log("Members:", members.slice(0, 20));`);
                     ))}
                   </div>
 
-                  {/* Interactive Textarea Foreground */}
                   <textarea
                     ref={textareaRef}
                     value={code}
@@ -759,105 +761,113 @@ console.log("Members:", members.slice(0, 20));`);
 
               {/* Editor Footer Actions */}
               <div className={`flex items-center justify-between p-2.5 ${currentTheme.headerBg} border-t ${currentTheme.border}`}>
-                <button
+                <Button
+                  variant="default"
+                  size="sm"
                   onClick={handleRunTest}
                   disabled={isRunning}
-                  className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold shadow-xs cursor-pointer transition-all disabled:opacity-50"
+                  className="gap-1.5 h-7 text-xs bg-emerald-600 hover:bg-emerald-500 text-white"
                 >
                   <Play className={`w-3.5 h-3.5 fill-current ${isRunning ? 'animate-spin' : ''}`} />
                   <span>{isRunning ? 'Running...' : 'Run Code (Ctrl+Enter)'}</span>
-                </button>
+                </Button>
 
                 <div className="flex items-center gap-1.5">
                   {onInsertImport && (
-                    <button
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={() => {
                         const statement = `import ${activePackageName.replace(/[^a-zA-Z0-9]/g, '_')} from '${activePackageName}';\n`;
                         onInsertImport(statement);
                       }}
-                      className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium cursor-pointer transition-colors"
+                      className="gap-1 h-7 text-xs"
                     >
-                      <Plus className="w-3 h-3 text-blue-400" />
+                      <Plus className="w-3 h-3 text-primary" />
                       <span>Import</span>
-                    </button>
+                    </Button>
                   )}
 
                   {onOpenAsNewTab && (
-                    <button
+                    <Button
+                      variant="default"
+                      size="sm"
                       onClick={() => {
                         onOpenAsNewTab(code, `${activePackageName}.test.ts`, 'typescript');
                         onClose();
                       }}
-                      className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-600/90 hover:bg-blue-500 text-white rounded-lg text-xs font-medium cursor-pointer transition-colors"
+                      className="gap-1 h-7 text-xs"
                     >
                       <Layers className="w-3 h-3" />
                       <span>New Tab</span>
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Right Column: Console Log Output (5 cols) */}
-          <div className="md:col-span-5 flex flex-col bg-[#070b12] border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden min-h-[260px]">
-            <div className="flex items-center justify-between px-3 py-2 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-xs font-mono">
-              <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+          {/* Right Column: Console Log Output */}
+          <div className="md:col-span-5 flex flex-col bg-muted/40 border border-border rounded-xl overflow-hidden min-h-[260px]">
+            <div className="flex items-center justify-between px-3 py-2 bg-muted/60 border-b border-border text-xs font-mono">
+              <div className="flex items-center gap-1.5 text-foreground">
                 <Terminal className="w-3.5 h-3.5 text-emerald-500" />
                 <span className="font-semibold">Console Output</span>
               </div>
               {execTime !== null && (
-                <div className="flex items-center gap-1 text-[10px] text-slate-400">
+                <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                   <Clock className="w-3 h-3" />
                   <span>{execTime.toFixed(1)}ms</span>
                 </div>
               )}
             </div>
 
-            <div className="flex-1 p-3 overflow-y-auto space-y-2 font-mono text-xs text-slate-200">
+            <ScrollArea className="flex-1 p-3 font-mono text-xs text-foreground">
               {logs.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center p-4 text-slate-500 space-y-1">
-                  <Play className="w-6 h-6 text-slate-600 opacity-50" />
+                <div className="h-full flex flex-col items-center justify-center text-center p-4 text-muted-foreground space-y-1">
+                  <Play className="w-6 h-6 opacity-40" />
                   <p className="text-xs">Click "Run Code" to execute in sandbox.</p>
                 </div>
               ) : (
                 logs.map(log => (
-                  <div key={log.id} className="space-y-0.5">
+                  <div key={log.id} className="space-y-0.5 mb-2">
                     <div className="flex items-center gap-1.5 text-[9px]">
                       <span className={`px-1 rounded uppercase font-bold ${
-                        log.type === 'error' ? 'bg-rose-950 text-rose-300' :
-                        log.type === 'return' ? 'bg-emerald-950 text-emerald-300' :
-                        'bg-slate-800 text-slate-300'
+                        log.type === 'error' ? 'bg-destructive/20 text-destructive' :
+                        log.type === 'return' ? 'bg-emerald-500/20 text-emerald-500' :
+                        'bg-muted text-muted-foreground'
                       }`}>
                         {log.type}
                       </span>
-                      <span className="text-slate-600">{log.time}</span>
+                      <span className="text-muted-foreground">{log.time}</span>
                     </div>
-                    <pre className="text-slate-300 whitespace-pre-wrap break-all leading-relaxed">
+                    <pre className="text-foreground whitespace-pre-wrap break-all leading-relaxed font-mono text-xs">
                       {log.content}
                     </pre>
                   </div>
                 ))
               )}
-            </div>
+            </ScrollArea>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-5 py-2.5 bg-slate-50 dark:bg-slate-900/60 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
-          <div className="flex items-center gap-1.5 text-[11px]">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+        <div className="flex items-center justify-between px-5 py-2.5 bg-muted/40 border-t border-border text-xs text-muted-foreground">
+          <div className="flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400">
+            <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
             <span>Packages run locally via esm.sh CDN. Zero server code execution.</span>
           </div>
 
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={onClose}
-            className="px-3.5 py-1 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-medium transition-colors cursor-pointer"
+            className="text-xs h-7"
           >
             Close
-          </button>
+          </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };

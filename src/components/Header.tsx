@@ -25,7 +25,9 @@ import {
   Info,
   ClipboardPaste,
   FileCode,
-  FileText
+  FileText,
+  Palette,
+  Check
 } from 'lucide-react';
 import { Theme } from '../hooks/useTheme';
 import { Button } from './ui/button';
@@ -279,7 +281,7 @@ export const Header: React.FC<HeaderProps> = ({
             )}
             <DropdownMenuItem onClick={onOpenChangelog}>
               <Info className="w-3.5 h-3.5 text-purple-500 mr-2" />
-              <span>Release Notes (v2.6.0)</span>
+              <span>Release Notes (v2.8.0)</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

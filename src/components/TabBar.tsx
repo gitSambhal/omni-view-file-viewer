@@ -1,10 +1,10 @@
 /**
  * @license Apache-2.0
  * Developer: Suhail Akhtar (https://suhail.top)
- * OmniView File Studio - Tab Bar (shadcn/ui)
+ * OmniView File Studio - Tab Bar with Radix Context Menu (shadcn/ui)
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   FileText,
   Table,
@@ -33,6 +33,15 @@ import {
 } from 'lucide-react';
 import { TabFile, FileCategory } from '../types/file';
 import { Button } from './ui/button';
+import {
+  ContextMenu,
+  ContextMenuTrigger,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuShortcut,
+  ContextMenuLabel
+} from './ui/context-menu';
 
 interface TabBarProps {
   tabs: TabFile[];
@@ -50,12 +59,6 @@ interface TabBarProps {
   onNewTab: () => void;
 }
 
-interface ContextMenuState {
-  x: number;
-  y: number;
-  tabId: string;
-}
-
 export const TabBar: React.FC<TabBarProps> = ({
   tabs,
   activeTabId,
@@ -71,8 +74,6 @@ export const TabBar: React.FC<TabBarProps> = ({
   onOpenLiveSyncDashboard,
   onNewTab
 }) => {
-  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
   const activeTabRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -84,36 +85,6 @@ export const TabBar: React.FC<TabBarProps> = ({
       });
     }
   }, [activeTabId, tabs.length]);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setContextMenu(null);
-      }
-    };
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setContextMenu(null);
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
-
-  const handleContextMenu = (e: React.MouseEvent, tabId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const menuWidth = 220;
-    const menuHeight = 280;
-    const x = Math.min(e.clientX, window.innerWidth - menuWidth - 10);
-    const y = Math.min(e.clientY, window.innerHeight - menuHeight - 10);
-
-    setContextMenu({ x, y, tabId });
-  };
 
   const getCategoryIcon = (category: FileCategory) => {
     switch (category) {
@@ -154,8 +125,6 @@ export const TabBar: React.FC<TabBarProps> = ({
     }
   };
 
-  const targetTab = contextMenu ? tabs.find(t => t.id === contextMenu.tabId) : null;
-
   return (
     <div className="flex items-center bg-muted/40 border-b border-border px-2 overflow-x-auto select-none no-scrollbar transition-colors">
       <div className="flex items-center gap-1 py-1 flex-1 min-w-0">
@@ -163,52 +132,126 @@ export const TabBar: React.FC<TabBarProps> = ({
           const isActive = tab.id === activeTabId;
 
           return (
-            <div
-              key={tab.id}
-              ref={isActive ? activeTabRef : null}
-              onClick={() => onSelectTab(tab.id)}
-              onContextMenu={e => handleContextMenu(e, tab.id)}
-              className={`group relative flex items-center gap-2 px-3 py-1.5 rounded-t-md text-xs cursor-pointer transition-all max-w-[220px] shrink-0 ${
-                isActive
-                  ? 'bg-background border-t-2 border-t-primary border-x border-b-0 border-border text-foreground font-medium shadow-2xs -mb-px z-10'
-                  : 'border border-transparent hover:bg-muted text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {getCategoryIcon(tab.category)}
-              <span className="truncate flex-1 text-[11px] font-sans font-medium">{tab.name}</span>
-
-              {/* Live sync badge & icon indicator */}
-              {tab.liveSyncActive && (
+            <ContextMenu key={tab.id}>
+              <ContextMenuTrigger asChild>
                 <div
-                  className="relative flex items-center justify-center shrink-0 cursor-pointer p-0.5 rounded hover:bg-emerald-500/10 transition-colors"
-                  onClick={e => {
-                    e.stopPropagation();
-                    if (onToggleLiveSyncTab) onToggleLiveSyncTab(tab.id);
-                  }}
-                  title={`Live Sync Active: ${tab.name}\n• Status: ${tab.syncStatus === 'syncing' ? 'Syncing changes...' : 'Watching disk'}\n• Last Synced: ${tab.lastSyncedAt ? new Date(tab.lastSyncedAt).toLocaleTimeString() : 'Just now'}\n• Reloads: ${tab.syncCount || 0} auto-reloads`}
+                  ref={isActive ? activeTabRef : null}
+                  onClick={() => onSelectTab(tab.id)}
+                  data-active-tab={isActive ? "true" : "false"}
+                  className={`group relative flex items-center gap-2 px-3 py-1.5 rounded-t-md text-xs cursor-pointer transition-all max-w-[220px] shrink-0 ${
+                    isActive
+                      ? 'bg-background border-t-2 border-t-primary border-x border-b-0 border-border text-foreground font-medium shadow-2xs -mb-px z-10'
+                      : 'border border-transparent hover:bg-muted text-muted-foreground hover:text-foreground'
+                  }`}
                 >
-                  {tab.syncStatus === 'syncing' ? (
-                    <span className="relative flex h-2.5 w-2.5 items-center justify-center">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <RefreshCw className="w-2.5 h-2.5 text-emerald-500 animate-spin relative z-10 font-bold" />
-                    </span>
-                  ) : (
-                    <span className="relative flex items-center justify-center">
-                      <RefreshCw className="w-2.5 h-2.5 text-emerald-500 dark:text-emerald-400 opacity-80 group-hover:opacity-100 transition-opacity" />
-                    </span>
-                  )}
-                </div>
-              )}
+                  {getCategoryIcon(tab.category)}
+                  <span className="truncate flex-1 text-[11px] font-sans font-medium">{tab.name}</span>
 
-              {/* Close button */}
-              <button
-                onClick={e => onCloseTab(tab.id, e)}
-                className="p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 cursor-pointer"
-                title="Close Tab (Right-click for options)"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </div>
+                  {/* Live sync badge & icon indicator */}
+                  {tab.liveSyncActive && (
+                    <div
+                      className="relative flex items-center justify-center shrink-0 cursor-pointer p-0.5 rounded hover:bg-emerald-500/10 transition-colors"
+                      onClick={e => {
+                        e.stopPropagation();
+                        if (onToggleLiveSyncTab) onToggleLiveSyncTab(tab.id);
+                      }}
+                      title={`Live Sync Active: ${tab.name}\n• Status: ${tab.syncStatus === 'syncing' ? 'Syncing...' : 'Watching'}\n• Last Synced: ${tab.lastSyncedAt ? new Date(tab.lastSyncedAt).toLocaleTimeString() : 'Now'}`}
+                    >
+                      {tab.syncStatus === 'syncing' ? (
+                        <span className="relative flex h-2.5 w-2.5 items-center justify-center">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                          <RefreshCw className="w-2.5 h-2.5 text-emerald-500 animate-spin relative z-10 font-bold" />
+                        </span>
+                      ) : (
+                        <span className="relative flex items-center justify-center">
+                          <RefreshCw className="w-2.5 h-2.5 text-emerald-500 dark:text-emerald-400 opacity-80 group-hover:opacity-100 transition-opacity" />
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Close button */}
+                  <button
+                    onClick={e => onCloseTab(tab.id, e)}
+                    className="p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 cursor-pointer"
+                    title="Close Tab"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              </ContextMenuTrigger>
+
+              <ContextMenuContent className="w-56">
+                <ContextMenuLabel className="font-mono text-[11px] text-muted-foreground truncate">
+                  {tab.name}
+                </ContextMenuLabel>
+                <ContextMenuSeparator />
+
+                <ContextMenuItem onClick={() => onCloseTab(tab.id)}>
+                  <X className="w-3.5 h-3.5 text-destructive mr-2" />
+                  <span>Close Tab</span>
+                  <ContextMenuShortcut>Ctrl+W</ContextMenuShortcut>
+                </ContextMenuItem>
+
+                {onCloseOtherTabs && (
+                  <ContextMenuItem onClick={() => onCloseOtherTabs(tab.id)}>
+                    <XCircle className="w-3.5 h-3.5 text-amber-500 mr-2" />
+                    <span>Close Other Tabs</span>
+                  </ContextMenuItem>
+                )}
+
+                {onCloseTabsToRight && (
+                  <ContextMenuItem onClick={() => onCloseTabsToRight(tab.id)}>
+                    <ArrowRightCircle className="w-3.5 h-3.5 text-primary mr-2" />
+                    <span>Close Tabs to Right</span>
+                  </ContextMenuItem>
+                )}
+
+                {onCloseAllTabs && (
+                  <ContextMenuItem onClick={onCloseAllTabs}>
+                    <Layers className="w-3.5 h-3.5 text-muted-foreground mr-2" />
+                    <span>Close All Tabs</span>
+                  </ContextMenuItem>
+                )}
+
+                <ContextMenuSeparator />
+
+                {onDuplicateTab && (
+                  <ContextMenuItem onClick={() => onDuplicateTab(tab.id)}>
+                    <Copy className="w-3.5 h-3.5 text-purple-500 mr-2" />
+                    <span>Duplicate Tab</span>
+                  </ContextMenuItem>
+                )}
+
+                {onToggleLiveSyncTab && (
+                  <ContextMenuItem onClick={() => onToggleLiveSyncTab(tab.id)}>
+                    <RefreshCw className="w-3.5 h-3.5 text-emerald-500 mr-2" />
+                    <span>{tab.liveSyncActive ? 'Disable Live Sync' : 'Enable Live Sync'}</span>
+                  </ContextMenuItem>
+                )}
+
+                {onOpenLiveSyncDashboard && (
+                  <ContextMenuItem onClick={onOpenLiveSyncDashboard}>
+                    <RefreshCw className="w-3.5 h-3.5 text-primary mr-2" />
+                    <span>Live Sync Telemetry</span>
+                  </ContextMenuItem>
+                )}
+
+                {onToggleHexViewTab && (
+                  <ContextMenuItem onClick={() => onToggleHexViewTab(tab.id)}>
+                    <Binary className="w-3.5 h-3.5 text-cyan-500 mr-2" />
+                    <span>{tab.viewMode === 'hex' ? 'Standard Preview' : 'Hex Byte Inspector'}</span>
+                  </ContextMenuItem>
+                )}
+
+                {onDownloadTabFile && (
+                  <ContextMenuItem onClick={() => onDownloadTabFile(tab.id)}>
+                    <Download className="w-3.5 h-3.5 text-primary mr-2" />
+                    <span>Download File</span>
+                  </ContextMenuItem>
+                )}
+              </ContextMenuContent>
+            </ContextMenu>
           );
         })}
 
@@ -217,149 +260,12 @@ export const TabBar: React.FC<TabBarProps> = ({
           variant="ghost"
           size="icon-xs"
           onClick={onNewTab}
-          className="text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground shrink-0"
           title="Open New File Tab"
         >
           <Plus className="w-3.5 h-3.5" />
         </Button>
       </div>
-
-      {/* Right Click Context Menu */}
-      {contextMenu && targetTab && (
-        <div
-          ref={menuRef}
-          style={{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }}
-          className="fixed z-[99999] w-56 bg-popover text-popover-foreground border border-border rounded-xl shadow-xl p-1 text-xs font-sans backdrop-blur-md animate-in fade-in duration-100 select-none"
-        >
-          <div className="px-2.5 py-1.5 border-b border-border font-mono text-[11px] font-medium text-muted-foreground truncate">
-            {targetTab.name}
-          </div>
-
-          <div className="py-1 space-y-0.5">
-            <button
-              onClick={() => {
-                onCloseTab(targetTab.id);
-                setContextMenu(null);
-              }}
-              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-muted text-foreground transition-colors cursor-pointer"
-            >
-              <div className="flex items-center gap-2">
-                <X className="w-3.5 h-3.5 text-destructive" />
-                <span>Close Tab</span>
-              </div>
-              <span className="text-[10px] font-mono text-muted-foreground">Ctrl+W</span>
-            </button>
-
-            {onCloseOtherTabs && (
-              <button
-                onClick={() => {
-                  onCloseOtherTabs(targetTab.id);
-                  setContextMenu(null);
-                }}
-                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-muted text-foreground transition-colors cursor-pointer"
-              >
-                <XCircle className="w-3.5 h-3.5 text-amber-500" />
-                <span>Close Other Tabs</span>
-              </button>
-            )}
-
-            {onCloseTabsToRight && (
-              <button
-                onClick={() => {
-                  onCloseTabsToRight(targetTab.id);
-                  setContextMenu(null);
-                }}
-                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-muted text-foreground transition-colors cursor-pointer"
-              >
-                <ArrowRightCircle className="w-3.5 h-3.5 text-primary" />
-                <span>Close Tabs to the Right</span>
-              </button>
-            )}
-
-            {onCloseAllTabs && (
-              <button
-                onClick={() => {
-                  onCloseAllTabs();
-                  setContextMenu(null);
-                }}
-                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-muted text-foreground transition-colors cursor-pointer"
-              >
-                <Layers className="w-3.5 h-3.5 text-muted-foreground" />
-                <span>Close All Tabs</span>
-              </button>
-            )}
-          </div>
-
-          <div className="my-0.5 border-t border-border" />
-
-          <div className="py-0.5 space-y-0.5">
-            {onDuplicateTab && (
-              <button
-                onClick={() => {
-                  onDuplicateTab(targetTab.id);
-                  setContextMenu(null);
-                }}
-                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-muted text-foreground transition-colors cursor-pointer"
-              >
-                <Copy className="w-3.5 h-3.5 text-purple-500" />
-                <span>Duplicate Tab</span>
-              </button>
-            )}
-
-            {onToggleLiveSyncTab && (
-              <button
-                onClick={() => {
-                  onToggleLiveSyncTab(targetTab.id);
-                  setContextMenu(null);
-                }}
-                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-muted text-foreground transition-colors cursor-pointer"
-              >
-                <RefreshCw className="w-3.5 h-3.5 text-emerald-500" />
-                <span>{targetTab.liveSyncActive ? 'Disable Live Sync' : 'Enable Live Sync'}</span>
-              </button>
-            )}
-
-            {onOpenLiveSyncDashboard && (
-              <button
-                onClick={() => {
-                  onOpenLiveSyncDashboard();
-                  setContextMenu(null);
-                }}
-                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-muted text-foreground transition-colors cursor-pointer"
-              >
-                <RefreshCw className="w-3.5 h-3.5 text-primary" />
-                <span>Live Sync Telemetry</span>
-              </button>
-            )}
-
-            {onToggleHexViewTab && (
-              <button
-                onClick={() => {
-                  onToggleHexViewTab(targetTab.id);
-                  setContextMenu(null);
-                }}
-                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-muted text-foreground transition-colors cursor-pointer"
-              >
-                <Binary className="w-3.5 h-3.5 text-cyan-500" />
-                <span>{targetTab.viewMode === 'hex' ? 'Standard Preview' : 'Hex Byte Mode'}</span>
-              </button>
-            )}
-
-            {onDownloadTabFile && (
-              <button
-                onClick={() => {
-                  onDownloadTabFile(targetTab.id);
-                  setContextMenu(null);
-                }}
-                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-muted text-foreground transition-colors cursor-pointer"
-              >
-                <Download className="w-3.5 h-3.5 text-primary" />
-                <span>Download File</span>
-              </button>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
