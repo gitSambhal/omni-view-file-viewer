@@ -23,10 +23,12 @@ export const ExcelViewer: React.FC<ExcelViewerProps> = ({ arrayBuffer, textConte
   const [sortAsc, setSortAsc] = useState<boolean>(true);
   const [copied, setCopied] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     try {
       setLoading(true);
+      setError(null);
       let wb: XLSX.WorkBook;
 
       if (arrayBuffer) {
@@ -43,8 +45,9 @@ export const ExcelViewer: React.FC<ExcelViewerProps> = ({ arrayBuffer, textConte
       if (wb.SheetNames.length > 0) {
         setActiveSheet(wb.SheetNames[0]);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error loading spreadsheet:', err);
+      setError(err?.message || 'Unable to parse spreadsheet contents. The file may be corrupt or encrypted.');
     } finally {
       setLoading(false);
     }
@@ -224,6 +227,11 @@ export const ExcelViewer: React.FC<ExcelViewerProps> = ({ arrayBuffer, textConte
           <div className="flex items-center justify-center h-full text-slate-500 dark:text-slate-400">
             <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mr-2"></div>
             Rendering spreadsheet grid...
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center h-full text-center p-6 space-y-2">
+            <div className="text-red-500 font-semibold text-sm">Unable to parse spreadsheet</div>
+            <div className="text-xs text-slate-500 max-w-md">{error}</div>
           </div>
         ) : headers.length === 0 ? (
           <div className="flex items-center justify-center h-full text-slate-500 text-sm">

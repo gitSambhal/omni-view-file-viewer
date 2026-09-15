@@ -205,6 +205,11 @@ export function probeAmbiguousCategory(
   const bytes = sampleBytes instanceof Uint8Array ? sampleBytes : new Uint8Array(sampleBytes);
   const ext = getFileExtension(filename);
 
+  // Check for PDF magic bytes (%PDF-) regardless of extension
+  if (bytes.length >= 4 && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) {
+    return 'pdf';
+  }
+
   if (['ts', 'mts'].includes(ext)) {
     if (bytes.length === 0) return 'code';
 

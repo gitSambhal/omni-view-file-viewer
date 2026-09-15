@@ -32,7 +32,8 @@ import {
   FolderOpen,
   ChevronLeft,
   HardDrive,
-  Code2
+  Code2,
+  ClipboardPaste
 } from 'lucide-react';
 import { TabFile, FileCategory } from '../types/file';
 
@@ -46,6 +47,7 @@ export interface SidebarProps {
   onCloseAllTabs: () => void;
   onOpenFilePicker: () => void;
   onOpenUrlModal: () => void;
+  onOpenPasteModal?: () => void;
   onOpenNpmTester: () => void;
   onOpenRunnersGuide: () => void;
   onOpenLiveSyncDashboard: () => void;
@@ -67,6 +69,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onCloseAllTabs,
   onOpenFilePicker,
   onOpenUrlModal,
+  onOpenPasteModal,
   onNewScratchpad,
   onDownloadTabFile,
   liveSyncCount
@@ -226,6 +229,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <Link2 className="w-3.5 h-3.5 text-cyan-500 shrink-0" />
                   <span>Open from URL</span>
                 </button>
+
+                {onOpenPasteModal && (
+                  <button
+                    onClick={() => {
+                      onOpenPasteModal();
+                      setIsNewMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-left transition-colors cursor-pointer"
+                  >
+                    <ClipboardPaste className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <span>Paste from Clipboard</span>
+                  </button>
+                )}
 
                 <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
                 <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">

@@ -25,8 +25,8 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, onClose 
               <Layers className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-100 text-base">What's New in OmniView Studio</h3>
-              <p className="text-xs text-slate-400">Release Version v2.2.0</p>
+              <h3 className="font-bold text-slate-100 text-base">What's New in OmniView File Studio</h3>
+              <p className="text-xs text-slate-400">Release Version v2.4.1</p>
             </div>
           </div>
 
@@ -40,6 +40,48 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, onClose 
 
         {/* Modal Content */}
         <div className="p-6 space-y-6 overflow-y-auto text-sm text-slate-300 leading-relaxed font-sans">
+          {/* v2.4.1 Highlights */}
+          <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 space-y-2">
+            <div className="flex items-center gap-2 font-semibold text-blue-300">
+              <Sparkles className="w-4 h-4 text-blue-400" />
+              <span>Version 2.4.1 - Encrypted PDF Rendering Hotfix</span>
+            </div>
+            <ul className="space-y-1.5 text-xs text-slate-300 list-disc list-inside">
+              <li><strong>Post-Decryption Rendering Fix:</strong> Resolved an issue where decrypted PDFs did not appear on canvas after password validation; added layout synchronization and deterministic load task lifecycle.</li>
+              <li><strong>Vite Worker Asset Pipeline:</strong> Bundled dedicated PDF worker asset with fallback for rock-solid document parsing across environments.</li>
+            </ul>
+          </div>
+
+          {/* v2.4.0 Highlights */}
+          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 space-y-2">
+            <div className="flex items-center gap-2 font-semibold text-red-300">
+              <Sparkles className="w-4 h-4 text-red-400" />
+              <span>Version 2.4.0 - Encrypted PDF Decryption & Ultra HD HiDPI Studio</span>
+            </div>
+            <ul className="space-y-1.5 text-xs text-slate-300 list-disc list-inside">
+              <li><strong>Password-Protected PDF Decryption:</strong> Native document decryption screen with automatic error feedback, password visibility toggle, and credential retention during active viewing.</li>
+              <li><strong>Ultra HD HiDPI Retina Rendering:</strong> Hardware-accelerated canvas bitmap scaling to match <code>devicePixelRatio</code> (2x–3x physical resolution) for razor-sharp vector typography.</li>
+              <li><strong>Interactive Document Outline & Bookmarks:</strong> Extracted table of contents in a dedicated sidebar tab for fast navigation.</li>
+              <li><strong>In-Document Text Search & Jump:</strong> Full-text search with match counts across all pages, numerical page jump, and Fit-to-Width / Fit-to-Page presets.</li>
+              <li><strong>Memory Leak & Stability Fixes:</strong> Object URL cleanup on tab closure, enhanced magic-byte PDF probing, and spreadsheet error handling.</li>
+            </ul>
+          </div>
+
+          {/* v2.3.0 Highlights */}
+          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 space-y-2">
+            <div className="flex items-center gap-2 font-semibold text-emerald-300">
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+              <span>Version 2.3.0 - Open File from Copy-Pasting & Universal Clipboard Ingestion</span>
+            </div>
+            <ul className="space-y-1.5 text-xs text-slate-300 list-disc list-inside">
+              <li><strong>Clipboard File Creator:</strong> Ingest copied text, JSON, SQL queries, Python scripts, logs, or image screenshots directly into active workspace tabs.</li>
+              <li><strong>Automatic Format Detection:</strong> Instant heuristic syntax detection identifying JSON, SQL, Python, TypeScript, Markdown, HTML, CSV, CSS, Shell, and Base64 images.</li>
+              <li><strong>Starter Templates & Presets:</strong> Pre-loaded templates for JSON payloads, SQLite tables, Markdown notes, Python data science scripts, and CSV spreadsheets.</li>
+              <li><strong>Global Workspace Paste (<code>Ctrl+V</code> / <code>Cmd+V</code>):</strong> Press paste anywhere on the canvas to open the dialog prefilled or directly ingest clipboard images.</li>
+              <li><strong>One-Click Launcher Access:</strong> Available across Header, Sidebar "+ New" menu, Tools dropdown, Empty State Welcome hub, and Command Palette.</li>
+            </ul>
+          </div>
+
           {/* v2.2.0 Highlights */}
           <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 space-y-2">
             <div className="flex items-center gap-2 font-semibold text-blue-300">

@@ -4,6 +4,7 @@
  */
 
 import { TabFile } from '../types/file';
+import { getSampleStandardPdfBuffer, getSampleEncryptedPdfBuffer } from './samplePdfData';
 
 export const SAMPLE_MARKDOWN = `# 🚀 OmniView File Studio Overview
 
@@ -677,8 +678,42 @@ export function getSampleTabFiles(): TabFile[] {
     zoomLevel: 100
   };
 
+  const stdPdfBuf = getSampleStandardPdfBuffer();
+  const samplePdf: TabFile = {
+    id: 'sample-pdf',
+    name: 'Security_Architecture_HiDPI.pdf',
+    size: stdPdfBuf.byteLength,
+    type: 'application/pdf',
+    lastModified: now - 30000,
+    extension: 'pdf',
+    category: 'pdf',
+    arrayBuffer: stdPdfBuf,
+    liveSyncActive: false,
+    syncStatus: 'synced',
+    viewMode: 'preview',
+    zoomLevel: 100
+  };
+
+  const encPdfBuf = getSampleEncryptedPdfBuffer();
+  const sampleEncryptedPdf: TabFile = {
+    id: 'sample-encrypted-pdf',
+    name: 'Confidential_Encrypted_Audit.pdf',
+    size: encPdfBuf.byteLength,
+    type: 'application/pdf',
+    lastModified: now - 15000,
+    extension: 'pdf',
+    category: 'pdf',
+    arrayBuffer: encPdfBuf,
+    liveSyncActive: false,
+    syncStatus: 'synced',
+    viewMode: 'preview',
+    zoomLevel: 100
+  };
+
   return [
     sampleMd,
+    samplePdf,
+    sampleEncryptedPdf,
     sampleVideo,
     sampleAudio,
     sampleEpub,

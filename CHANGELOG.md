@@ -7,6 +7,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.4.1] - 2026-09-15
+
+### Changed
+- **Toolbar Streamlining**: Removed the standalone quick "Paste" button from the top navigation bar and landing dropzone to reduce visual clutter, while keeping the full clipboard ingestion feature accessible via keyboard shortcuts (`Ctrl+V`/`Cmd+V`), the "Open" menu, sidebar, and Command Palette.
+
+### Fixed
+- **Encrypted PDF Post-Decryption Rendering Resolution**:
+  - Resolved canvas mounting timing issue where newly unlocked encrypted PDFs failed to paint onto the canvas after password submission.
+  - Eliminated Promise deadlock in `pdfjsLib.getDocument` by relying on deterministic `PasswordException` rejection rather than hung `onPassword` event loops.
+  - Synchronized canvas container dimensions (`pageDimensions`) and DOM mounting with `requestAnimationFrame` ticks, guaranteeing page 1 renders immediately at crisp HiDPI resolution upon entering the decryption password.
+  - Bundled dedicated Vite Web Worker asset (`pdf.worker.min.mjs?url`) with fallback to ensure reliable cross-environment worker execution.
+
+## [2.4.0] - 2026-09-15
+
+### Added
+- **Encrypted & Password-Protected PDF Decryption Engine (`PdfViewer.tsx`)**:
+  - **Interactive Document Unlock Screen**: Automatically intercepts PDF.js `PasswordException` (code 1 / code 2) and prompts user with a specialized decryption interface.
+  - **Instant Verification & Error Handling**: Differentiates between initial password requirement and incorrect password entries with immediate feedback and visual indicators.
+  - **Password Visibility Toggle & Auto-Focus**: Toggle between masked and unmasked characters with `Enter` key submission and auto-focus for seamless keyboard workflows.
+  - **Persistent Session Decryption**: Safely retains document decryption credentials during active viewing so page changes, zoom steps, and rotations remain unlocked.
+  - **Sample Audit Decryption Preset**: Bundled a sample password-protected PDF (`Confidential_Encrypted_Audit.pdf`) with one-click autofill credential hint (`omniview`) for immediate verification.
+  - **Document Security & Re-Lock Control**: In-viewer security badge displaying encrypted status with one-click re-lock capability.
+
+- **Ultra HD HiDPI Retina PDF Rendering Engine**:
+  - **Hardware Pixel Ratio Optimization**: Dynamically multiplies canvas backing-store bitmap dimensions according to device pixel ratio (`window.devicePixelRatio`, reaching 2.0x–3.0x on Retina/4K displays) to eliminate blurriness and pixelation.
+  - **Quality Preset Switcher**: Added in-toolbar quality dropdown offering `Ultra HD (Retina Auto)`, `High (1.5x)`, and `Standard (1.0x)` modes.
+  - **Vector Font & Glyphs Accuracy**: Integrated CMap packed configurations (`cMapPacked`, `cMapUrl`) and standard font definitions (`standardFontDataUrl`) to prevent missing symbols or distorted typographic glyphs.
+  - **Image Smoothing**: Enabled high-quality canvas image smoothing (`imageSmoothingQuality: 'high'`) across all rendering passes.
+
+- **Advanced PDF Navigation & Document Inspection**:
+  - **Table of Contents (Document Outline)**: Extracts and displays interactive bookmark hierarchy in a dedicated sidebar tab.
+  - **Page Directory & Quick Jump**: Numerical page jump input field (`Page [ x ] of N`) with First Page, Previous, Next, and Last Page buttons.
+  - **Fit-to-Width & Fit-to-Page**: One-click dynamic zoom adjustments matching container viewport dimensions.
+  - **In-Document Text Search**: Client-side full-text search across all PDF pages with match count display and previous/next page match cycling.
+  - **Document Security & Metadata Inspector**: Displays PDF metadata (Title, Author, Producer, Version, Encryption Status, and DPR Scale).
+  - **Clean Print & Fullscreen Modes**: In-app print window launcher and immersive fullscreen reading mode.
+
+### Fixed & Improved
+- **Browser Memory Leak Prevention**: Added automatic object URL revocation (`URL.revokeObjectURL`) when closing individual tabs, closing all tabs, or closing other tabs in `App.tsx`.
+- **Enhanced Ambiguous File Type Probing**: Extended magic byte detection in `fileDetector.ts` and `App.tsx` for binary files, detecting `%PDF-` leading headers regardless of file extension.
+- **Spreadsheet Error Guarding**: Added graceful error handling in `ExcelViewer.tsx` to handle corrupted or invalid workbook structures cleanly.
+
+## [2.3.0] - 2026-09-15
+
+### Added
+- **Open File from Copy-Pasting & Clipboard Ingestion (`PasteFileModal.tsx`)**:
+  - **Universal Clipboard Ingestion**: Create and open new active workspace file tabs directly from copied clipboard contents (text, code, JSON, logs, SQL, or screenshots/images).
+  - **Smart Content & Format Detection**: Automatically analyzes pasted text to identify file formats (JSON objects/arrays, SQL DDL/DQL, Python scripts, TypeScript/JavaScript, Markdown documentation, HTML snippets, CSV tables, CSS, Shell scripts, or Base64 images) and assigns the correct extension and syntax viewer.
+  - **One-Click Clipboard Read (`navigator.clipboard`)**: Directly read text or binary image data with permission handling and fallback for manual pasting.
+  - **Curated Starter Templates**: Pre-configured sample presets for JSON payloads, SQLite queries, Markdown documentation, Python 3.12 data analysis, and CSV tables.
+  - **Global Workspace Paste (`Ctrl+V` / `Cmd+V`)**: Instant paste shortcut when viewing the workspace that opens the dialog prefilled or directly ingests pasted image screenshots.
+  - **Seamless Integration**: Accessible via the Header quick action button, "Open" dropdown, Tools menu, Sidebar "+ New" menu, DropZone welcome screen, and Command Palette (`Ctrl+K`).
+
+## [2.2.1] - 2026-09-15
+
+### Removed
+- **Poster Option**: Removed social media promotional poster generator modal and all corresponding launcher buttons across the Header, Footer, Tools menu, and Command Palette.
+
 ## [2.2.0] - 2026-09-04
 
 ### Added & Improved

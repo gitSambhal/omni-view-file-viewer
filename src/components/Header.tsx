@@ -25,7 +25,8 @@ import {
   SlidersHorizontal,
   Info,
   ExternalLink,
-  Plus
+  Plus,
+  ClipboardPaste
 } from 'lucide-react';
 import { Theme } from '../hooks/useTheme';
 
@@ -42,6 +43,7 @@ export interface HeaderProps {
   onOpenRunnersGuide?: () => void;
   onOpenNpmTester?: () => void;
   onOpenCommandPalette?: () => void;
+  onOpenPasteModal?: () => void;
   isSidebarOpen?: boolean;
   onToggleSidebar?: () => void;
   onNewScratchpad?: (type: 'ts' | 'python' | 'sql' | 'markdown' | 'html' | 'json') => void;
@@ -62,6 +64,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenRunnersGuide,
   onOpenNpmTester,
   onOpenCommandPalette,
+  onOpenPasteModal,
   isSidebarOpen = true,
   onToggleSidebar,
   onNewScratchpad,
@@ -114,7 +117,7 @@ export const Header: React.FC<HeaderProps> = ({
           <div>
             <div className="flex items-center gap-1.5">
               <h1 className="font-semibold text-sm tracking-tight text-slate-900 dark:text-slate-100 font-sans">
-                OmniView <span className="font-normal text-slate-500 dark:text-slate-400">Studio</span>
+                OmniView <span className="font-normal text-slate-500 dark:text-slate-400">File Studio</span>
               </h1>
               <span className="text-[9px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-1.5 py-0.2 rounded">
                 OFFLINE
@@ -206,6 +209,22 @@ export const Header: React.FC<HeaderProps> = ({
                   </button>
                 )}
 
+                {onOpenPasteModal && (
+                  <button
+                    onClick={() => {
+                      onOpenPasteModal();
+                      setIsOpenMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-left transition-colors cursor-pointer"
+                  >
+                    <ClipboardPaste className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <div>
+                      <p className="font-medium">Paste from Clipboard</p>
+                      <p className="text-[10px] text-slate-400">Paste text, code, JSON or images (Ctrl+V)</p>
+                    </div>
+                  </button>
+                )}
+
                 <button
                   onClick={() => {
                     onLoadSampleFiles();
@@ -260,6 +279,7 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           )}
         </div>
+
 
         {/* Unified "Tools" Menu (NPM, Runners, LiveSync, Hex, Formats, Changelog) */}
         <div className="relative" ref={toolsMenuRef}>
@@ -354,6 +374,22 @@ export const Header: React.FC<HeaderProps> = ({
                     <p className="text-[10px] text-slate-400">Raw offsets & byte stream</p>
                   </div>
                 </button>
+
+                {onOpenPasteModal && (
+                  <button
+                    onClick={() => {
+                      onOpenPasteModal();
+                      setIsToolsMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-left transition-colors cursor-pointer"
+                  >
+                    <ClipboardPaste className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <div>
+                      <p className="font-medium">Paste & Open File</p>
+                      <p className="text-[10px] text-slate-400">From clipboard or typed text</p>
+                    </div>
+                  </button>
+                )}
               </div>
 
               <div className="p-1 space-y-0.5">
@@ -378,7 +414,7 @@ export const Header: React.FC<HeaderProps> = ({
                   className="w-full flex items-center gap-2.5 px-3 py-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-left transition-colors cursor-pointer"
                 >
                   <Info className="w-3.5 h-3.5 text-purple-500 shrink-0" />
-                  <span>Release Notes (v2.2.0)</span>
+                  <span>Release Notes (v2.3.0)</span>
                 </button>
               </div>
             </div>

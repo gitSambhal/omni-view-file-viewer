@@ -342,8 +342,8 @@ export const SUPPORTED_FORMATS: FormatDefinition[] = [
     category: 'pdf',
     categoryName: 'Documents & PDFs',
     mimeType: 'application/pdf',
-    description: 'Native PDF.js rendering with thumbnail sidebar, text search, zoom presets, page rotation, and print.',
-    capabilities: ['Thumbnails Bar', 'Full-Text Search', 'Page Rotation', 'Fit-to-Width / Fit-to-Page', 'Print & Export'],
+    description: 'Hardware-accelerated PDF rendering with password-protected document decryption, Ultra HD HiDPI Retina scaling, full-text search, outline bookmarks, page jump, and print.',
+    capabilities: ['Password Decryption', 'Ultra HD HiDPI Retina', 'Full-Text Search', 'Bookmarks & Outline', 'Fit-to-Width / Fit-to-Page', 'Page Jump & Rotation', 'Clean Print & Export'],
     icon: FileText,
     color: 'text-red-500 dark:text-red-400',
     badgeBg: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30'

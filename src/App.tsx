@@ -25,6 +25,7 @@ import { ChangelogModal } from './components/ChangelogModal';
 import { LiveSyncModal } from './components/LiveSyncModal';
 import { SupportedFormatsModal } from './components/SupportedFormatsModal';
 import { OpenFileFromUrlModal } from './components/OpenFileFromUrlModal';
+import { PasteFileModal } from './components/PasteFileModal';
 import { CodeRunnersModal } from './components/CodeRunnersModal';
 import { NpmTesterModal } from './components/NpmTesterModal';
 import { ToastContainer } from './components/Toast';
@@ -108,6 +109,8 @@ export default function App() {
   const [isLiveSyncDashboardOpen, setIsLiveSyncDashboardOpen] = useState<boolean>(false);
   const [isSupportedFormatsModalOpen, setIsSupportedFormatsModalOpen] = useState<boolean>(false);
   const [isUrlModalOpen, setIsUrlModalOpen] = useState<boolean>(false);
+  const [isPasteModalOpen, setIsPasteModalOpen] = useState<boolean>(false);
+  const [pasteModalInitialText, setPasteModalInitialText] = useState<string>('');
   const [isRunnersGuideOpen, setIsRunnersGuideOpen] = useState<boolean>(false);
   const [isNpmTesterOpen, setIsNpmTesterOpen] = useState<boolean>(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
@@ -117,6 +120,16 @@ export default function App() {
   });
   const [isDraggingOverApp, setIsDraggingOverApp] = useState<boolean>(false);
   const dragCounter = useRef<number>(0);
+
+  const handleOpenPasteModal = useCallback((initialText?: string) => {
+    setPasteModalInitialText(initialText || '');
+    setIsPasteModalOpen(true);
+  }, []);
+
+  const handleFileCreatedFromPaste = useCallback((newTab: TabFile) => {
+    setTabs(prev => [...prev, newTab]);
+    setActiveTabId(newTab.id);
+  }, []);
 
   // Global Keyboard Shortcuts (Cmd/Ctrl + K for Command Palette, Cmd/Ctrl + B for Sidebar, Cmd/Ctrl + O for Open File)
   useEffect(() => {
@@ -140,6 +153,42 @@ export default function App() {
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
   }, []);
+
+  // Global Clipboard Paste Listener (Ctrl+V / Cmd+V anywhere when not focused on an input)
+  useEffect(() => {
+    const handleGlobalPaste = (e: ClipboardEvent) => {
+      const target = e.target as HTMLElement;
+      const isInput =
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable ||
+          target.closest('.monaco-editor') ||
+          target.closest('.cm-editor'));
+
+      if (isPasteModalOpen || isUrlModalOpen || isNpmTesterOpen) return;
+
+      // Ingest pasted files or screenshots directly
+      if (e.clipboardData?.files && e.clipboardData.files.length > 0) {
+        e.preventDefault();
+        handleFilesSelected(e.clipboardData.files);
+        return;
+      }
+
+      // If user isn't in an input/editor, open the Paste dialog prefilled with clipboard text
+      if (!isInput && e.clipboardData) {
+        const text = e.clipboardData.getData('text');
+        if (text && text.trim()) {
+          e.preventDefault();
+          setPasteModalInitialText(text);
+          setIsPasteModalOpen(true);
+        }
+      }
+    };
+
+    window.addEventListener('paste', handleGlobalPaste);
+    return () => window.removeEventListener('paste', handleGlobalPaste);
+  }, [isPasteModalOpen, isUrlModalOpen, isNpmTesterOpen]);
 
   const activeTab = activeTabId === 'welcome' ? null : tabs.find(t => t.id === activeTabId) || null;
 
@@ -167,8 +216,8 @@ export default function App() {
     const ext = getFileExtension(file.name);
     const tabId = `file-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 
-    // Intelligently probe leading bytes for ambiguous types (.ts, .mts) to guarantee TypeScript vs MPEG-TS video accuracy
-    if (['ts', 'mts'].includes(ext) && file.size > 0) {
+    // Intelligently probe leading bytes for ambiguous types (.ts, .mts) or unknown/binary files to guarantee category accuracy
+    if (file.size > 0 && (['ts', 'mts'].includes(ext) || category === 'binary' || !ext)) {
       try {
         const sampleSlice = await file.slice(0, 2048).arrayBuffer();
         category = probeAmbiguousCategory(file.name, category, sampleSlice);
@@ -617,6 +666,16 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
   // Tab management actions
   const handleCloseTab = (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
+    const tabToClose = tabs.find(t => t.id === id);
+    if (tabToClose?.objectUrl && !tabToClose.objectUrl.startsWith('data:')) {
+      const isShared = tabs.some(t => t.id !== id && t.objectUrl === tabToClose.objectUrl);
+      if (!isShared) {
+        try {
+          URL.revokeObjectURL(tabToClose.objectUrl);
+        } catch (_) {}
+      }
+    }
+
     const remaining = tabs.filter(t => t.id !== id);
     setTabs(remaining);
 
@@ -626,6 +685,13 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
   };
 
   const handleCloseOtherTabs = (id: string) => {
+    tabs.forEach(t => {
+      if (t.id !== id && t.objectUrl && !t.objectUrl.startsWith('data:')) {
+        try {
+          URL.revokeObjectURL(t.objectUrl);
+        } catch (_) {}
+      }
+    });
     const remaining = tabs.filter(t => t.id === id);
     setTabs(remaining);
     setActiveTabId(id);
@@ -635,6 +701,14 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
   const handleCloseTabsToRight = (id: string) => {
     const index = tabs.findIndex(t => t.id === id);
     if (index !== -1) {
+      const closing = tabs.slice(index + 1);
+      closing.forEach(t => {
+        if (t.objectUrl && !t.objectUrl.startsWith('data:')) {
+          try {
+            URL.revokeObjectURL(t.objectUrl);
+          } catch (_) {}
+        }
+      });
       const remaining = tabs.slice(0, index + 1);
       setTabs(remaining);
       if (!remaining.some(t => t.id === activeTabId)) {
@@ -645,6 +719,13 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
   };
 
   const handleCloseAllTabs = () => {
+    tabs.forEach(t => {
+      if (t.objectUrl && !t.objectUrl.startsWith('data:')) {
+        try {
+          URL.revokeObjectURL(t.objectUrl);
+        } catch (_) {}
+      }
+    });
     setTabs([]);
     setActiveTabId(null);
     addToast('info', 'All Tabs Closed', 'Workspace cleared.');
@@ -974,6 +1055,7 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
         onOpenLiveSyncDashboard={() => setIsLiveSyncDashboardOpen(true)}
         onOpenSupportedFormats={() => setIsSupportedFormatsModalOpen(true)}
         onOpenUrlModal={() => setIsUrlModalOpen(true)}
+        onOpenPasteModal={() => handleOpenPasteModal()}
         onOpenRunnersGuide={() => setIsRunnersGuideOpen(true)}
         onOpenNpmTester={() => setIsNpmTesterOpen(true)}
         onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
@@ -997,6 +1079,7 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
           onCloseAllTabs={handleCloseAllTabs}
           onOpenFilePicker={handleOpenFilePicker}
           onOpenUrlModal={() => setIsUrlModalOpen(true)}
+          onOpenPasteModal={() => handleOpenPasteModal()}
           onOpenNpmTester={() => setIsNpmTesterOpen(true)}
           onOpenRunnersGuide={() => setIsRunnersGuideOpen(true)}
           onOpenLiveSyncDashboard={() => setIsLiveSyncDashboardOpen(true)}
@@ -1039,6 +1122,7 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
                 }}
                 onOpenSupportedFormats={() => setIsSupportedFormatsModalOpen(true)}
                 onOpenUrlModal={() => setIsUrlModalOpen(true)}
+                onOpenPasteModal={() => handleOpenPasteModal()}
                 onOpenRunnersGuide={() => setIsRunnersGuideOpen(true)}
                 onOpenNpmTester={() => setIsNpmTesterOpen(true)}
                 onNewScratchpad={handleNewScratchpad}
@@ -1327,6 +1411,7 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
         onCloseAllTabs={handleCloseAllTabs}
         onOpenFilePicker={handleOpenFilePicker}
         onOpenUrlModal={() => setIsUrlModalOpen(true)}
+        onOpenPasteModal={() => handleOpenPasteModal()}
         onOpenNpmTester={() => setIsNpmTesterOpen(true)}
         onOpenRunnersGuide={() => setIsRunnersGuideOpen(true)}
         onOpenLiveSyncDashboard={() => setIsLiveSyncDashboardOpen(true)}
@@ -1373,6 +1458,15 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
         isOpen={isUrlModalOpen}
         onClose={() => setIsUrlModalOpen(false)}
         onFileLoaded={handleFileFromUrl}
+      />
+
+      {/* Open File from Clipboard / Paste Modal */}
+      <PasteFileModal
+        isOpen={isPasteModalOpen}
+        onClose={() => setIsPasteModalOpen(false)}
+        onFileCreated={handleFileCreatedFromPaste}
+        initialText={pasteModalInitialText}
+        onShowToast={(type, title, message) => addToast(type, title, message)}
       />
 
       {/* Code Runners Directory & Samples Modal */}

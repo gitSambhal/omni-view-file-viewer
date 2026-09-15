@@ -29,6 +29,7 @@ interface DropZoneProps {
   onLoadSamples: () => void;
   onOpenSupportedFormats?: () => void;
   onOpenUrlModal?: () => void;
+  onOpenPasteModal?: () => void;
   onOpenRunnersGuide?: () => void;
   onOpenNpmTester?: () => void;
   onNewScratchpad?: (type: 'ts' | 'python' | 'sql' | 'markdown' | 'html' | 'json') => void;
@@ -40,6 +41,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
   onLoadSamples,
   onOpenSupportedFormats,
   onOpenUrlModal,
+  onOpenPasteModal,
   onNewScratchpad
 }) => {
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -86,7 +88,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
         {/* Header Title */}
         <div className="space-y-2 max-w-2xl">
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 font-sans">
-            OmniView <span className="text-blue-600 dark:text-blue-400 font-normal">Studio</span>
+            OmniView <span className="text-blue-600 dark:text-blue-400 font-normal">File Studio</span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed max-w-xl mx-auto">
             Universal local file reader & developer workspace. Inspect, edit, and run 
@@ -141,6 +143,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
                 <span>Fetch URL</span>
               </button>
             )}
+
           </div>
         </div>
 

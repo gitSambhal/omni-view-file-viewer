@@ -26,7 +26,8 @@ import {
   X,
   Keyboard,
   ArrowRight,
-  Plus
+  Plus,
+  ClipboardPaste
 } from 'lucide-react';
 import { TabFile, FileCategory } from '../types/file';
 import { Theme } from '../hooks/useTheme';
@@ -41,6 +42,7 @@ export interface CommandPaletteProps {
   onCloseAllTabs: () => void;
   onOpenFilePicker: () => void;
   onOpenUrlModal: () => void;
+  onOpenPasteModal?: () => void;
   onOpenNpmTester: () => void;
   onOpenRunnersGuide: () => void;
   onOpenLiveSyncDashboard: () => void;
@@ -72,6 +74,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   onCloseAllTabs,
   onOpenFilePicker,
   onOpenUrlModal,
+  onOpenPasteModal,
   onOpenNpmTester,
   onOpenRunnersGuide,
   onOpenLiveSyncDashboard,
@@ -216,6 +219,34 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         }
       },
       {
+        id: 'tool-sample-pdf',
+        title: 'Open Encrypted PDF & HiDPI Studio',
+        description: 'Test password-protected document decryption (sample pass: omniview) and Ultra HD HiDPI rendering',
+        category: 'Tools & Utilities',
+        icon: <FileText className="w-4 h-4 text-red-500" />,
+        action: () => {
+          const encTab = tabs.find(t => t.id === 'sample-encrypted-pdf');
+          if (encTab) {
+            onSelectTab(encTab.id);
+          } else {
+            onLoadSampleFiles();
+          }
+          onClose();
+        }
+      },
+      {
+        id: 'tool-paste-file',
+        title: 'Paste & Open File from Clipboard',
+        description: 'Create and open a new file tab from clipboard text, code, JSON, or images',
+        category: 'Tools & Utilities',
+        icon: <ClipboardPaste className="w-4 h-4 text-emerald-500" />,
+        shortcut: 'Ctrl+V',
+        action: () => {
+          if (onOpenPasteModal) onOpenPasteModal();
+          onClose();
+        }
+      },
+      {
         id: 'tool-runners',
         title: 'Code Runners & Execution Guide',
         description: 'View supported runtimes (Python 3.12, TypeScript, SQLite, Bash, HTML)',
@@ -309,6 +340,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     onOpenNpmTester,
     onOpenUrlModal,
     onOpenFilePicker,
+    onOpenPasteModal,
     onOpenRunnersGuide,
     onOpenLiveSyncDashboard,
     onOpenHexForCurrentTab,
