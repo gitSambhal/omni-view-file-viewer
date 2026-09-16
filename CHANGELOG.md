@@ -1,11 +1,17 @@
 # Changelog
 
-All notable changes to **OmniView File Studio** will be documented in this file.
+All notable changes to **OmniView File Viewer** will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
+
+## [2.8.1] - 2026-09-15
+
+### Changed
+- **Branding & Identity Alignment**:
+  - Standardized application name to **OmniView File Viewer** across `metadata.json`, `<title>`, Open Graph tags, Twitter cards, PWA manifest, structured JSON-LD schema, and the top navigation bar.
 
 ## [2.8.0] - 2026-09-15
 
