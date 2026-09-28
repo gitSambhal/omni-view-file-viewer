@@ -7,6 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.9.3] - 2026-09-28
+
+### Added
+- **Sizeable Split Sections in In-Memory SQL Console**:
+  - Re-architected the In-Memory SQL Console in `DatabaseViewer` into a fully sizeable, responsive dual-pane split section layout.
+  - Interactive **Draggable Splitter Bar** with mouse & touch support allowing smooth sizing of SQL Editor vs Query Output panes from 15% to 85%.
+  - Added instant split presets on the divider bar (`25 : 75` Large Results, `44 : 56` Balanced IDE View, `70 : 30` Large Editor).
+  - Added **Layout Orientation Toggle**: switch seamlessly between **Stacked (Vertical Split)** and **Side-by-Side (Horizontal Split)** for optimal use of widescreen displays.
+  - Added dedicated **Section Maximize Modes**:
+    - **Maximize Editor**: gives 100% space to the editor with a sleek docked results bar.
+    - **Maximize Output**: gives 100% space to query results with a docked query bar.
+    - **Restore Split**: returns to the custom sizeable ratio with one click.
+  - Collapsible **Keywords & Table Schema Snippets bar** (`Sparkles`) to maximize vertical writing space.
+  - Full-height flex layouts ensuring textarea, line numbers, and output grid scroll independently without double scrollbars or clipping.
+  - Collapsible **Recent Query History** panel with execution time badges and one-click query replay.
+
+## [2.9.2] - 2026-09-27
+
+### Added
+- **Expandable In-Memory SQL Console Box**:
+  - Enhanced the In-Memory SQL Console in DatabaseViewer with full expandability, solving the cramped low-height issue.
+  - Generous default height increased to 340px (from ~100-140px/5 rows).
+  - Added dedicated one-click **Expand / Full View mode** (`Maximize2` / `Minimize2`) to allow writing and reviewing complex multi-line SQL queries with ease.
+  - Added quick **Height Presets** in the toolbar (`220px Compact`, `340px Standard`, `520px Tall`).
+  - Added an interactive **Draggable Bottom Resizer Bar** (`GripHorizontal`) allowing smooth height resizing anywhere from 160px to 850px.
+  - Fully synchronized line numbering gutter with vertical scroll syncing (`onScroll`) and active cursor line highlighting.
+  - Added status bar displaying current cursor position (`Ln X, Col Y`), total line count, and character metrics.
+  - Added quick-action **Copy SQL** and **Clear Query** buttons in the console toolbar.
+  - Enhanced the **Query Output** grid with its own expandable height mode (`Compact` / `Expand`) for comfortably reviewing large SQL result sets.
+
+## [2.9.1] - 2026-09-23
+
+### Fixed
+- **Resolved Blank White Page on Startup**:
+  - Replaced unsupported browser-side `process.env.NODE_ENV` check in `swRegister.ts` with `import.meta.env.PROD`, which was throwing an `Uncaught ReferenceError: process is not defined` prior to React mounting.
+  - Added development service-worker cleanup to prevent stale workers from intercepting module requests.
+  - Wrapped root mounting point in a global `ErrorBoundary` with reset and reload options to guarantee UI resilience.
+
+## [2.9.0] - 2026-09-23
+
+### Added
+- **Fresh Upload-First Landing Page**:
+  - App now opens to a clean, focused landing page instead of auto-loading sample tabs on first launch.
+  - Features prominent local file browsing with native file picker (`Ctrl+O`), drag-and-drop dropzone, clipboard paste (`Ctrl+V`), and remote URL fetching.
+  - Added a prominent, dedicated **"Open Sample Files"** button (with "10+ Demos" badge) to load sample files on demand anytime.
+  - Enhanced Sidebar empty state with direct actions to open local files or explore sample files.
+
+### Changed
+- **Removed Duplicate & Unnecessary Controls**:
+  - Eliminated duplicate global keyboard shortcut listeners across components.
+  - Removed unused props (`onOpenNpmTester`, `onOpenRunnersGuide`, `onOpenLiveSyncDashboard`, `onOpenHexForCurrentTab`, `liveSyncCount`) passed into `Sidebar`.
+  - Replaced hardcoded slate background classes on root shell with standard shadcn/ui design tokens (`bg-background text-foreground`).
+  - Unified sample files loading lifecycle into a single background async pipeline (`handleLoadSampleFiles`).
+
 ## [2.8.1] - 2026-09-15
 
 ### Changed

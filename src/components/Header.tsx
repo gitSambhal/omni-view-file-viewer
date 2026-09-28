@@ -281,7 +281,7 @@ export const Header: React.FC<HeaderProps> = ({
             )}
             <DropdownMenuItem onClick={onOpenChangelog}>
               <Info className="w-3.5 h-3.5 text-purple-500 mr-2" />
-              <span>Release Notes (v2.8.1)</span>
+              <span>Release Notes (v2.9.3)</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -33,7 +33,8 @@ import {
   ChevronLeft,
   HardDrive,
   Code2,
-  ClipboardPaste
+  ClipboardPaste,
+  Upload
 } from 'lucide-react';
 import { TabFile, FileCategory } from '../types/file';
 import { Button } from './ui/button';
@@ -59,15 +60,11 @@ export interface SidebarProps {
   onCloseTab: (id: string) => void;
   onCloseAllTabs: () => void;
   onOpenFilePicker: () => void;
+  onLoadSampleFiles?: () => void;
   onOpenUrlModal: () => void;
   onOpenPasteModal?: () => void;
-  onOpenNpmTester: () => void;
-  onOpenRunnersGuide: () => void;
-  onOpenLiveSyncDashboard: () => void;
-  onOpenHexForCurrentTab: () => void;
   onNewScratchpad: (type: 'ts' | 'python' | 'sql' | 'markdown' | 'html' | 'json') => void;
   onDownloadTabFile?: (id: string) => void;
-  liveSyncCount: number;
 }
 
 type CategoryFilter = 'all' | 'documents' | 'code' | 'data' | 'media';
@@ -81,6 +78,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onCloseTab,
   onCloseAllTabs,
   onOpenFilePicker,
+  onLoadSampleFiles,
   onOpenUrlModal,
   onOpenPasteModal,
   onNewScratchpad,
@@ -208,6 +206,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <FolderOpen className="w-3.5 h-3.5 text-blue-500 mr-2" />
                 <span>Open Local File</span>
               </DropdownMenuItem>
+              {onLoadSampleFiles && (
+                <DropdownMenuItem onClick={onLoadSampleFiles}>
+                  <Sparkles className="w-3.5 h-3.5 text-purple-500 mr-2" />
+                  <span>Open Sample Files</span>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={onOpenUrlModal}>
                 <Link2 className="w-3.5 h-3.5 text-cyan-500 mr-2" />
                 <span>Open from URL</span>
@@ -300,13 +304,37 @@ export const Sidebar: React.FC<SidebarProps> = ({
               : 'bg-card border border-border text-foreground hover:bg-muted'
           }`}
         >
-          <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-          <span>App Overview & Landing</span>
+          <Upload className="w-3.5 h-3.5 shrink-0" />
+          <span>Upload & Overview</span>
         </button>
 
         {filteredTabs.length === 0 ? (
-          <div className="text-center py-10 text-muted-foreground text-xs">
-            {searchQuery ? 'No matching files' : 'No open files in workspace'}
+          <div className="text-center py-8 px-3 text-muted-foreground text-xs space-y-3">
+            <p className="text-xs">{searchQuery ? 'No matching files' : 'No open files in workspace'}</p>
+            {!searchQuery && (
+              <div className="flex flex-col gap-1.5 pt-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onOpenFilePicker}
+                  className="w-full text-xs h-7.5 gap-1.5 justify-center"
+                >
+                  <FolderOpen className="w-3.5 h-3.5 text-blue-500" />
+                  <span>Open Local File</span>
+                </Button>
+                {onLoadSampleFiles && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onLoadSampleFiles}
+                    className="w-full text-xs h-7.5 gap-1.5 justify-center hover:bg-muted"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-primary" />
+                    <span>Open Sample Files</span>
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           <div className="space-y-0.5">

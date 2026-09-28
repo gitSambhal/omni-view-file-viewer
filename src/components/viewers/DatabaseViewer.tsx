@@ -35,7 +35,16 @@ import {
   FileSpreadsheet,
   FileCode2,
   ShieldCheck,
-  HardDrive
+  HardDrive,
+  Maximize2,
+  Minimize2,
+  GripHorizontal,
+  GripVertical,
+  Trash2,
+  ChevronsUpDown,
+  Columns,
+  Rows,
+  History
 } from 'lucide-react';
 import alasql from 'alasql';
 import { getFileExtension } from '../../services/fileDetector';
@@ -98,6 +107,21 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = ({ arrayBuffer, tex
   const [queryHistory, setQueryHistory] = useState<QueryHistoryItem[]>([]);
   const [copiedResult, setCopiedResult] = useState<boolean>(false);
   const [copiedDdl, setCopiedDdl] = useState<string | null>(null);
+  const [copiedSql, setCopiedSql] = useState<boolean>(false);
+
+  // SQL Console Sizable Section & Mode State
+  const [splitPercent, setSplitPercent] = useState<number>(44); // 44% for Editor, 56% for Output
+  const [layoutOrientation, setLayoutOrientation] = useState<'vertical' | 'horizontal'>('vertical');
+  const [consoleSectionFocus, setConsoleSectionFocus] = useState<'split' | 'editor' | 'output'>('split');
+  const [isDraggingResizer, setIsDraggingResizer] = useState<boolean>(false);
+  const [showSnippets, setShowSnippets] = useState<boolean>(true);
+  const [showQueryHistory, setShowQueryHistory] = useState<boolean>(false);
+  const [cursorPos, setCursorPos] = useState<{ line: number; col: number }>({ line: 1, col: 1 });
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const lineNumbersRef = useRef<HTMLDivElement>(null);
+  const sqlConsoleContainerRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef<boolean>(false);
 
   // Initialize and parse the database
   const initializeDatabase = () => {
@@ -362,6 +386,96 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = ({ arrayBuffer, tex
       formatted = formatted.replace(regex, kw.toUpperCase());
     });
     setSqlQuery(formatted);
+  };
+
+  // SQL Console Line Count and Cursor Sync
+  const queryLineCount = useMemo(() => {
+    return Math.max(1, sqlQuery.split('\n').length);
+  }, [sqlQuery]);
+
+  const updateCursorPosition = () => {
+    if (!textareaRef.current) return;
+    const pos = textareaRef.current.selectionStart;
+    const textBefore = textareaRef.current.value.substring(0, pos);
+    const lines = textBefore.split('\n');
+    setCursorPos({
+      line: lines.length,
+      col: lines[lines.length - 1].length + 1
+    });
+  };
+
+  const handleEditorScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
+    if (lineNumbersRef.current) {
+      lineNumbersRef.current.scrollTop = e.currentTarget.scrollTop;
+    }
+  };
+
+  const handleClearSql = () => {
+    setSqlQuery('');
+    setCursorPos({ line: 1, col: 1 });
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  };
+
+  const handleCopySql = () => {
+    if (!sqlQuery) return;
+    navigator.clipboard.writeText(sqlQuery);
+    setCopiedSql(true);
+    setTimeout(() => setCopiedSql(false), 2000);
+  };
+
+  // Interactive Sizable Section Resizer for SQL Console (Mouse & Touch)
+  const handleStartResizing = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    isDraggingRef.current = true;
+    setIsDraggingResizer(true);
+    setConsoleSectionFocus('split');
+
+    const updatePosition = (clientX: number, clientY: number) => {
+      if (!isDraggingRef.current || !sqlConsoleContainerRef.current) return;
+      const rect = sqlConsoleContainerRef.current.getBoundingClientRect();
+      if (layoutOrientation === 'vertical') {
+        const relativeY = clientY - rect.top;
+        const percent = (relativeY / rect.height) * 100;
+        const clamped = Math.max(15, Math.min(85, percent));
+        setSplitPercent(Math.round(clamped));
+      } else {
+        const relativeX = clientX - rect.left;
+        const percent = (relativeX / rect.width) * 100;
+        const clamped = Math.max(15, Math.min(85, percent));
+        setSplitPercent(Math.round(clamped));
+      }
+    };
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      updatePosition(moveEvent.clientX, moveEvent.clientY);
+    };
+
+    const handleTouchMove = (moveEvent: TouchEvent) => {
+      if (moveEvent.touches.length === 1) {
+        updatePosition(moveEvent.touches[0].clientX, moveEvent.touches[0].clientY);
+      }
+    };
+
+    const handleEnd = () => {
+      isDraggingRef.current = false;
+      setIsDraggingResizer(false);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleEnd);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleEnd);
+      document.body.style.removeProperty('user-select');
+      document.body.style.removeProperty('cursor');
+    };
+
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = layoutOrientation === 'vertical' ? 'row-resize' : 'col-resize';
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleEnd);
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleEnd);
   };
 
   // Export handlers
@@ -819,246 +933,615 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = ({ arrayBuffer, tex
               </div>
             )}
 
-            {/* TAB 2: SQL Console */}
+            {/* TAB 2: SQL Console - Sizeable Sections Architecture */}
             {activeTab === 'query' && (
-              <div className="flex-1 flex flex-col min-h-0 overflow-y-auto p-3 sm:p-4 space-y-3 bg-slate-50 dark:bg-[#070c14]">
-                {/* Editor Container */}
-                <div className="bg-white dark:bg-[#0c121e] rounded-xl border border-slate-200 dark:border-slate-800/90 shadow-xs overflow-hidden flex flex-col">
-                  {/* Toolbar */}
-                  <div className="flex flex-wrap items-center justify-between px-3 py-2 bg-slate-100/80 dark:bg-[#0f172a] border-b border-slate-200 dark:border-slate-800 gap-2">
-                    <div className="flex items-center gap-2">
-                      <Code className="w-3.5 h-3.5 text-emerald-500" />
-                      <span className="text-xs font-mono font-bold text-slate-700 dark:text-slate-200">
-                        In-Memory SQL Console
+              <div
+                ref={sqlConsoleContainerRef}
+                className={`flex-1 min-h-0 h-full p-2 sm:p-3 bg-slate-100/70 dark:bg-[#070c14] overflow-hidden flex ${
+                  layoutOrientation === 'vertical' ? 'flex-col' : 'flex-col md:flex-row'
+                } gap-2 relative`}
+              >
+                {/* Minimized Editor Dock (when Output is Maximized) */}
+                {consoleSectionFocus === 'output' && (
+                  <div className="shrink-0 flex items-center justify-between px-3 py-1.5 bg-white dark:bg-[#0c121e] border border-slate-200 dark:border-slate-800 rounded-xl text-xs shadow-2xs">
+                    <div className="flex items-center gap-2 truncate">
+                      <Code className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span className="font-mono font-bold text-slate-700 dark:text-slate-200 shrink-0">
+                        In-Memory SQL Console (Docked)
                       </span>
-                      <span className="text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-1.5 py-0.2 rounded font-mono hidden sm:inline">
-                        AlaSQL Engine
+                      <span className="text-slate-400 font-mono text-[11px] truncate max-w-sm hidden sm:inline">
+                        {sqlQuery.replace(/\s+/g, ' ').slice(0, 50)}...
                       </span>
                     </div>
-
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={handleFormatSql}
-                        className="px-2 py-1 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-medium transition-colors cursor-pointer border border-slate-200 dark:border-slate-700"
-                        title="Uppercase standard SQL keywords"
-                      >
-                        Format SQL
-                      </button>
-
+                    <div className="flex items-center gap-1.5 shrink-0">
                       <button
                         onClick={() => executeQuery()}
                         disabled={isExecuting}
-                        className="flex items-center gap-1.5 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-semibold shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                        className="flex items-center gap-1 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-semibold shadow-2xs transition-all cursor-pointer disabled:opacity-50"
                       >
-                        {isExecuting ? (
-                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                          <Play className="w-3.5 h-3.5 fill-current" />
-                        )}
-                        <span>Run Query (Ctrl+Enter)</span>
+                        {isExecuting ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3 fill-current" />}
+                        <span>Run</span>
+                      </button>
+                      <button
+                        onClick={() => setConsoleSectionFocus('split')}
+                        className="flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 text-xs font-semibold cursor-pointer border border-emerald-500/20"
+                        title="Restore split view"
+                      >
+                        <Minimize2 className="w-3 h-3" />
+                        <span>Restore Split</span>
+                      </button>
+                      <button
+                        onClick={() => setConsoleSectionFocus('editor')}
+                        className="flex items-center gap-1 px-2.5 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-medium cursor-pointer border border-slate-200 dark:border-slate-700"
+                        title="Expand SQL Editor"
+                      >
+                        <Maximize2 className="w-3 h-3" />
+                        <span>Maximize Editor</span>
                       </button>
                     </div>
                   </div>
-
-                  {/* Quick Syntax Snippets */}
-                  <div className="px-3 py-1.5 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center gap-1.5 overflow-x-auto text-xs font-mono text-slate-500 no-scrollbar">
-                    <span className="text-slate-400 text-[10px] uppercase font-sans font-semibold mr-1 shrink-0">
-                      Snippets:
-                    </span>
-                    {['SELECT * FROM', 'WHERE', 'COUNT(*)', 'GROUP BY', 'ORDER BY DESC', 'LIMIT 25', 'INNER JOIN'].map(
-                      snip => (
-                        <button
-                          key={snip}
-                          onClick={() => insertSqlSnippet(snip)}
-                          className="bg-white dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded text-[11px] font-mono transition-colors cursor-pointer shrink-0"
-                        >
-                          {snip}
-                        </button>
-                      )
-                    )}
-                  </div>
-
-                  {/* Schema Quick Insertion Chips */}
-                  {dbParseResult && dbParseResult.tables.length > 0 && (
-                    <div className="px-3 py-1.5 bg-slate-50 dark:bg-slate-950/70 border-b border-slate-200 dark:border-slate-800 flex items-center gap-1.5 overflow-x-auto text-xs font-mono no-scrollbar">
-                      <span className="text-slate-400 text-[10px] uppercase font-sans font-semibold mr-1 shrink-0">
-                        Insert Table:
-                      </span>
-                      {dbParseResult.tables.map(t => (
-                        <button
-                          key={t.name}
-                          onClick={() => insertSqlSnippet(t.name.replace(/[^a-zA-Z0-9_]/g, '_'))}
-                          className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[11px] font-mono transition-colors cursor-pointer shrink-0"
-                          title={`Insert table "${t.name}" into query`}
-                        >
-                          📁 {t.name}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Textarea Editor with Line Numbers */}
-                  <div className="relative flex bg-slate-950 font-mono text-xs sm:text-sm min-h-[140px]">
-                    <div className="w-10 py-3 bg-slate-900 border-r border-slate-800 text-slate-600 text-right pr-2 select-none font-mono text-xs leading-relaxed shrink-0">
-                      {Array.from({ length: Math.max(5, sqlQuery.split('\n').length) }).map((_, idx) => (
-                        <div key={idx} className="h-5 leading-5">
-                          {idx + 1}
-                        </div>
-                      ))}
-                    </div>
-
-                    <textarea
-                      value={sqlQuery}
-                      onChange={e => setSqlQuery(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      rows={Math.max(5, Math.min(16, sqlQuery.split('\n').length + 2))}
-                      className="flex-1 p-3 bg-slate-950 text-emerald-300 font-mono text-xs sm:text-sm leading-5 focus:outline-none resize-y w-full caret-emerald-400 placeholder:text-slate-600"
-                      placeholder="-- Enter SQL query here (e.g. SELECT * FROM table_name LIMIT 20;)&#10;-- Press Ctrl+Enter to execute"
-                      spellCheck="false"
-                    />
-                  </div>
-                </div>
-
-                {/* Error Banner */}
-                {queryError && (
-                  <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-500 text-xs flex items-start gap-2">
-                    <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                    <div>
-                      <strong className="font-semibold block">Query Error</strong>
-                      <p className="font-mono text-[11px]">{queryError}</p>
-                    </div>
-                  </div>
                 )}
 
-                {/* Success Banner */}
-                {querySuccessMsg && !queryError && (
-                  <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-600 dark:text-emerald-400 text-xs flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 shrink-0" />
-                    <span className="font-mono text-[11px]">{querySuccessMsg}</span>
-                  </div>
-                )}
-
-                {/* Query Output Grid */}
-                <div className="bg-white dark:bg-[#0c121e] rounded-xl border border-slate-200 dark:border-slate-800/90 shadow-xs flex flex-col overflow-hidden min-h-[200px]">
-                  <div className="flex flex-wrap items-center justify-between px-3 py-2 bg-slate-100/80 dark:bg-[#0f172a] border-b border-slate-200 dark:border-slate-800 gap-2">
-                    <div className="flex items-center gap-2">
-                      <Table className="w-3.5 h-3.5 text-slate-500" />
-                      <span className="text-xs font-mono font-bold text-slate-700 dark:text-slate-300">
-                        Query Output
-                      </span>
-                      {queryResult && (
-                        <span className="text-[10px] font-mono text-slate-500 bg-slate-200 dark:bg-slate-800 px-1.5 py-0.2 rounded">
-                          {queryResult.rows.length} rows &bull; {queryResult.columns.length} cols ({queryResult.timeMs} ms)
+                {/* SQL Editor Section (Rendered in Split or Editor-Maximized mode) */}
+                {consoleSectionFocus !== 'output' && (
+                  <div
+                    style={
+                      consoleSectionFocus === 'editor'
+                        ? { flex: '1 1 0%', height: '100%' }
+                        : layoutOrientation === 'vertical'
+                        ? { height: `calc(${splitPercent}% - 14px)` }
+                        : { width: `calc(${splitPercent}% - 10px)` }
+                    }
+                    className={`bg-white dark:bg-[#0c121e] rounded-xl border border-slate-200 dark:border-slate-800/90 shadow-xs overflow-hidden flex flex-col transition-[height,width] duration-75 ${
+                      layoutOrientation === 'vertical' ? 'w-full min-h-[140px]' : 'h-full min-w-[260px]'
+                    } ${consoleSectionFocus === 'editor' ? 'ring-2 ring-emerald-500/30' : ''}`}
+                  >
+                    {/* Toolbar */}
+                    <div className="flex flex-wrap items-center justify-between px-3 py-2 bg-slate-100/80 dark:bg-[#0f172a] border-b border-slate-200 dark:border-slate-800 gap-2 shrink-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Code className="w-3.5 h-3.5 text-emerald-500" />
+                        <span className="text-xs font-mono font-bold text-slate-700 dark:text-slate-200">
+                          In-Memory SQL Console
                         </span>
-                      )}
-                    </div>
+                        <span className="text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-1.5 py-0.2 rounded font-mono hidden sm:inline">
+                          AlaSQL Engine
+                        </span>
+                        <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-slate-200/60 dark:bg-slate-800/60 px-1.5 py-0.2 rounded">
+                          {queryLineCount} {queryLineCount === 1 ? 'line' : 'lines'} &bull; {sqlQuery.length} chars
+                        </span>
+                        <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 hidden md:inline">
+                          Ln {cursorPos.line}, Col {cursorPos.col}
+                        </span>
+                      </div>
 
-                    {queryResult && queryResult.rows.length > 0 && (
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {/* Orientation Toggle (Stacked vs Side-by-Side) */}
                         <button
-                          onClick={handleCopyQueryOutput}
-                          className="flex items-center gap-1 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-2 py-1 rounded text-[11px] font-medium transition-colors cursor-pointer border border-slate-200 dark:border-slate-700"
+                          onClick={() => setLayoutOrientation(prev => prev === 'vertical' ? 'horizontal' : 'vertical')}
+                          className="hidden md:flex items-center gap-1 px-2 py-1 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-medium transition-colors cursor-pointer border border-slate-200 dark:border-slate-700"
+                          title={layoutOrientation === 'vertical' ? 'Switch to side-by-side horizontal split' : 'Switch to stacked vertical split'}
                         >
-                          {copiedResult ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                          <span>{copiedResult ? 'Copied' : 'Copy'}</span>
+                          {layoutOrientation === 'vertical' ? (
+                            <>
+                              <Columns className="w-3.5 h-3.5 text-slate-500" />
+                              <span className="hidden lg:inline text-[11px]">Side-by-Side</span>
+                            </>
+                          ) : (
+                            <>
+                              <Rows className="w-3.5 h-3.5 text-slate-500" />
+                              <span className="hidden lg:inline text-[11px]">Stacked</span>
+                            </>
+                          )}
                         </button>
+
+                        {/* Snippets Bar Toggle */}
                         <button
-                          onClick={handleExportQueryCsv}
-                          className="flex items-center gap-1 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-2 py-1 rounded text-[11px] font-medium transition-colors cursor-pointer border border-slate-200 dark:border-slate-700"
+                          onClick={() => setShowSnippets(prev => !prev)}
+                          className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer border ${
+                            showSnippets
+                              ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 font-semibold'
+                              : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
+                          }`}
+                          title="Toggle SQL snippets & table name shortcuts"
                         >
-                          <Download className="w-3 h-3 text-emerald-500" />
-                          <span>CSV</span>
+                          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                          <span className="hidden sm:inline text-[11px]">Snippets</span>
                         </button>
+
+                        {/* Maximize / Restore Editor Section */}
                         <button
-                          onClick={handleExportQueryJson}
-                          className="flex items-center gap-1 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-2 py-1 rounded text-[11px] font-medium transition-colors cursor-pointer border border-slate-200 dark:border-slate-700"
+                          onClick={() => setConsoleSectionFocus(prev => prev === 'editor' ? 'split' : 'editor')}
+                          className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer border ${
+                            consoleSectionFocus === 'editor'
+                              ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-semibold'
+                              : 'bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                          }`}
+                          title={consoleSectionFocus === 'editor' ? 'Restore split layout' : 'Maximize SQL editor (100% space)'}
                         >
-                          <Download className="w-3 h-3 text-blue-500" />
-                          <span>JSON</span>
+                          {consoleSectionFocus === 'editor' ? (
+                            <>
+                              <Minimize2 className="w-3.5 h-3.5" />
+                              <span className="text-[11px]">Restore</span>
+                            </>
+                          ) : (
+                            <>
+                              <Maximize2 className="w-3.5 h-3.5" />
+                              <span className="text-[11px]">Maximize</span>
+                            </>
+                          )}
+                        </button>
+
+                        {/* Format SQL */}
+                        <button
+                          onClick={handleFormatSql}
+                          className="px-2 py-1 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-medium transition-colors cursor-pointer border border-slate-200 dark:border-slate-700"
+                          title="Uppercase standard SQL keywords"
+                        >
+                          <span className="text-[11px]">Format</span>
+                        </button>
+
+                        {/* Copy SQL */}
+                        <button
+                          onClick={handleCopySql}
+                          className="flex items-center gap-1 px-2 py-1 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-medium transition-colors cursor-pointer border border-slate-200 dark:border-slate-700"
+                          title="Copy SQL query to clipboard"
+                        >
+                          {copiedSql ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                          <span className="hidden sm:inline text-[11px]">{copiedSql ? 'Copied' : 'Copy'}</span>
+                        </button>
+
+                        {/* Clear SQL */}
+                        <button
+                          onClick={handleClearSql}
+                          className="p-1 text-slate-500 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors cursor-pointer border border-transparent hover:border-red-500/20"
+                          title="Clear query editor"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+
+                        {/* Run Query */}
+                        <button
+                          onClick={() => executeQuery()}
+                          disabled={isExecuting}
+                          className="flex items-center gap-1.5 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-semibold shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                        >
+                          {isExecuting ? (
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Play className="w-3.5 h-3.5 fill-current" />
+                          )}
+                          <span className="text-[11px]">Run (Ctrl+Enter)</span>
                         </button>
                       </div>
-                    )}
-                  </div>
+                    </div>
 
-                  <div className="flex-1 overflow-auto p-3 min-h-[160px] max-h-[400px]">
-                    {queryResult && queryResult.rows.length > 0 ? (
-                      <table className="w-full text-left text-xs font-mono border-collapse border border-slate-200 dark:border-slate-800 rounded">
-                        <thead>
-                          <tr className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 sticky top-0 shadow-2xs">
-                            <th className="p-2 border-b border-r border-slate-200 dark:border-slate-700 w-10 text-center text-slate-400 text-[10px]">
-                              #
-                            </th>
-                            {queryResult.columns.map((col, idx) => (
-                              <th
-                                key={idx}
-                                className="p-2 border-b border-r border-slate-200 dark:border-slate-700 font-semibold"
+                    {/* Quick Syntax Snippets & Table Insertion Chips (Collapsible) */}
+                    {showSnippets && (
+                      <div className="px-3 py-1.5 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center gap-1.5 overflow-x-auto text-xs font-mono text-slate-500 no-scrollbar shrink-0">
+                        <span className="text-slate-400 text-[10px] uppercase font-sans font-semibold mr-0.5 shrink-0">
+                          Keywords:
+                        </span>
+                        {['SELECT * FROM', 'WHERE', 'COUNT(*)', 'GROUP BY', 'ORDER BY DESC', 'LIMIT 25', 'INNER JOIN'].map(
+                          snip => (
+                            <button
+                              key={snip}
+                              onClick={() => insertSqlSnippet(snip)}
+                              className="bg-white dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 rounded text-[10px] font-mono transition-colors cursor-pointer shrink-0"
+                            >
+                              {snip}
+                            </button>
+                          )
+                        )}
+
+                        {dbParseResult && dbParseResult.tables.length > 0 && (
+                          <>
+                            <span className="text-slate-400 text-[10px] uppercase font-sans font-semibold ml-2 mr-0.5 shrink-0">
+                              Tables:
+                            </span>
+                            {dbParseResult.tables.map(t => (
+                              <button
+                                key={t.name}
+                                onClick={() => insertSqlSnippet(t.name.replace(/[^a-zA-Z0-9_]/g, '_'))}
+                                className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded text-[10px] font-mono transition-colors cursor-pointer shrink-0"
+                                title={`Insert table "${t.name}" into query`}
                               >
-                                {col}
-                              </th>
+                                📁 {t.name}
+                              </button>
                             ))}
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900/60">
-                          {queryResult.rows.map((row, rIdx) => (
-                            <tr key={rIdx} className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
-                              <td className="p-2 border-r border-slate-200 dark:border-slate-800 text-center text-slate-400 text-[10px] bg-slate-50 dark:bg-slate-950/40">
-                                {rIdx + 1}
-                              </td>
-                              {queryResult.columns.map((_, cIdx) => (
-                                <td
-                                  key={cIdx}
-                                  className="p-2 border-r border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-300"
+                          </>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Textarea Editor with Synchronized Line Numbers */}
+                    <div className="relative flex-1 min-h-0 flex bg-slate-950 font-mono text-xs sm:text-sm w-full overflow-hidden">
+                      {/* Synchronized Line Numbers Gutter */}
+                      <div
+                        ref={lineNumbersRef}
+                        className="w-12 pt-3 pb-8 bg-slate-900/90 border-r border-slate-800 text-slate-500 select-none font-mono text-xs overflow-hidden shrink-0"
+                      >
+                        {Array.from({ length: Math.max(queryLineCount + 15, 25) }).map((_, idx) => (
+                          <div
+                            key={idx}
+                            className={`h-5 leading-5 text-right pr-2.5 transition-colors ${
+                              idx + 1 === cursorPos.line
+                                ? 'text-emerald-400 font-bold bg-emerald-500/15'
+                                : idx < queryLineCount
+                                ? 'text-slate-500'
+                                : 'text-slate-800'
+                            }`}
+                          >
+                            {idx < queryLineCount ? idx + 1 : ''}
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Code Textarea */}
+                      <textarea
+                        ref={textareaRef}
+                        value={sqlQuery}
+                        onChange={e => {
+                          setSqlQuery(e.target.value);
+                          updateCursorPosition();
+                        }}
+                        onKeyDown={handleKeyDown}
+                        onKeyUp={updateCursorPosition}
+                        onClick={updateCursorPosition}
+                        onSelect={updateCursorPosition}
+                        onScroll={handleEditorScroll}
+                        className="flex-1 p-3 pt-3 pb-8 bg-slate-950 text-emerald-300 font-mono text-xs sm:text-sm leading-5 focus:outline-none resize-none w-full caret-emerald-400 placeholder:text-slate-600 overflow-y-auto"
+                        placeholder="-- Enter SQL query here (e.g. SELECT * FROM table_name LIMIT 25;)&#10;-- Press Ctrl+Enter to execute"
+                        spellCheck="false"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Sizable Section Divider Bar (Rendered when in Split Mode) */}
+                {consoleSectionFocus === 'split' && (
+                  layoutOrientation === 'vertical' ? (
+                    /* Horizontal Draggable Divider for Stacked Layout */
+                    <div
+                      onMouseDown={handleStartResizing}
+                      onTouchStart={handleStartResizing}
+                      title="Drag to resize SQL Console and Results sections"
+                      className={`h-7 shrink-0 bg-slate-200/90 dark:bg-slate-800/90 hover:bg-emerald-500/15 dark:hover:bg-emerald-500/15 rounded-lg flex items-center justify-between px-3 cursor-row-resize select-none border border-slate-300/80 dark:border-slate-700/80 transition-colors group ${
+                        isDraggingResizer ? 'ring-2 ring-emerald-500 bg-emerald-500/20' : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                        <GripHorizontal className="w-4 h-4 text-slate-400 group-hover:text-emerald-500 transition-colors" />
+                        <span className="font-semibold text-slate-700 dark:text-slate-300 hidden sm:inline">
+                          Size Sections:
+                        </span>
+                        <span className="bg-slate-300/70 dark:bg-slate-700/70 text-slate-700 dark:text-slate-300 px-1.5 py-0.2 rounded text-[10px]">
+                          {splitPercent}% Editor &bull; {100 - splitPercent}% Results
+                        </span>
+                      </div>
+
+                      {/* Split Presets */}
+                      <div className="flex items-center gap-1 text-[10px] font-mono">
+                        <span className="text-slate-400 mr-1 hidden md:inline">Presets:</span>
+                        {[
+                          { label: '25 : 75', percent: 25, title: 'Large Results (25% Editor / 75% Results)' },
+                          { label: '44 : 56', percent: 44, title: 'Balanced (44% Editor / 56% Results)' },
+                          { label: '70 : 30', percent: 70, title: 'Large Editor (70% Editor / 30% Results)' }
+                        ].map(p => (
+                          <button
+                            key={p.label}
+                            type="button"
+                            onClick={e => {
+                              e.stopPropagation();
+                              setSplitPercent(p.percent);
+                            }}
+                            className={`px-1.5 py-0.5 rounded transition-colors cursor-pointer ${
+                              splitPercent === p.percent
+                                ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 font-bold shadow-2xs'
+                                : 'bg-slate-100/80 dark:bg-slate-900/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                            }`}
+                            title={p.title}
+                          >
+                            {p.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Section Maximize Buttons */}
+                      <div className="flex items-center gap-1 text-[10px]">
+                        <button
+                          type="button"
+                          onClick={e => {
+                            e.stopPropagation();
+                            setConsoleSectionFocus('editor');
+                          }}
+                          className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:text-emerald-500 border border-slate-300 dark:border-slate-600 cursor-pointer hidden xs:inline"
+                          title="Maximize SQL Editor (100% space)"
+                        >
+                          Full Editor
+                        </button>
+                        <button
+                          type="button"
+                          onClick={e => {
+                            e.stopPropagation();
+                            setConsoleSectionFocus('output');
+                          }}
+                          className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:text-emerald-500 border border-slate-300 dark:border-slate-600 cursor-pointer hidden xs:inline"
+                          title="Maximize Results (100% space)"
+                        >
+                          Full Output
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Vertical Draggable Divider for Side-by-Side Layout */
+                    <div
+                      onMouseDown={handleStartResizing}
+                      onTouchStart={handleStartResizing}
+                      title="Drag to resize SQL Console and Results sections horizontally"
+                      className={`w-4 shrink-0 bg-slate-200/90 dark:bg-slate-800/90 hover:bg-emerald-500/20 dark:hover:bg-emerald-500/20 rounded-lg flex flex-col items-center justify-center cursor-col-resize select-none border border-slate-300/80 dark:border-slate-700/80 transition-colors group ${
+                        isDraggingResizer ? 'ring-2 ring-emerald-500 bg-emerald-500/20' : ''
+                      }`}
+                    >
+                      <GripVertical className="w-4 h-4 text-slate-400 group-hover:text-emerald-500 transition-colors" />
+                    </div>
+                  )
+                )}
+
+                {/* Minimized Output Dock (when Editor is Maximized) */}
+                {consoleSectionFocus === 'editor' && (
+                  <div className="shrink-0 flex items-center justify-between px-3 py-1.5 bg-white dark:bg-[#0c121e] border border-slate-200 dark:border-slate-800 rounded-xl text-xs shadow-2xs">
+                    <div className="flex items-center gap-2">
+                      <Table className="w-4 h-4 text-slate-400" />
+                      <span className="font-mono text-slate-600 dark:text-slate-400 font-medium">
+                        Query Output Docked {queryResult ? `(${queryResult.rows.length} rows, ${queryResult.timeMs}ms)` : '(no query run yet)'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => setConsoleSectionFocus('split')}
+                        className="flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 text-xs font-semibold cursor-pointer border border-emerald-500/20"
+                        title="Restore split view"
+                      >
+                        <Minimize2 className="w-3 h-3" />
+                        <span>Restore Split View</span>
+                      </button>
+                      <button
+                        onClick={() => setConsoleSectionFocus('output')}
+                        className="flex items-center gap-1 px-2.5 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-medium cursor-pointer border border-slate-200 dark:border-slate-700"
+                        title="Expand Query Output"
+                      >
+                        <Maximize2 className="w-3 h-3" />
+                        <span>Show Full Output</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Query Output Grid Section (Rendered in Split or Output-Maximized mode) */}
+                {consoleSectionFocus !== 'editor' && (
+                  <div
+                    style={
+                      consoleSectionFocus === 'output'
+                        ? { flex: '1 1 0%', height: '100%' }
+                        : layoutOrientation === 'vertical'
+                        ? { height: `calc(${100 - splitPercent}% - 14px)` }
+                        : { width: `calc(${100 - splitPercent}% - 10px)` }
+                    }
+                    className={`bg-white dark:bg-[#0c121e] rounded-xl border border-slate-200 dark:border-slate-800/90 shadow-xs flex flex-col overflow-hidden transition-[height,width] duration-75 ${
+                      layoutOrientation === 'vertical' ? 'w-full min-h-[140px]' : 'h-full min-w-[260px]'
+                    } ${consoleSectionFocus === 'output' ? 'ring-2 ring-emerald-500/30' : ''}`}
+                  >
+                    {/* Output Header Toolbar */}
+                    <div className="flex flex-wrap items-center justify-between px-3 py-2 bg-slate-100/80 dark:bg-[#0f172a] border-b border-slate-200 dark:border-slate-800 gap-2 shrink-0">
+                      <div className="flex items-center gap-2">
+                        <Table className="w-3.5 h-3.5 text-slate-500" />
+                        <span className="text-xs font-mono font-bold text-slate-700 dark:text-slate-300">
+                          Query Output
+                        </span>
+                        {queryResult && (
+                          <span className="text-[10px] font-mono text-slate-500 bg-slate-200 dark:bg-slate-800 px-1.5 py-0.2 rounded">
+                            {queryResult.rows.length} rows &bull; {queryResult.columns.length} cols ({queryResult.timeMs} ms)
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {/* History Toggle Button */}
+                        {queryHistory.length > 0 && (
+                          <button
+                            onClick={() => setShowQueryHistory(prev => !prev)}
+                            className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium transition-colors cursor-pointer border ${
+                              showQueryHistory
+                                ? 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-600'
+                                : 'bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                            }`}
+                            title="Toggle recent query history"
+                          >
+                            <History className="w-3 h-3 text-slate-500" />
+                            <span className="hidden sm:inline">History</span>
+                            <span className="text-[10px] bg-slate-300/80 dark:bg-slate-700 px-1 rounded-full">{queryHistory.length}</span>
+                          </button>
+                        )}
+
+                        {queryResult && queryResult.rows.length > 0 && (
+                          <>
+                            <button
+                              onClick={handleCopyQueryOutput}
+                              className="flex items-center gap-1 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-2 py-1 rounded text-[11px] font-medium transition-colors cursor-pointer border border-slate-200 dark:border-slate-700"
+                              title="Copy query results to clipboard (TSV format)"
+                            >
+                              {copiedResult ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                              <span>{copiedResult ? 'Copied' : 'Copy'}</span>
+                            </button>
+                            <button
+                              onClick={handleExportQueryCsv}
+                              className="flex items-center gap-1 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-2 py-1 rounded text-[11px] font-medium transition-colors cursor-pointer border border-slate-200 dark:border-slate-700"
+                              title="Export results as CSV"
+                            >
+                              <Download className="w-3 h-3 text-emerald-500" />
+                              <span>CSV</span>
+                            </button>
+                            <button
+                              onClick={handleExportQueryJson}
+                              className="flex items-center gap-1 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-2 py-1 rounded text-[11px] font-medium transition-colors cursor-pointer border border-slate-200 dark:border-slate-700"
+                              title="Export results as JSON"
+                            >
+                              <Download className="w-3 h-3 text-blue-500" />
+                              <span>JSON</span>
+                            </button>
+                          </>
+                        )}
+
+                        {/* Maximize / Restore Output Section */}
+                        <button
+                          onClick={() => setConsoleSectionFocus(prev => prev === 'output' ? 'split' : 'output')}
+                          className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium transition-colors cursor-pointer border ${
+                            consoleSectionFocus === 'output'
+                              ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-semibold'
+                              : 'bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                          }`}
+                          title={consoleSectionFocus === 'output' ? 'Restore split layout' : 'Maximize query output (100% space)'}
+                        >
+                          {consoleSectionFocus === 'output' ? (
+                            <>
+                              <Minimize2 className="w-3 h-3" />
+                              <span>Restore</span>
+                            </>
+                          ) : (
+                            <>
+                              <Maximize2 className="w-3 h-3" />
+                              <span className="hidden sm:inline">Maximize</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Error Banner */}
+                    {queryError && (
+                      <div className="p-2.5 mx-3 mt-2 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-xs flex items-start gap-2 shrink-0">
+                        <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <strong className="font-semibold block">Query Execution Error</strong>
+                          <p className="font-mono text-[11px] break-words">{queryError}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Success Banner */}
+                    {querySuccessMsg && !queryError && (
+                      <div className="p-2 mx-3 mt-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-600 dark:text-emerald-400 text-xs flex items-center gap-2 shrink-0">
+                        <CheckCircle2 className="w-4 h-4 shrink-0" />
+                        <span className="font-mono text-[11px]">{querySuccessMsg}</span>
+                      </div>
+                    )}
+
+                    {/* Query History Drawer */}
+                    {showQueryHistory && queryHistory.length > 0 && (
+                      <div className="p-2.5 mx-3 mt-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs shrink-0">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-semibold">
+                            Recent Query History (Click to re-run)
+                          </span>
+                          <button
+                            onClick={() => setShowQueryHistory(false)}
+                            className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                          >
+                            Hide
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
+                          {queryHistory.slice(0, 8).map(h => (
+                            <button
+                              key={h.id}
+                              onClick={() => {
+                                setSqlQuery(h.query);
+                                executeQuery(h.query);
+                              }}
+                              className="text-left p-1.5 px-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-500/50 rounded-md text-xs font-mono text-slate-700 dark:text-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer"
+                            >
+                              <span className={h.status === 'success' ? 'text-emerald-500' : 'text-rose-500'}>&bull;</span>
+                              <span className="truncate max-w-[220px]">{h.query}</span>
+                              <span className="text-[10px] text-slate-400">({h.timeMs}ms)</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Results Table Grid */}
+                    <div className="flex-1 min-h-0 overflow-auto p-2 sm:p-3">
+                      {queryResult && queryResult.rows.length > 0 ? (
+                        <table className="w-full text-left text-xs font-mono border-collapse border border-slate-200 dark:border-slate-800 rounded">
+                          <thead>
+                            <tr className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 sticky top-0 shadow-2xs z-1">
+                              <th className="p-2 border-b border-r border-slate-200 dark:border-slate-700 w-10 text-center text-slate-400 text-[10px]">
+                                #
+                              </th>
+                              {queryResult.columns.map((col, idx) => (
+                                <th
+                                  key={idx}
+                                  className="p-2 border-b border-r border-slate-200 dark:border-slate-700 font-semibold"
                                 >
-                                  {row[cIdx] === null || row[cIdx] === undefined ? (
-                                    <span className="text-slate-400 italic font-sans text-[10px]">NULL</span>
-                                  ) : typeof row[cIdx] === 'boolean' ? (
-                                    <span className={row[cIdx] ? 'text-emerald-500 font-bold' : 'text-rose-500 font-bold'}>
-                                      {String(row[cIdx])}
-                                    </span>
-                                  ) : (
-                                    String(row[cIdx])
-                                  )}
-                                </td>
+                                  {col}
+                                </th>
                               ))}
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    ) : queryResult && queryResult.rows.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center h-32 text-slate-400 text-xs">
-                        <CheckCircle2 className="w-6 h-6 mb-1 text-emerald-500 opacity-60" />
-                        <span>Query executed successfully. 0 records returned.</span>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center h-32 text-slate-400 text-xs">
-                        <Play className="w-6 h-6 mb-1 text-slate-400 opacity-40" />
-                        <span>Enter an SQL query above and click 'Run Query'.</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Query History */}
-                {queryHistory.length > 0 && (
-                  <div className="space-y-1.5 pt-1">
-                    <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider font-semibold">
-                      Recent Query History
-                    </span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {queryHistory.slice(0, 6).map(h => (
-                        <button
-                          key={h.id}
-                          onClick={() => {
-                            setSqlQuery(h.query);
-                            executeQuery(h.query);
-                          }}
-                          className="text-left p-1.5 px-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500/40 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer"
-                        >
-                          <span className={h.status === 'success' ? 'text-emerald-500' : 'text-rose-500'}>&bull;</span>
-                          <span className="truncate max-w-[200px]">{h.query}</span>
-                          <span className="text-[10px] text-slate-400">({h.timeMs}ms)</span>
-                        </button>
-                      ))}
+                          </thead>
+                          <tbody className="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900/60">
+                            {queryResult.rows.map((row, rIdx) => (
+                              <tr key={rIdx} className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
+                                <td className="p-2 border-r border-slate-200 dark:border-slate-800 text-center text-slate-400 text-[10px] bg-slate-50 dark:bg-slate-950/40">
+                                  {rIdx + 1}
+                                </td>
+                                {queryResult.columns.map((_, cIdx) => (
+                                  <td
+                                    key={cIdx}
+                                    className="p-2 border-r border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-300"
+                                  >
+                                    {row[cIdx] === null || row[cIdx] === undefined ? (
+                                      <span className="text-slate-400 italic font-sans text-[10px]">NULL</span>
+                                    ) : typeof row[cIdx] === 'boolean' ? (
+                                      <span className={row[cIdx] ? 'text-emerald-500 font-bold' : 'text-rose-500 font-bold'}>
+                                        {String(row[cIdx])}
+                                      </span>
+                                    ) : (
+                                      String(row[cIdx])
+                                    )}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      ) : queryResult && queryResult.rows.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-full min-h-[140px] text-slate-400 text-xs">
+                          <CheckCircle2 className="w-7 h-7 mb-1 text-emerald-500 opacity-70" />
+                          <span className="font-semibold text-slate-600 dark:text-slate-300">Statement Executed Successfully</span>
+                          <span className="text-[11px] text-slate-400">0 records returned</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center h-full min-h-[140px] text-slate-400 text-xs space-y-2">
+                          <Play className="w-8 h-8 text-slate-400 opacity-30" />
+                          <div className="text-center">
+                            <span className="font-semibold text-slate-600 dark:text-slate-300 block">No Query Output Yet</span>
+                            <span className="text-[11px] text-slate-400">Write an SQL query above and click 'Run (Ctrl+Enter)'</span>
+                          </div>
+                          {dbParseResult && dbParseResult.tables.length > 0 && (
+                            <button
+                              onClick={() => {
+                                const tbl = dbParseResult.tables[0].name.replace(/[^a-zA-Z0-9_]/g, '_');
+                                const q = `SELECT * FROM ${tbl} LIMIT 25;`;
+                                setSqlQuery(q);
+                                executeQuery(q);
+                              }}
+                              className="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-md text-xs font-mono border border-emerald-500/20 cursor-pointer transition-colors"
+                            >
+                              Run sample: SELECT * FROM {dbParseResult.tables[0].name} LIMIT 25;
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

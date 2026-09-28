@@ -58,53 +58,49 @@ export default function App() {
   const { theme, toggleTheme } = useTheme();
   const { toasts, addToast, removeToast } = useToast();
 
-  const [tabs, setTabs] = useState<TabFile[]>(() => getSampleTabFiles());
-  const [activeTabId, setActiveTabId] = useState<string | null>('sample-md');
+  const [tabs, setTabs] = useState<TabFile[]>([]);
+  const [activeTabId, setActiveTabId] = useState<string | null>(null);
 
-  // Lazily populate sample EPUB ArrayBuffer and sample media Blobs on initial mount
-  useEffect(() => {
-    const epubTab = tabs.find(t => t.id === 'sample-epub');
-    if (epubTab && !epubTab.arrayBuffer) {
-      generateSampleEpubBuffer().then(buf => {
-        setTabs(prev =>
-          prev.map(t =>
-            t.id === 'sample-epub' ? { ...t, arrayBuffer: buf, size: buf.byteLength } : t
-          )
-        );
-      });
+  const handleLoadSampleFiles = useCallback(() => {
+    const sampleTabs = getSampleTabFiles();
+    setTabs(sampleTabs);
+    setActiveTabId('sample-md');
+    addToast('info', 'Sample Files Loaded', 'Loaded 10+ interactive demo files (Markdown, PDF, Excel, SQLite, Python, Media).');
+
+    // Lazily populate sample EPUB, Audio, and Video buffers
+    generateSampleEpubBuffer().then(buf => {
+      setTabs(prev =>
+        prev.map(t =>
+          t.id === 'sample-epub' ? { ...t, arrayBuffer: buf, size: buf.byteLength } : t
+        )
+      );
+    });
+
+    try {
+      const wavBlob = generateSampleWavBlob();
+      const url = URL.createObjectURL(wavBlob);
+      setTabs(prev =>
+        prev.map(t =>
+          t.id === 'sample-audio' ? { ...t, objectUrl: url, size: wavBlob.size } : t
+        )
+      );
+    } catch (err) {
+      console.warn('Could not generate sample audio:', err);
     }
 
-    const audioTab = tabs.find(t => t.id === 'sample-audio');
-    if (audioTab && !audioTab.objectUrl) {
-      try {
-        const wavBlob = generateSampleWavBlob();
-        const url = URL.createObjectURL(wavBlob);
+    generateSampleVideoBlob().then(vidBlob => {
+      if (vidBlob && vidBlob.size > 0) {
+        const url = URL.createObjectURL(vidBlob);
         setTabs(prev =>
           prev.map(t =>
-            t.id === 'sample-audio' ? { ...t, objectUrl: url, size: wavBlob.size } : t
+            t.id === 'sample-video' ? { ...t, objectUrl: url, size: vidBlob.size } : t
           )
         );
-      } catch (err) {
-        console.warn('Could not generate sample audio:', err);
       }
-    }
-
-    const videoTab = tabs.find(t => t.id === 'sample-video');
-    if (videoTab && !videoTab.objectUrl) {
-      generateSampleVideoBlob().then(vidBlob => {
-        if (vidBlob && vidBlob.size > 0) {
-          const url = URL.createObjectURL(vidBlob);
-          setTabs(prev =>
-            prev.map(t =>
-              t.id === 'sample-video' ? { ...t, objectUrl: url, size: vidBlob.size } : t
-            )
-          );
-        }
-      }).catch(err => {
-        console.warn('Could not generate sample video:', err);
-      });
-    }
-  }, []);
+    }).catch(err => {
+      console.warn('Could not generate sample video:', err);
+    });
+  }, [addToast]);
   const [isChangelogOpen, setIsChangelogOpen] = useState<boolean>(false);
   const [isLiveSyncDashboardOpen, setIsLiveSyncDashboardOpen] = useState<boolean>(false);
   const [isSupportedFormatsModalOpen, setIsSupportedFormatsModalOpen] = useState<boolean>(false);
@@ -131,12 +127,18 @@ export default function App() {
     setActiveTabId(newTab.id);
   }, []);
 
-  // Global Keyboard Shortcuts (Cmd/Ctrl + K for Command Palette, Cmd/Ctrl + B for Sidebar, Cmd/Ctrl + O for Open File)
+  // Global Keyboard Shortcuts (Cmd/Ctrl + K for Command Palette, Cmd/Ctrl + B for Sidebar, Cmd/Ctrl + O for Open File, Cmd/Ctrl + W for Close Tab)
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       // Don't trigger if user is typing in an input or textarea (unless Cmd/Ctrl key is pressed)
       const target = e.target as HTMLElement;
-      const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+      const isInput =
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable ||
+          target.closest('.monaco-editor') ||
+          target.closest('.cm-editor'));
 
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
@@ -147,12 +149,22 @@ export default function App() {
       } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'o') {
         e.preventDefault();
         handleOpenFilePicker();
+      } else if (!isInput && (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'w') {
+        if (activeTabId) {
+          e.preventDefault();
+          setTabs(prev => {
+            const rem = prev.filter(t => t.id !== activeTabId);
+            if (rem.length > 0) setActiveTabId(rem[rem.length - 1].id);
+            else setActiveTabId(null);
+            return rem;
+          });
+        }
       }
     };
 
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-  }, []);
+  }, [activeTabId]);
 
   // Global Clipboard Paste Listener (Ctrl+V / Cmd+V anywhere when not focused on an input)
   useEffect(() => {
@@ -839,7 +851,10 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
   };
 
   const handleToggleHexView = () => {
-    if (!activeTabId) return;
+    if (!activeTabId) {
+      addToast('info', 'No Active File', 'Open or select a file first to inspect its binary hex bytes.');
+      return;
+    }
     handleToggleHexViewTab(activeTabId);
   };
 
@@ -986,30 +1001,6 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
     }
   };
 
-  // Keyboard Shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'o') {
-        e.preventDefault();
-        handleOpenFilePicker();
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'w') {
-        e.preventDefault();
-        if (activeTabId) {
-          setTabs(prev => {
-            const rem = prev.filter(t => t.id !== activeTabId);
-            if (rem.length > 0) setActiveTabId(rem[rem.length - 1].id);
-            else setActiveTabId(null);
-            return rem;
-          });
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTabId]);
-
   const liveSyncCount = tabs.filter(t => t.liveSyncActive).length;
 
   return (
@@ -1018,7 +1009,7 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
       onDragOver={handleAppDragOver}
       onDragLeave={handleAppDragLeave}
       onDrop={handleAppDrop}
-      className="flex flex-col h-screen w-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-hidden font-sans transition-colors duration-200 relative"
+      className="flex flex-col h-screen w-screen bg-background text-foreground overflow-hidden font-sans transition-colors duration-200 relative"
     >
       {/* App-Level Fullscreen Drag & Drop Overlay */}
       {isDraggingOverApp && (
@@ -1045,11 +1036,7 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
         theme={theme}
         onToggleTheme={toggleTheme}
         onOpenFilePicker={handleOpenFilePicker}
-        onLoadSampleFiles={() => {
-          setTabs(getSampleTabFiles());
-          setActiveTabId('sample-md');
-          addToast('info', 'Demos Loaded', 'Loaded sample interactive files.');
-        }}
+        onLoadSampleFiles={handleLoadSampleFiles}
         onOpenChangelog={() => setIsChangelogOpen(true)}
         onOpenHexForCurrentTab={handleToggleHexView}
         onOpenLiveSyncDashboard={() => setIsLiveSyncDashboardOpen(true)}
@@ -1078,15 +1065,11 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
           onCloseTab={handleCloseTab}
           onCloseAllTabs={handleCloseAllTabs}
           onOpenFilePicker={handleOpenFilePicker}
+          onLoadSampleFiles={handleLoadSampleFiles}
           onOpenUrlModal={() => setIsUrlModalOpen(true)}
           onOpenPasteModal={() => handleOpenPasteModal()}
-          onOpenNpmTester={() => setIsNpmTesterOpen(true)}
-          onOpenRunnersGuide={() => setIsRunnersGuideOpen(true)}
-          onOpenLiveSyncDashboard={() => setIsLiveSyncDashboardOpen(true)}
-          onOpenHexForCurrentTab={handleToggleHexView}
           onNewScratchpad={handleNewScratchpad}
           onDownloadTabFile={handleDownloadTabFile}
-          liveSyncCount={liveSyncCount}
         />
 
         {/* Center Workspace Stage */}
@@ -1116,10 +1099,7 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
               <DropZone
                 onFilesSelected={handleFilesSelected}
                 onOpenFilePicker={handleOpenFilePicker}
-                onLoadSamples={() => {
-                  setTabs(getSampleTabFiles());
-                  setActiveTabId('sample-md');
-                }}
+                onLoadSamples={handleLoadSampleFiles}
                 onOpenSupportedFormats={() => setIsSupportedFormatsModalOpen(true)}
                 onOpenUrlModal={() => setIsUrlModalOpen(true)}
                 onOpenPasteModal={() => handleOpenPasteModal()}
@@ -1416,11 +1396,7 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
         onOpenRunnersGuide={() => setIsRunnersGuideOpen(true)}
         onOpenLiveSyncDashboard={() => setIsLiveSyncDashboardOpen(true)}
         onOpenSupportedFormats={() => setIsSupportedFormatsModalOpen(true)}
-        onLoadSampleFiles={() => {
-          setTabs(getSampleTabFiles());
-          setActiveTabId('sample-md');
-          addToast('info', 'Demos Loaded', 'Loaded sample interactive files.');
-        }}
+        onLoadSampleFiles={handleLoadSampleFiles}
         onOpenHexForCurrentTab={handleToggleHexView}
         onNewScratchpad={handleNewScratchpad}
         theme={theme}

@@ -1,27 +1,27 @@
 /**
  * @license Apache-2.0
  * Developer: Suhail Akhtar (https://suhail.top)
- * OmniView File Studio - Footer & System Status Bar (shadcn/ui)
+ * OmniView File Viewer - Footer & System Status Bar (shadcn/ui)
  */
 
 import React from 'react';
 import { TabFile } from '../types/file';
 import { formatFileSize } from '../services/fileDetector';
-import { RefreshCw, FileText, ShieldCheck } from 'lucide-react';
+import { RefreshCw, FileText, ShieldCheck, Binary } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { Separator } from './ui/separator';
 
 interface FooterProps {
   activeTab: TabFile | null;
   onOpenChangelog: () => void;
-  onToggleViewMode: () => void;
+  onToggleViewMode?: () => void;
   onOpenLiveSyncDashboard?: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({
   activeTab,
   onOpenChangelog,
+  onToggleViewMode,
   onOpenLiveSyncDashboard
 }) => {
   return (
@@ -47,6 +47,24 @@ export const Footer: React.FC<FooterProps> = ({
               {activeTab.extension || activeTab.category}
             </Badge>
 
+            {onToggleViewMode && (
+              <>
+                <span className="text-border">/</span>
+                <button
+                  onClick={onToggleViewMode}
+                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded transition-colors cursor-pointer text-[10px] font-mono ${
+                    activeTab.viewMode === 'hex'
+                      ? 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 font-semibold'
+                      : 'hover:text-foreground text-muted-foreground'
+                  }`}
+                  title={activeTab.viewMode === 'hex' ? 'Return to standard preview' : 'Inspect binary hex bytes'}
+                >
+                  <Binary className="w-3 h-3 text-cyan-500" />
+                  <span>{activeTab.viewMode === 'hex' ? 'HEX' : 'Hex'}</span>
+                </button>
+              </>
+            )}
+
             {activeTab.liveSyncActive && (
               <>
                 <span className="text-border">/</span>
@@ -65,7 +83,7 @@ export const Footer: React.FC<FooterProps> = ({
             )}
           </>
         ) : (
-          <span className="text-muted-foreground text-[11px]">No active workspace tab</span>
+          <span className="text-muted-foreground text-[11px]">Ready for files</span>
         )}
       </div>
 
@@ -93,7 +111,7 @@ export const Footer: React.FC<FooterProps> = ({
           className="h-6 px-2 text-[10px] font-mono text-muted-foreground hover:text-foreground"
           title="View Changelog & Release Notes"
         >
-          v2.8.1
+          v2.9.3
         </Button>
       </div>
     </footer>
