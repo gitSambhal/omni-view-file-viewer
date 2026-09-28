@@ -123,6 +123,61 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = ({ arrayBuffer, tex
   const sqlConsoleContainerRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef<boolean>(false);
 
+  // Helper to create a case-insensitive row proxy for SQL queries
+  const createCaseInsensitiveRow = (colMap: Record<string, any>) => {
+    const lowerMap = new Map<string, any>();
+    for (const [k, v] of Object.entries(colMap)) {
+      lowerMap.set(k.toLowerCase(), v);
+      lowerMap.set(k.toLowerCase().replace(/[^a-z0-9]/g, ''), v);
+    }
+    return new Proxy(colMap, {
+      get(target, prop) {
+        if (typeof prop === 'string') {
+          const lower = prop.toLowerCase();
+          if (lowerMap.has(lower)) return lowerMap.get(lower);
+          const stripped = lower.replace(/[^a-z0-9]/g, '');
+          if (lowerMap.has(stripped)) return lowerMap.get(stripped);
+        }
+        return (target as any)[prop];
+      },
+      has(target, prop) {
+        if (typeof prop === 'string') {
+          const lower = prop.toLowerCase();
+          if (lowerMap.has(lower) || lowerMap.has(lower.replace(/[^a-z0-9]/g, ''))) return true;
+        }
+        return prop in target;
+      }
+    });
+  };
+
+  // Helper to preprocess SQL queries so double-quoted identifiers are converted to bracketed identifiers
+  const preprocessSqlQuery = (sql: string, parseResult: ParsedDatabaseResult | null): string => {
+    if (!parseResult) return sql;
+    const knownSet = new Set<string>();
+    for (const t of parseResult.tables) {
+      knownSet.add(t.name.toLowerCase());
+      knownSet.add(t.name.toLowerCase().replace(/[^a-z0-9_]/g, '_'));
+      for (const c of t.columns) {
+        knownSet.add(c.toLowerCase());
+        knownSet.add(c.toLowerCase().replace(/[^a-z0-9_]/g, '_'));
+        knownSet.add(c.toLowerCase().replace(/[^a-z0-9]/g, ''));
+      }
+    }
+
+    return sql.replace(/(?:FROM|JOIN|INTO|UPDATE|TABLE)\s+"([a-zA-Z0-9_]+)"|'([^'\\]|\\.)*'|"([a-zA-Z0-9_]+)"/gi, (match, tableMatch, _singleQuoteContent, colMatch) => {
+      if (tableMatch) {
+        return match.replace(`"${tableMatch}"`, `[${tableMatch}]`);
+      }
+      if (colMatch) {
+        if (knownSet.has(colMatch.toLowerCase()) || knownSet.has(colMatch.toLowerCase().replace(/[^a-z0-9]/g, ''))) {
+          return `[${colMatch}]`;
+        }
+        return match;
+      }
+      return match;
+    });
+  };
+
   // Initialize and parse the database
   const initializeDatabase = () => {
     setParseLoading(true);
@@ -131,8 +186,39 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = ({ arrayBuffer, tex
     setDbInstanceId(newDbName);
 
     try {
+      // 0. Ensure AlaSQL runs in case-insensitive mode for columns & tables
+      alasql.options.casesensitive = false;
+
       // 1. Create clean isolated in-memory AlaSQL database
       alasql(`CREATE DATABASE ${newDbName}; USE ${newDbName};`);
+
+      const currentDb = alasql.databases[newDbName];
+      if (currentDb && currentDb.tables && !(currentDb.tables as any).__proxied) {
+        const origTables = currentDb.tables;
+        currentDb.tables = new Proxy(origTables, {
+          get(target, prop) {
+            if (prop === '__proxied') return true;
+            if (typeof prop === 'string') {
+              const lower = prop.toLowerCase();
+              if (lower in target) return (target as any)[lower];
+              for (const k of Object.keys(target)) {
+                if (k.toLowerCase() === lower) return (target as any)[k];
+              }
+            }
+            return (target as any)[prop];
+          },
+          has(target, prop) {
+            if (typeof prop === 'string') {
+              const lower = prop.toLowerCase();
+              if (lower in target) return true;
+              for (const k of Object.keys(target)) {
+                if (k.toLowerCase() === lower) return true;
+              }
+            }
+            return prop in target;
+          }
+        });
+      }
 
       // 2. Parse using universal database parser
       const result = parseUniversalDatabase(arrayBuffer, textContent, filename);
@@ -150,17 +236,59 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = ({ arrayBuffer, tex
         try {
           alasql(`CREATE TABLE IF NOT EXISTS ${safeTableName} (${safeCols.join(', ')});`);
 
-          if (table.rows && table.rows.length > 0) {
-            // Bulk insert rows
-            const insertObjects = table.rows.map(row => {
-              const obj: Record<string, any> = {};
-              table.columns.forEach((col, idx) => {
-                const colSafe = col.replace(/[^a-zA-Z0-9_]/g, '_') || `col_${idx + 1}`;
-                obj[colSafe] = row[idx];
+          const lowerName = safeTableName.toLowerCase();
+          const targetTable = (currentDb && currentDb.tables && (currentDb.tables as any)[lowerName]) ||
+            (alasql.tables && alasql.tables[lowerName]) ||
+            (alasql.tables && alasql.tables[safeTableName]);
+
+          if (targetTable) {
+            // Case-insensitive xcolumns proxy for bracketed / uppercase column access
+            if (targetTable.xcolumns && !(targetTable.xcolumns as any).__proxied) {
+              const origXcolumns = targetTable.xcolumns;
+              targetTable.xcolumns = new Proxy(origXcolumns, {
+                get(target, prop) {
+                  if (prop === '__proxied') return true;
+                  if (typeof prop === 'string') {
+                    const lower = prop.toLowerCase();
+                    if (lower in target) return { ...target[lower], columnid: prop };
+                    const stripped = lower.replace(/[^a-z0-9]/g, '');
+                    for (const k of Object.keys(target)) {
+                      if (k.toLowerCase().replace(/[^a-z0-9]/g, '') === stripped) {
+                        return { ...target[k], columnid: prop };
+                      }
+                    }
+                  }
+                  return (target as any)[prop];
+                },
+                has(target, prop) {
+                  if (typeof prop === 'string') {
+                    const lower = prop.toLowerCase();
+                    if (lower in target) return true;
+                    const stripped = lower.replace(/[^a-z0-9]/g, '');
+                    for (const k of Object.keys(target)) {
+                      if (k.toLowerCase().replace(/[^a-z0-9]/g, '') === stripped) return true;
+                    }
+                  }
+                  return prop in target;
+                }
               });
-              return obj;
-            });
-            alasql.tables[safeTableName].data = insertObjects;
+            }
+
+            if (table.rows && table.rows.length > 0) {
+              // Bulk insert rows with multi-case indexing and Case-Insensitive Proxy
+              const insertObjects = table.rows.map(row => {
+                const rawObj: Record<string, any> = {};
+                table.columns.forEach((col, idx) => {
+                  const colSafe = col.replace(/[^a-zA-Z0-9_]/g, '_') || `col_${idx + 1}`;
+                  const val = row[idx];
+                  rawObj[colSafe] = val;
+                  rawObj[colSafe.toLowerCase()] = val;
+                  rawObj[col.toLowerCase()] = val;
+                });
+                return createCaseInsensitiveRow(rawObj);
+              });
+              targetTable.data = insertObjects;
+            }
           }
         } catch (tblErr: any) {
           console.warn(`[DatabaseViewer] Non-fatal note registering table ${safeTableName}:`, tblErr);
@@ -270,13 +398,34 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = ({ arrayBuffer, tex
     const startTime = performance.now();
 
     try {
+      alasql.options.casesensitive = false;
       alasql(`USE ${dbInstanceId};`);
-      const result = alasql(q);
+      const processedQuery = preprocessSqlQuery(q, dbParseResult);
+      const result = alasql(processedQuery);
       const timeMs = (performance.now() - startTime).toFixed(1);
 
       if (Array.isArray(result) && result.length > 0 && typeof result[0] === 'object' && result[0] !== null) {
-        const columns = Object.keys(result[0]);
-        const rows = result.map(item => columns.map(c => item[c]));
+        const rawColumns = Object.keys(result[0]);
+
+        // Map column names back to original schema casing if available
+        const colCaseMap = new Map<string, string>();
+        if (dbParseResult) {
+          for (const t of dbParseResult.tables) {
+            for (const col of t.columns) {
+              const safe = col.replace(/[^a-zA-Z0-9_]/g, '_');
+              colCaseMap.set(col.toLowerCase(), col);
+              colCaseMap.set(safe.toLowerCase(), col);
+              colCaseMap.set(safe.toLowerCase().replace(/[^a-z0-9]/g, ''), col);
+            }
+          }
+        }
+
+        const columns = rawColumns.map(col => {
+          const lower = col.toLowerCase();
+          return colCaseMap.get(lower) || colCaseMap.get(lower.replace(/[^a-z0-9]/g, '')) || col;
+        });
+
+        const rows = result.map(item => rawColumns.map(c => item[c]));
         setQueryResult({
           columns,
           rows,

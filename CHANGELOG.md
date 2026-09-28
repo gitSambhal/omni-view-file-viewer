@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.9.4] - 2026-09-28
+
+### Fixed
+- **In-Memory SQL Query Runner Case-Insensitive Column & Table Name Support**:
+  - Fixed query runner throwing `Column does not exist: <column>` or returning empty results when column names in SQL queries did not match the exact case of table definitions.
+  - Enabled `alasql.options.casesensitive = false` globally and across both `DatabaseViewer` and `runSQL` code runner.
+  - Added robust case-insensitive `Proxy` wrappers for database table catalogs (`xcolumns`, `tables`, and row data records) ensuring seamless evaluation across lowercase (`firstname`), uppercase (`FIRSTNAME`), camelCase (`firstName`), snake_case (`first_name`), and bracketed identifiers (`[FirstName]`).
+  - Added query preprocessor to convert SQL-standard double-quoted identifiers (`"FirstName"`, `"Customers"`) to bracketed identifiers while protecting string literal values.
+  - Preserved original schema column casing when displaying query results in the output table and export files (CSV, JSON, TSV).
+
 ## [2.9.3] - 2026-09-28
 
 ### Added

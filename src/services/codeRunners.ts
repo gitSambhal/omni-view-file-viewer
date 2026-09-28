@@ -871,6 +871,42 @@ export async function runSQL(
   sqlCode: string,
   addLog: (type: ConsoleLogItem['type'], content: any, tableData?: any) => void
 ): Promise<void> {
+  // Ensure AlaSQL runs in case-insensitive mode for table and column lookups
+  alasql.options.casesensitive = false;
+
+  // Ensure active database tables dictionary is case-insensitive
+  try {
+    const activeDb = alasql.databases[alasql.useid] || alasql.databases['alasql'];
+    if (activeDb && activeDb.tables && !(activeDb.tables as any).__proxied) {
+      const origTables = activeDb.tables;
+      activeDb.tables = new Proxy(origTables, {
+        get(target, prop) {
+          if (prop === '__proxied') return true;
+          if (typeof prop === 'string') {
+            const lower = prop.toLowerCase();
+            if (lower in target) return (target as any)[lower];
+            for (const k of Object.keys(target)) {
+              if (k.toLowerCase() === lower) return (target as any)[k];
+            }
+          }
+          return (target as any)[prop];
+        },
+        has(target, prop) {
+          if (typeof prop === 'string') {
+            const lower = prop.toLowerCase();
+            if (lower in target) return true;
+            for (const k of Object.keys(target)) {
+              if (k.toLowerCase() === lower) return true;
+            }
+          }
+          return prop in target;
+        }
+      });
+    }
+  } catch (_e) {
+    // Non-fatal
+  }
+
   const statements = sqlCode
     .split(';')
     .map(s => s.trim())
@@ -882,12 +918,52 @@ export async function runSQL(
   }
 
   for (const stmt of statements) {
-    const isSelect = /^\s*SELECT\b/i.test(stmt);
-    const isCreate = /^\s*CREATE\b/i.test(stmt);
-    const isInsert = /^\s*INSERT\b/i.test(stmt);
-
     try {
-      const result = alasql(stmt);
+      // Normalize double-quoted identifiers to bracketed [ident] outside single quotes
+      const normalizedStmt = stmt.replace(/'(?:[^'\\]|\\.)*'|"([a-zA-Z0-9_]+)"/g, (match, ident) => {
+        if (ident) return `[${ident}]`;
+        return match;
+      });
+
+      const result = alasql(normalizedStmt);
+
+      // Make any newly created table's xcolumns case-insensitive
+      try {
+        const activeDb = alasql.databases[alasql.useid] || alasql.databases['alasql'];
+        if (activeDb && activeDb.tables) {
+          for (const tblName of Object.keys(activeDb.tables)) {
+            const t = (activeDb.tables as any)[tblName];
+            if (t && t.xcolumns && !t.xcolumns.__proxied) {
+              const origXcols = t.xcolumns;
+              t.xcolumns = new Proxy(origXcols, {
+                get(target, prop) {
+                  if (prop === '__proxied') return true;
+                  if (typeof prop === 'string') {
+                    const lower = prop.toLowerCase();
+                    if (lower in target) return { ...target[lower], columnid: prop };
+                    for (const k of Object.keys(target)) {
+                      if (k.toLowerCase() === lower) return { ...target[k], columnid: prop };
+                    }
+                  }
+                  return (target as any)[prop];
+                },
+                has(target, prop) {
+                  if (typeof prop === 'string') {
+                    const lower = prop.toLowerCase();
+                    if (lower in target) return true;
+                    for (const k of Object.keys(target)) {
+                      if (k.toLowerCase() === lower) return true;
+                    }
+                  }
+                  return prop in target;
+                }
+              });
+            }
+          }
+        }
+      } catch (_proxyErr) {
+        // Non-fatal
+      }
 
       if (Array.isArray(result) && result.length > 0 && typeof result[0] === 'object') {
         const columns = Object.keys(result[0]);
