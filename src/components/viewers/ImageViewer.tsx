@@ -251,8 +251,8 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
           )}
 
           {/* Mouse Wheel Zoom Guide overlay badge */}
-          <div className="absolute bottom-3 left-3 bg-slate-900/80 text-slate-300 text-[11px] font-mono px-3 py-1.5 rounded-full backdrop-blur border border-slate-700 flex items-center gap-1.5 pointer-events-none">
-            <Move className="w-3 h-3 text-pink-400" /> Scroll wheel to Zoom | Click & Drag to Pan
+          <div className="absolute bottom-3 left-3 bg-[#1C1C1E] text-neutral-300 text-[11px] font-mono px-3 py-1.5 rounded-full border border-neutral-800 shadow-md flex items-center gap-1.5 pointer-events-none">
+            <Move className="w-3 h-3 text-pink-400" /> Scroll wheel to Zoom · Click & Drag to Pan
           </div>
         </div>
 

@@ -30,6 +30,7 @@ import {
   Check
 } from 'lucide-react';
 import { Theme } from '../hooks/useTheme';
+import { useAccentColor } from '../hooks/useAccentColor';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
@@ -83,24 +84,62 @@ export const Header: React.FC<HeaderProps> = ({
   liveSyncCount,
   isSyncing = false
 }) => {
+  const { accent, setAccent, accentOptions, activeOption } = useAccentColor();
+
   return (
-    <header className="flex items-center justify-between px-3 md:px-4 py-2 bg-background/95 backdrop-blur-md border-b border-border text-foreground select-none gap-3 transition-colors z-40 shrink-0">
-      {/* Left: Sidebar Toggle, Brand & Attribution */}
-      <div className="flex items-center gap-2.5 min-w-0">
+    <header className="flex items-center justify-between px-3 md:px-4 py-2 bg-card border-b border-border text-foreground select-none gap-3 transition-colors z-40 shrink-0">
+      {/* Left: macOS Window Traffic Lights, Sidebar Toggle, Brand & Attribution */}
+      <div className="flex items-center gap-3 min-w-0">
+        {/* macOS Window Controls */}
+        <div className="hidden sm:flex items-center gap-2 pr-1">
+          <button
+            onClick={() => {
+              if (onOpenChangelog) onOpenChangelog();
+            }}
+            className="w-3 h-3 rounded-full bg-[#FF5F56] hover:brightness-90 transition-all border border-black/10 cursor-pointer flex items-center justify-center group"
+            title="About OmniView & Release Notes"
+            aria-label="Window Close / Info"
+          >
+            <span className="opacity-0 group-hover:opacity-100 text-[8px] font-bold leading-none text-[#7D0000]">×</span>
+          </button>
+          <button
+            onClick={onToggleSidebar}
+            className="w-3 h-3 rounded-full bg-[#FFBD2E] hover:brightness-90 transition-all border border-black/10 cursor-pointer flex items-center justify-center group"
+            title="Toggle Sidebar (⌘B)"
+            aria-label="Toggle Sidebar"
+          >
+            <span className="opacity-0 group-hover:opacity-100 text-[8px] font-bold leading-none text-[#995700]">–</span>
+          </button>
+          <button
+            onClick={() => {
+              if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+              } else {
+                document.exitFullscreen().catch(() => {});
+              }
+            }}
+            className="w-3 h-3 rounded-full bg-[#27C93F] hover:brightness-90 transition-all border border-black/10 cursor-pointer flex items-center justify-center group"
+            title="Toggle Fullscreen"
+            aria-label="Toggle Fullscreen"
+          >
+            <span className="opacity-0 group-hover:opacity-100 text-[7px] font-bold leading-none text-[#006500]">⤢</span>
+          </button>
+        </div>
+
         {onToggleSidebar && (
           <Button
             variant={isSidebarOpen ? "secondary" : "ghost"}
             size="icon-xs"
             onClick={onToggleSidebar}
-            title="Toggle Explorer Sidebar (Ctrl+B)"
+            title="Toggle Explorer Sidebar (⌘B)"
             aria-label="Toggle Workspace Sidebar"
           >
-            <PanelLeft className="w-4 h-4" />
+            <PanelLeft className="w-3.5 h-3.5" />
           </Button>
         )}
 
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-7 h-7 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shadow-xs shrink-0 font-bold">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-6.5 h-6.5 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shadow-xs shrink-0 font-bold">
             <Layers className="w-3.5 h-3.5" />
           </div>
           <div className="min-w-0 flex items-center gap-2">
@@ -109,16 +148,11 @@ export const Header: React.FC<HeaderProps> = ({
                 OmniView
               </span>
               <span className="text-[11px] font-normal text-muted-foreground hidden sm:inline">
-                File Viewer
+                Studio
               </span>
             </div>
 
-            <Badge variant="outline" className="hidden lg:inline-flex items-center gap-1.5 px-2 py-0 text-[10px] font-mono">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Offline</span>
-            </Badge>
-
-            <span className="text-border text-xs hidden sm:inline">•</span>
+            <span className="text-muted-foreground/60 text-xs hidden sm:inline">·</span>
 
             <span className="text-[11px] text-muted-foreground truncate hidden sm:inline">
               by{' '}
@@ -135,18 +169,18 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Center: Sleek Spotlight Search Trigger */}
+      {/* Center: Apple Spotlight Search Trigger (No Glass Blur) */}
       {onOpenCommandPalette && (
         <button
           onClick={onOpenCommandPalette}
-          className="hidden md:flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-muted/60 hover:bg-muted border border-border text-muted-foreground hover:text-foreground transition-all cursor-pointer min-w-[260px] lg:min-w-[340px] shadow-2xs group"
-          title="Search files, actions & tools (Ctrl+K)"
+          className="hidden md:flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-secondary/80 hover:bg-secondary border border-border text-muted-foreground hover:text-foreground transition-all cursor-pointer min-w-[260px] lg:min-w-[340px] shadow-2xs group"
+          title="Search files, actions & tools (⌘K)"
         >
           <Search className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
           <span className="text-xs text-muted-foreground font-normal truncate">
             Search files, tools & commands...
           </span>
-          <kbd className="ml-auto inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground bg-background rounded border border-border shadow-2xs">
+          <kbd className="ml-auto inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground bg-card rounded border border-border shadow-2xs">
             ⌘K
           </kbd>
         </button>
@@ -157,7 +191,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Unified "Open" Menu Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="default" size="sm" className="h-8 gap-1.5 px-3 text-xs">
+            <Button variant="default" size="sm" className="h-7.5 gap-1.5 px-3 text-xs">
               <FolderOpen className="w-3.5 h-3.5" />
               <span>Open</span>
               <ChevronDown className="w-3 h-3 opacity-80" />
@@ -168,7 +202,7 @@ export const Header: React.FC<HeaderProps> = ({
               <FolderOpen className="w-4 h-4 text-blue-500 mr-2" />
               <div>
                 <p className="font-medium text-xs">Local Files</p>
-                <p className="text-[10px] text-muted-foreground">Browse disk (Ctrl+O)</p>
+                <p className="text-[10px] text-muted-foreground">Browse disk (⌘O)</p>
               </div>
             </DropdownMenuItem>
             {onOpenUrlModal && (
@@ -185,7 +219,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <ClipboardPaste className="w-4 h-4 text-emerald-500 mr-2" />
                 <div>
                   <p className="font-medium text-xs">Paste from Clipboard</p>
-                  <p className="text-[10px] text-muted-foreground">Text, code or images (Ctrl+V)</p>
+                  <p className="text-[10px] text-muted-foreground">Text, code or images (⌘V)</p>
                 </div>
               </DropdownMenuItem>
             )}
@@ -225,14 +259,14 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Unified "Tools" Menu Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-8 gap-1.5 px-3 text-xs">
+            <Button variant="outline" size="sm" className="h-7.5 gap-1.5 px-3 text-xs">
               <SlidersHorizontal className="w-3.5 h-3.5 text-muted-foreground" />
               <span className="hidden sm:inline">Tools</span>
               {liveSyncCount > 0 && (
-                <Badge variant="default" className="bg-emerald-600 hover:bg-emerald-600 text-white text-[9px] px-1.5 py-0 h-4">
-                  <span className={`w-1.5 h-1.5 rounded-full bg-white mr-1 ${isSyncing ? 'animate-ping' : ''}`} />
-                  {liveSyncCount}
-                </Badge>
+                <span className="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-600 dark:text-emerald-400">
+                  <span className={`w-1.5 h-1.5 rounded-full bg-emerald-500 ${isSyncing ? 'animate-ping' : ''}`} />
+                  <span>{liveSyncCount}</span>
+                </span>
               )}
               <ChevronDown className="w-3 h-3 opacity-60" />
             </Button>
@@ -280,13 +314,52 @@ export const Header: React.FC<HeaderProps> = ({
               </DropdownMenuItem>
             )}
             <DropdownMenuItem onClick={onOpenChangelog}>
-              <Info className="w-3.5 h-3.5 text-purple-500 mr-2" />
-              <span>Release Notes (v2.9.4)</span>
+              <Info className="w-3.5 h-3.5 text-primary mr-2" />
+              <span>Release Notes (v3.1.0)</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
         <Separator orientation="vertical" className="h-4 mx-0.5" />
+
+        {/* Dynamic Primary Accent Selector */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              className="text-muted-foreground hover:text-foreground relative rounded-full"
+              title={`Accent Color: ${activeOption.label}`}
+              aria-label="Change Accent Color"
+            >
+              <Palette className="w-3.5 h-3.5 text-foreground" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuLabel className="text-[11px] font-medium text-muted-foreground">
+              Primary Accent Color
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {accentOptions.map(opt => (
+              <DropdownMenuItem
+                key={opt.id}
+                onClick={() => setAccent(opt.id)}
+                className="flex items-center justify-between text-xs cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5">
+                  <span
+                    className="w-3 h-3 rounded-full shrink-0 border border-black/10"
+                    style={{ backgroundColor: theme === 'dark' ? opt.darkHex : opt.lightHex }}
+                  />
+                  <span className={accent === opt.id ? 'font-semibold text-foreground' : 'text-muted-foreground'}>
+                    {opt.label}
+                  </span>
+                </div>
+                {accent === opt.id && <Check className="w-3.5 h-3.5 text-primary" />}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* Dark / Light Mode Toggle */}
         <Button
@@ -295,8 +368,9 @@ export const Header: React.FC<HeaderProps> = ({
           onClick={onToggleTheme}
           title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`}
           aria-label="Toggle color theme"
+          className="rounded-full"
         >
-          {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
+          {theme === 'dark' ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-neutral-600" />}
         </Button>
       </div>
     </header>

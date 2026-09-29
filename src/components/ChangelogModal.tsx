@@ -34,7 +34,7 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, onClose 
             <div>
               <DialogTitle className="text-base font-bold">What's New in OmniView File Studio</DialogTitle>
               <DialogDescription className="text-xs mt-0.5">
-                Release Version v2.6.0 with shadcn/ui Design System
+                Release Version v3.1.0 with Electric Indigo & Dynamic Accent Theme Engine
               </DialogDescription>
             </div>
           </div>
@@ -42,18 +42,82 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, onClose 
 
         <ScrollArea className="max-h-[65vh] p-5">
           <div className="space-y-4 text-sm leading-relaxed">
-            {/* v2.6.0 Highlights */}
+            {/* v3.1.0 Highlights */}
             <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 font-semibold text-foreground">
                   <Sparkles className="w-4 h-4 text-primary" />
-                  <span>Version 2.6.0 - shadcn/ui Redesign & Theme Tokens</span>
+                  <span>Version 3.1.0 - Electric Indigo Primary & Dynamic Accent Engine</span>
                 </div>
-                <Badge variant="default">Latest</Badge>
+                <span className="text-[11px] font-mono font-semibold text-primary">Latest</span>
               </div>
               <ul className="space-y-1.5 text-xs text-muted-foreground list-disc list-inside">
-                <li><strong>shadcn/ui Component System:</strong> Integrated Radix UI primitives, standard Buttons, Badges, Tabs, Dropdowns, Dialogs, Tooltips, Sliders, and Sonner alerts.</li>
-                <li><strong>Refined Enterprise Theme Tokens:</strong> Clean CSS variables with light and dark contrast modes, smooth animations, and accessibility compliance.</li>
+                <li><strong>Fresh Primary Identity:</strong> Modern Electric Indigo (<code>#4F46E5</code> / <code>#6366F1</code>) replaced legacy blue, giving the studio a bold, high-contrast, professional developer aesthetic.</li>
+                <li><strong>Interactive Accent Switcher:</strong> Instant header dropdown to switch between 6 vibrant themes: Electric Indigo, Electric Violet, Cyber Emerald, Ocean Cyan, Sunset Amber, and Neon Rose.</li>
+                <li><strong>Refined Slate & Obsidian Surfaces:</strong> Crisp Slate White canvas (<code>#F8F9FC</code>) and Obsidian dark canvas (<code>#0B0C10</code>) with razor-sharp borders and zero glass blur.</li>
+                <li><strong>Docked Active Tab Indicators:</strong> TabBar active tab now sports a top accent line docking seamlessly into the viewport.</li>
+              </ul>
+            </div>
+
+            {/* v3.0.0 Highlights */}
+            <div className="bg-secondary/40 border border-border rounded-xl p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 font-semibold text-foreground">
+                  <Layers className="w-4 h-4 text-primary" />
+                  <span>Version 3.0.0 - Modern Studio Redesign & Best Practices UI Components</span>
+                </div>
+                <span className="text-[11px] font-mono text-muted-foreground">v3.0.0</span>
+              </div>
+              <ul className="space-y-1.5 text-xs text-muted-foreground list-disc list-inside">
+                <li><strong>Modern Workspace Architecture:</strong> Single-elevation depth, responsive 1440px desktop layout integrity, and 60-30-10 color distribution with zero glass blur.</li>
+                <li><strong>Universal Zero-Pill Compliance:</strong> Replaced static candy pill tags and bordered chips with clean unboxed text and typographic bullet separators.</li>
+                <li><strong>High-Fidelity Radix Components:</strong> Polished accessible Dialogs, Dropdown Menus, Context Menus, and Scroll Areas with tactile physics (<code>active:scale-[0.98]</code>).</li>
+                <li><strong>Strict Tabular Figures:</strong> Enforced <code>font-mono tabular-nums</code> across all numeric displays, file sizes, offsets, and counters.</li>
+              </ul>
+            </div>
+
+            {/* v2.9.6 Highlights */}
+            <div className="bg-secondary/40 border border-border rounded-xl p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 font-semibold text-foreground">
+                  <Layers className="w-4 h-4 text-primary" />
+                  <span>Version 2.9.6 - Dependency Optimizer & Stale Chunk Resolution</span>
+                </div>
+                <span className="text-[11px] font-mono text-muted-foreground">v2.9.6</span>
+              </div>
+              <ul className="space-y-1.5 text-xs text-muted-foreground list-disc list-inside">
+                <li><strong>Vite Pre-bundler Compatibility:</strong> Configured <code>optimizeDeps.exclude</code> for <code>pdfjs-dist</code> with modern ES module execution.</li>
+                <li><strong>Native ESNext Build Target:</strong> Guaranteed modern top-level await and Web Worker threading support across all document viewers.</li>
+              </ul>
+            </div>
+
+            {/* v2.9.5 Highlights */}
+            <div className="bg-secondary/40 border border-border rounded-xl p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 font-semibold text-foreground">
+                  <Layers className="w-4 h-4 text-primary" />
+                  <span>Version 2.9.5 - Apple HIG UI/UX Redesign (Zero Glass UI)</span>
+                </div>
+                <span className="text-[11px] font-mono text-muted-foreground">v2.9.5</span>
+              </div>
+              <ul className="space-y-1.5 text-xs text-muted-foreground list-disc list-inside">
+                <li><strong>Apple Human Interface Guidelines (HIG):</strong> Re-engineered design system with San Francisco typography hierarchy, Apple squircle radii (10px), authentic macOS traffic light window controls, and solid Apple palettes (#F5F5F7 canvas, #FFFFFF cards, #0071E3 accent blue).</li>
+                <li><strong>Strict Zero Glass UI Discipline:</strong> Completely eliminated frosted glass, translucent blurs, and backdrop filters in favor of crisp, opaque, physical surfaces with high-clarity contrast.</li>
+                <li><strong>Apple Segmented Controls:</strong> Integrated physical segmented slider controls across workspace category filters, engine selectors, and format toggles.</li>
+                <li><strong>Spotlight Command Palette:</strong> Revamped keyboard command palette (⌘K) to mirror macOS Spotlight with refined keyboard navigation, clean list hierarchy, and instant search.</li>
+                <li><strong>macOS Safari & Finder Tabs:</strong> Restyled tab bar with physical tab docking, seamless content integration, and refined close affordances.</li>
+              </ul>
+            </div>
+
+            {/* v2.9.4 Highlights */}
+            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 space-y-2">
+              <div className="flex items-center gap-2 font-semibold text-emerald-600 dark:text-emerald-400">
+                <Database className="w-4 h-4" />
+                <span>Version 2.9.4 - Case-Insensitive SQL Column & Identifier Matching</span>
+              </div>
+              <ul className="space-y-1.5 text-xs text-muted-foreground list-disc list-inside">
+                <li><strong>In-Memory Query Engine:</strong> Configured case-insensitive identifier resolution across table names and columns for seamless querying regardless of schema casing.</li>
+                <li><strong>Identifier Quoting Support:</strong> Supported double-quoted and bracketed column and table identifiers in SQLite and AlaSQL statements.</li>
               </ul>
             </div>
 

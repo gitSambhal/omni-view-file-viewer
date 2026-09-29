@@ -1013,18 +1013,18 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
     >
       {/* App-Level Fullscreen Drag & Drop Overlay */}
       {isDraggingOverApp && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex flex-col items-center justify-center p-6 border-4 border-dashed border-blue-500 animate-in fade-in duration-150 pointer-events-none">
-          <div className="bg-slate-900/95 border border-blue-500/40 p-8 rounded-3xl shadow-2xl flex flex-col items-center text-center max-w-md space-y-4">
-            <div className="w-16 h-16 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center animate-bounce">
+        <div className="fixed inset-0 z-50 bg-black/60 flex flex-col items-center justify-center p-6 border-4 border-dashed border-primary animate-in fade-in duration-150 pointer-events-none">
+          <div className="bg-card border border-primary/40 p-8 rounded-3xl shadow-2xl flex flex-col items-center text-center max-w-md space-y-4">
+            <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center animate-bounce">
               <Upload className="w-8 h-8" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-xl font-bold text-white">Drop files to open in OmniView</h3>
-              <p className="text-xs text-slate-300">
+              <h3 className="text-xl font-semibold text-foreground">Drop files to open in OmniView</h3>
+              <p className="text-xs text-muted-foreground">
                 Release anywhere to open in dedicated tabs with 100% offline privacy.
               </p>
             </div>
-            <div className="flex items-center gap-2 text-[11px] font-mono text-blue-400 bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20">
+            <div className="flex items-center gap-2 text-[11px] font-mono text-primary bg-secondary px-3 py-1.5 rounded-lg border border-border">
               <span>MP4, MKV, Code, ENV, YAML, Logs, PDF & 50+ formats</span>
             </div>
           </div>
@@ -1109,11 +1109,11 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
               />
             ) : activeTab.viewMode === 'hex' ? (
           <div className="w-full flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden relative">
-            {/* Top Reader Subheader Bar */}
-            <div className="h-9 px-3 bg-card/60 backdrop-blur-md border-b border-border text-xs text-muted-foreground select-none shrink-0 relative z-30 flex items-center justify-between">
+            {/* Top Reader Subheader Bar - Solid Apple Chrome Toolbar */}
+            <div className="h-9 px-3 bg-card border-b border-border text-xs text-muted-foreground select-none shrink-0 relative z-30 flex items-center justify-between">
               <div className="flex items-center gap-2 min-w-0">
                 <span className="font-medium text-foreground truncate max-w-xs">{activeTab.name}</span>
-                <span className="text-[11px] font-mono text-muted-foreground">({(activeTab.size / 1024).toFixed(1)} KB)</span>
+                <span className="text-[11px] font-mono tabular-nums text-muted-foreground">({(activeTab.size / 1024).toFixed(1)} KB)</span>
               </div>
               <ReaderSwitcher
                 activeTab={activeTab}
@@ -1129,19 +1129,23 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
         ) : (
           /* Render category specific viewer with dynamic Reader Switcher */
           <div className="w-full flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden relative">
-            {/* Top Reader Subheader Bar */}
-            <div className="h-9 px-3 bg-card/60 backdrop-blur-md border-b border-border text-xs text-muted-foreground select-none shrink-0 relative z-30 flex items-center justify-between">
+            {/* Top Reader Subheader Bar - Solid Apple Chrome Toolbar */}
+            <div className="h-9 px-3 bg-card border-b border-border text-xs text-muted-foreground select-none shrink-0 relative z-30 flex items-center justify-between">
               <div className="flex items-center gap-2 min-w-0">
                 <span className="font-medium text-foreground truncate max-w-xs">{activeTab.name}</span>
-                <span className="text-[11px] font-mono text-muted-foreground">
+                <span className="text-[11px] font-mono tabular-nums text-muted-foreground">
                   {activeTab.size > 1024 * 1024
                     ? `${(activeTab.size / (1024 * 1024)).toFixed(2)} MB`
                     : `${(activeTab.size / 1024).toFixed(1)} KB`}
                 </span>
                 {activeTab.liveSyncActive && (
-                  <span className="hidden sm:inline-flex items-center gap-1 text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded font-mono">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live Sync
-                  </span>
+                  <>
+                    <span className="text-border">·</span>
+                    <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-mono">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span>Live Sync</span>
+                    </span>
+                  </>
                 )}
               </div>
               <ReaderSwitcher

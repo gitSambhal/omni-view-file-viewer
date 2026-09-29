@@ -126,8 +126,8 @@ export const TabBar: React.FC<TabBarProps> = ({
   };
 
   return (
-    <div className="flex items-center bg-muted/40 border-b border-border px-2 overflow-x-auto select-none no-scrollbar transition-colors">
-      <div className="flex items-center gap-1 py-1 flex-1 min-w-0">
+    <div className="flex items-center bg-background border-b border-border px-2 overflow-x-auto select-none no-scrollbar transition-colors h-9 shrink-0">
+      <div className="flex items-end gap-1 flex-1 min-w-0 h-full">
         {tabs.map(tab => {
           const isActive = tab.id === activeTabId;
 
@@ -138,10 +138,10 @@ export const TabBar: React.FC<TabBarProps> = ({
                   ref={isActive ? activeTabRef : null}
                   onClick={() => onSelectTab(tab.id)}
                   data-active-tab={isActive ? "true" : "false"}
-                  className={`group relative flex items-center gap-2 px-3 py-1.5 rounded-t-md text-xs cursor-pointer transition-all max-w-[220px] shrink-0 ${
+                  className={`group relative flex items-center gap-2 px-3 py-1.5 rounded-t-lg text-xs cursor-pointer transition-all max-w-[220px] shrink-0 h-8 ${
                     isActive
-                      ? 'bg-background border-t-2 border-t-primary border-x border-b-0 border-border text-foreground font-medium shadow-2xs -mb-px z-10'
-                      : 'border border-transparent hover:bg-muted text-muted-foreground hover:text-foreground'
+                      ? 'bg-card border-t-2 border-t-primary border-x border-border text-foreground font-medium shadow-[0_1px_3px_rgba(0,0,0,0.06)] -mb-px z-10'
+                      : 'border border-transparent hover:bg-secondary/70 text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   {getCategoryIcon(tab.category)}
@@ -173,7 +173,7 @@ export const TabBar: React.FC<TabBarProps> = ({
                   {/* Close button */}
                   <button
                     onClick={e => onCloseTab(tab.id, e)}
-                    className="p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 cursor-pointer"
+                    className="p-0.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 cursor-pointer"
                     title="Close Tab"
                   >
                     <X className="w-3 h-3" />

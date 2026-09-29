@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.1.0] - 2026-09-29
+
+### Added
+- **Fresh Primary Color System & Dynamic Accent Selector**:
+  - Replaced legacy default Apple blue with high-energy **Electric Indigo** (`#4F46E5` light / `#6366F1` dark) as the modern primary identity.
+  - Implemented dynamic **Primary Accent Color Selector** in the application header: instantly switch across 6 curated themes:
+    - **Electric Indigo** (Default high-contrast modern indigo)
+    - **Electric Violet** (Deep purple/violet spectrum)
+    - **Cyber Emerald** (Vibrant terminal emerald)
+    - **Ocean Cyan** (Clean marine cyan)
+    - **Sunset Amber** (Warm amber gold)
+    - **Neon Rose** (High-energy crimson rose)
+  - Enhanced canvas contrast: crisp Slate White canvas (`#F8F9FC`) in light mode and Cyber Obsidian (`#0B0C10`) in dark mode with refined card and border styling.
+  - Added distinctive top accent borders to active tabs in the TabBar, connecting them seamlessly to the workspace.
+
+## [3.0.0] - 2026-09-29
+
+### Added
+- **Modern Studio UI/UX Overhaul & Best Practices Architecture**:
+  - Re-architected application shell with modern SaaS workspace standards: single-elevation depth, 1440px desktop layout integrity, and disciplined 60-30-10 color distribution.
+  - **Zero-Pill Compliance Across All Surfaces**: Completely eradicated static colored pill badges, bordered capsules, and static candy tags in favor of clean, quiet unboxed typography with typographic separators (`·`).
+  - **Modern UI Components & Radix Accessibility**: Enhanced Radix-based Dialogs, Dropdown Menus, Context Menus, and Scroll Areas with solid Apple card surfaces (`bg-card`), tactile active-press feedback (`active:scale-[0.98]`), and visible WCAG-compliant focus rings.
+  - **Modern Tabular Discipline**: Enforced monospace tabular figures (`font-mono tabular-nums`) across all byte sizes, line counters, hex offsets, and timestamps to eliminate layout jitter.
+  - **Refined Spotlight Search (⌘K)**: Quick navigation command palette with categorized search items, instant keyboard navigation, and zero glass blur.
+  - **Developer Attribution & SEO**: Maintained developer attribution for **Suhail Akhtar** ([suhail.top](https://suhail.top)) in `<head>` meta tags, footer status bar, and file headers.
+
+## [2.9.6] - 2026-09-29
+
+### Fixed
+- **Vite Dep Optimizer Incompatibility & Stale Chunk Resolution**:
+  - Configured `optimizeDeps.exclude: ['pdfjs-dist']` in `vite.config.ts` to prevent Vite from pre-bundling PDF.js into volatile shared chunk files that trigger 404 missing chunk errors (`chunk-*.js`).
+  - Added `build.target: 'esnext'` and `optimizeDeps.esbuildOptions.target: 'esnext'` for native modern ES module and top-level await handling.
+  - Cleared stale dep optimizer cache and restarted dev server.
+
+## [2.9.5] - 2026-09-29
+
+### Added
+- **Apple Human Interface Guidelines (HIG) UI/UX Redesign (Strict Zero Glass UI)**:
+  - Re-architected entire user interface to match Apple Human Interface Guidelines aesthetic: clean, purposeful, human-centered, and typography-first.
+  - **Zero Glass UI Enforcement**: Completely removed all frosted glass, blurred backdrops (`backdrop-blur-*`), translucent hazy overlays, and gradient glass filters in favor of solid, opaque, physical surfaces with high-clarity contrast.
+  - **Apple System Palettes**: Implemented Apple light mode canvas (`#F5F5F7`), solid card panels (`#FFFFFF`), Apple system blue (`#0071E3`), system gray borders (`#E5E5EA`), and dark mode system black (`#000000`), system gray 6 (`#1C1C1E`), and dark blue (`#2997FF`).
+  - **macOS Window Traffic Lights**: Added signature macOS Sequoia window controls (Close `#FF5F56`, Minimize `#FFBD2E`, Zoom `#27C93F`) in the application header with interactive actions.
+  - **Apple Segmented Controls**: Converted raw button lists into physical segmented control tracks (`apple-segmented-track`) with sliding solid active buttons and squircle corners (`rounded-lg`).
+  - **macOS Safari / Finder Tabs**: Streamlined tab bar with physical tab docking, seamless content integration, and refined close affordances.
+  - **Spotlight Command Palette**: Overhauled command palette (⌘K) to mirror macOS Spotlight with clean typography, high-contrast list selection, and keyboard navigation.
+  - **Anti-Slop Zero-Pill Compliance**: Removed static candy pills and metadata chips, rendering info as unboxed clean text with typographic separators (`·`).
+
 ## [2.9.4] - 2026-09-28
 
 ### Fixed

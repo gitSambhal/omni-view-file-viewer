@@ -16,37 +16,34 @@ export const ToastContainer: React.FC<ToastProps> = ({ toasts, onRemove }) => {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed bottom-12 right-6 z-[100001] flex flex-col gap-2.5 max-w-sm w-full pointer-events-none select-none">
+    <div className="fixed bottom-10 right-5 z-[100001] flex flex-col gap-2.5 max-w-sm w-full pointer-events-none select-none">
       {toasts.map(toast => {
-        let icon = <Info className="w-5 h-5 text-blue-400 shrink-0" />;
-        let border = 'border-blue-500/30 bg-slate-900/95 text-blue-100';
+        let icon = <Info className="w-4.5 h-4.5 text-primary shrink-0" />;
 
         if (toast.type === 'success') {
-          icon = <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />;
-          border = 'border-emerald-500/30 bg-slate-900/95 text-emerald-100';
+          icon = <CheckCircle2 className="w-4.5 h-4.5 text-emerald-500 shrink-0" />;
         } else if (toast.type === 'error') {
-          icon = <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />;
-          border = 'border-red-500/30 bg-slate-900/95 text-red-100';
+          icon = <AlertCircle className="w-4.5 h-4.5 text-rose-500 shrink-0" />;
         } else if (toast.type === 'warning') {
-          icon = <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />;
-          border = 'border-amber-500/30 bg-slate-900/95 text-amber-100';
+          icon = <AlertTriangle className="w-4.5 h-4.5 text-amber-500 shrink-0" />;
         }
 
         return (
           <div
             key={toast.id}
-            className={`pointer-events-auto p-4 rounded-xl border shadow-2xl backdrop-blur-md flex items-start gap-3 transition-all transform animate-in fade-in slide-in-from-bottom-2 duration-200 ${border}`}
+            className="pointer-events-auto p-3.5 rounded-2xl border border-border bg-card text-foreground shadow-[0_12px_32px_rgba(0,0,0,0.16)] flex items-start gap-3 transition-all transform animate-in fade-in slide-in-from-bottom-2 duration-200"
           >
-            {icon}
-            <div className="flex-1">
-              <h5 className="font-bold text-xs">{toast.title}</h5>
-              <p className="text-xs text-slate-300 mt-0.5 leading-relaxed">{toast.message}</p>
+            <div className="mt-0.5">{icon}</div>
+            <div className="flex-1 min-w-0">
+              <h5 className="font-semibold text-xs text-foreground">{toast.title}</h5>
+              <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{toast.message}</p>
             </div>
             <button
               onClick={() => onRemove(toast.id)}
-              className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
+              className="text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-muted transition-colors cursor-pointer"
+              aria-label="Dismiss toast"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         );

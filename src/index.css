@@ -27,53 +27,101 @@
 
 @layer base {
   :root {
-    --background: #ffffff;
-    --foreground: #09090b;
-    --card: #ffffff;
-    --card-foreground: #09090b;
-    --popover: #ffffff;
-    --popover-foreground: #09090b;
-    --primary: #18181b;
-    --primary-foreground: #fafafa;
-    --secondary: #f4f4f5;
-    --secondary-foreground: #18181b;
-    --muted: #f4f4f5;
-    --muted-foreground: #71717a;
-    --accent: #f4f4f5;
-    --accent-foreground: #18181b;
-    --destructive: #ef4444;
-    --destructive-foreground: #fafafa;
-    --border: #e4e4e7;
-    --input: #e4e4e7;
-    --ring: #18181b;
-    --radius: 0.5rem;
-    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    /* Modern Studio Color System - Light Mode */
+    --background: #F8F9FC;
+    --foreground: #0F172A;
+    --card: #FFFFFF;
+    --card-foreground: #0F172A;
+    --popover: #FFFFFF;
+    --popover-foreground: #0F172A;
+    --primary: #4F46E5;
+    --primary-foreground: #FFFFFF;
+    --secondary: #EEF2F6;
+    --secondary-foreground: #1E293B;
+    --muted: #F1F5F9;
+    --muted-foreground: #64748B;
+    --accent: #EEF2FF;
+    --accent-foreground: #4338CA;
+    --destructive: #E11D48;
+    --destructive-foreground: #FFFFFF;
+    --border: #E2E8F0;
+    --input: #E2E8F0;
+    --ring: #4F46E5;
+    --radius: 0.75rem;
+    --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Plus Jakarta Sans", system-ui, sans-serif;
+    --font-mono: "SF Mono", ui-monospace, Menlo, Monaco, Consolas, "JetBrains Mono", monospace;
   }
 
   .dark {
-    --background: #090d16;
-    --foreground: #fafafa;
-    --card: #0c121e;
-    --card-foreground: #fafafa;
-    --popover: #0c121e;
-    --popover-foreground: #fafafa;
-    --primary: #fafafa;
-    --primary-foreground: #18181b;
-    --secondary: #172033;
-    --secondary-foreground: #fafafa;
-    --muted: #172033;
-    --muted-foreground: #94a3b8;
-    --accent: #172033;
-    --accent-foreground: #fafafa;
-    --destructive: #7f1d1d;
-    --destructive-foreground: #fafafa;
-    --border: #1e293b;
-    --input: #1e293b;
-    --ring: #cbd5e1;
-    --radius: 0.5rem;
-    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    /* Modern Studio Color System - Dark Mode */
+    --background: #0B0C10;
+    --foreground: #F8FAFC;
+    --card: #13151D;
+    --card-foreground: #F8FAFC;
+    --popover: #181A24;
+    --popover-foreground: #F8FAFC;
+    --primary: #6366F1;
+    --primary-foreground: #FFFFFF;
+    --secondary: #1B1E29;
+    --secondary-foreground: #F1F5F9;
+    --muted: #171923;
+    --muted-foreground: #94A3B8;
+    --accent: #232738;
+    --accent-foreground: #E0E7FF;
+    --destructive: #F43F5E;
+    --destructive-foreground: #FFFFFF;
+    --border: #232734;
+    --input: #232734;
+    --ring: #6366F1;
+    --radius: 0.75rem;
+    --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Plus Jakarta Sans", system-ui, sans-serif;
+    --font-mono: "SF Mono", ui-monospace, Menlo, Monaco, Consolas, "JetBrains Mono", monospace;
+  }
+
+  /* Dynamic Accent Color Themes */
+  [data-accent="violet"] {
+    --primary: #7C3AED;
+    --ring: #7C3AED;
+  }
+  .dark[data-accent="violet"], [data-accent="violet"] .dark, .dark [data-accent="violet"] {
+    --primary: #8B5CF6;
+    --ring: #8B5CF6;
+  }
+
+  [data-accent="emerald"] {
+    --primary: #059669;
+    --ring: #059669;
+  }
+  .dark[data-accent="emerald"], [data-accent="emerald"] .dark, .dark [data-accent="emerald"] {
+    --primary: #10B981;
+    --ring: #10B981;
+  }
+
+  [data-accent="cyan"] {
+    --primary: #0284C7;
+    --ring: #0284C7;
+  }
+  .dark[data-accent="cyan"], [data-accent="cyan"] .dark, .dark [data-accent="cyan"] {
+    --primary: #38BDF8;
+    --ring: #38BDF8;
+  }
+
+  [data-accent="amber"] {
+    --primary: #D97706;
+    --ring: #D97706;
+  }
+  .dark[data-accent="amber"], [data-accent="amber"] .dark, .dark [data-accent="amber"] {
+    --primary: #F59E0B;
+    --ring: #F59E0B;
+  }
+
+  [data-accent="rose"] {
+    --primary: #E11D48;
+    --ring: #E11D48;
+  }
+  .dark[data-accent="rose"], [data-accent="rose"] .dark, .dark [data-accent="rose"] {
+    --primary: #F43F5E;
+    --ring: #F43F5E;
   }
 
   * {
@@ -87,17 +135,17 @@
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition: background-color 0.15s cubic-bezier(0.16, 1, 0.3, 1), color 0.15s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   button, input, select, textarea, optgroup {
     font-family: inherit;
   }
 
-  /* Enterprise custom thin scrollbars */
+  /* Apple-inspired sleek scrollbars */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 7px;
+    height: 7px;
   }
 
   ::-webkit-scrollbar-track {
@@ -105,12 +153,16 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(148, 163, 184, 0.4);
+    background: rgba(134, 134, 139, 0.35);
     border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(148, 163, 184, 0.7);
+    background: rgba(134, 134, 139, 0.6);
+    border: 2px solid transparent;
+    background-clip: padding-box;
   }
 
   .no-scrollbar::-webkit-scrollbar {
@@ -130,13 +182,13 @@
 
   /* Light mode syntax highlight token overrides */
   html:not(.dark) .hljs {
-    color: #24292e;
+    color: #1d1d1f;
     background: transparent;
   }
   html:not(.dark) .hljs-keyword,
   html:not(.dark) .hljs-selector-tag,
   html:not(.dark) .hljs-subst {
-    color: #d73a49;
+    color: #af0e1b;
     font-weight: 600;
   }
   html:not(.dark) .hljs-string,
@@ -148,27 +200,59 @@
   html:not(.dark) .hljs-template-variable,
   html:not(.dark) .hljs-type,
   html:not(.dark) .hljs-addition {
-    color: #032f62;
+    color: #0050a4;
   }
   html:not(.dark) .hljs-comment,
   html:not(.dark) .hljs-quote,
   html:not(.dark) .hljs-deletion,
   html:not(.dark) .hljs-meta {
-    color: #6a737d;
+    color: #86868b;
     font-style: italic;
   }
   html:not(.dark) .hljs-number,
   html:not(.dark) .hljs-regexp,
   html:not(.dark) .hljs-link {
-    color: #005cc5;
+    color: #0071e3;
   }
   html:not(.dark) .hljs-variable,
   html:not(.dark) .hljs-name,
   html:not(.dark) .hljs-attr {
-    color: #e36209;
+    color: #b05a00;
   }
   html:not(.dark) .hljs-function,
   html:not(.dark) .hljs-title.function_ {
-    color: #6f42c1;
+    color: #6a1a9a;
   }
+}
+
+/* Apple-style UI Utilities */
+.apple-segmented-track {
+  background-color: var(--secondary);
+  padding: 2px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.apple-segmented-item {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.apple-segmented-item:hover {
+  color: var(--foreground);
+}
+
+.apple-segmented-item-active {
+  background-color: var(--card);
+  color: var(--foreground);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }

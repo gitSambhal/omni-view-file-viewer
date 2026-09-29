@@ -552,7 +552,7 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
       {/* ERROR FALLBACK */}
       {hasError ? (
         <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-8 bg-slate-950 text-slate-100 overflow-y-auto">
-          <div className="max-w-lg w-full p-6 bg-slate-900/90 border border-amber-500/40 rounded-3xl shadow-2xl text-center space-y-5 backdrop-blur-xl">
+          <div className="max-w-lg w-full p-6 bg-slate-900 border border-amber-500/40 rounded-3xl shadow-2xl text-center space-y-5">
             <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
               <AlertCircle className="w-8 h-8 text-amber-400" />
             </div>
@@ -651,7 +651,7 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
             className={useNativeControls ? 'w-full max-w-xl my-3 accent-purple-500' : 'hidden'}
           />
 
-          <div className="w-full max-w-xl bg-white dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-8 flex flex-col items-center space-y-5">
+          <div className="w-full max-w-xl bg-white dark:bg-[#1C1C1E] rounded-3xl border border-border shadow-2xl p-6 sm:p-8 flex flex-col items-center space-y-5">
             {/* Header Badge */}
             <div className="w-full flex flex-wrap items-center justify-between text-xs font-mono text-purple-600 dark:text-purple-400 gap-2">
               <div className="flex items-center gap-2 font-semibold">
@@ -783,7 +783,7 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
                   </button>
 
                   {showSpeedMenu && (
-                    <div className="absolute bottom-9 right-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-1.5 shadow-2xl z-50 flex flex-col gap-1 min-w-[95px] backdrop-blur-xl text-xs font-mono">
+                    <div className="absolute bottom-9 right-0 bg-white dark:bg-[#1C1C1E] border border-border rounded-xl p-1.5 shadow-2xl z-50 flex flex-col gap-1 min-w-[95px] text-xs font-mono">
                       {[0.5, 0.75, 1.0, 1.25, 1.5, 2.0].map(sp => (
                         <button
                           key={sp}
@@ -863,7 +863,7 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
           {/* CENTRAL PLAY/PAUSE SPLASH ANIMATION */}
           {!useNativeControls && clickSplash && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center z-20">
-              <div className="p-6 bg-black/60 rounded-full backdrop-blur-md animate-ping">
+              <div className="p-6 bg-black/70 rounded-full animate-ping">
                 {clickSplash === 'play' ? (
                   <Play className="w-12 h-12 text-white fill-white ml-1" />
                 ) : (
@@ -881,17 +881,17 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
               }`}
             >
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 text-xs font-semibold text-purple-300 bg-purple-500/20 px-3 py-1 rounded-full border border-purple-500/30 backdrop-blur-md">
+                <div className="flex items-center gap-2 text-xs font-semibold text-purple-300 bg-purple-500/20 px-3 py-1 rounded-full border border-purple-500/30">
                   <VideoIcon className="w-3.5 h-3.5 text-purple-400" />
                   <span>Cinema Studio</span>
                 </div>
                 {mediaInfo && (
-                  <span className="hidden sm:inline-flex items-center px-2 py-0.5 bg-purple-500/15 border border-purple-500/25 rounded-md text-[11px] font-mono text-purple-300 backdrop-blur-md">
+                  <span className="hidden sm:inline-flex items-center px-2 py-0.5 bg-purple-500/15 border border-purple-500/25 rounded-md text-[11px] font-mono text-purple-300">
                     {mediaInfo.formatName}
                   </span>
                 )}
                 {mediaInfo?.videoWidth && (
-                  <span className="hidden md:inline-flex items-center px-2 py-0.5 bg-white/10 border border-white/15 rounded-md text-[11px] font-mono text-slate-300 backdrop-blur-md">
+                  <span className="hidden md:inline-flex items-center px-2 py-0.5 bg-white/10 border border-white/15 rounded-md text-[11px] font-mono text-slate-300">
                     {mediaInfo.videoWidth}×{mediaInfo.videoHeight}
                   </span>
                 )}
@@ -904,7 +904,7 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
                 {/* Codec & Stream Info Inspector */}
                 <button
                   onClick={() => setIsInspectorOpen(true)}
-                  className="flex items-center gap-1 px-2.5 py-1 bg-black/50 hover:bg-black/80 text-purple-300 hover:text-white rounded-lg border border-purple-500/30 text-xs font-mono transition-colors cursor-pointer backdrop-blur-md"
+                  className="flex items-center gap-1 px-2.5 py-1 bg-black/60 hover:bg-black/85 text-purple-300 hover:text-white rounded-lg border border-purple-500/30 text-xs font-mono transition-colors cursor-pointer"
                   title="View Video & Audio Codec Specs, Streams, and Container Metadata"
                 >
                   <Info className="w-3.5 h-3.5 text-purple-400" />
@@ -914,7 +914,7 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
                 {/* Aspect Ratio / Fit Toggle */}
                 <button
                   onClick={cycleFitMode}
-                  className="flex items-center gap-1.5 px-2.5 py-1 bg-black/50 hover:bg-black/80 text-white rounded-lg border border-white/10 text-xs font-mono transition-colors cursor-pointer backdrop-blur-md"
+                  className="flex items-center gap-1.5 px-2.5 py-1 bg-black/60 hover:bg-black/85 text-white rounded-lg border border-white/15 text-xs font-mono transition-colors cursor-pointer"
                   title={`Fit Mode: ${fitMode.toUpperCase()} (Click to toggle Fill/Zoom to eliminate black bars)`}
                 >
                   <Scan className="w-3.5 h-3.5 text-purple-400" />
@@ -924,10 +924,10 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
                 {/* Theater / In-Window Fullscreen Toggle */}
                 <button
                   onClick={() => setIsInWindowFullscreen(prev => !prev)}
-                  className={`p-1.5 rounded-lg border text-xs transition-colors cursor-pointer backdrop-blur-md ${
+                  className={`p-1.5 rounded-lg border text-xs transition-colors cursor-pointer ${
                     isInWindowFullscreen
                       ? 'bg-purple-600 text-white border-purple-500 shadow-md'
-                      : 'bg-black/50 hover:bg-black/80 text-white border-white/10'
+                      : 'bg-black/60 hover:bg-black/85 text-white border-white/15'
                   }`}
                   title={isInWindowFullscreen ? 'Exit Theater Mode (T)' : 'Enter Theater Mode (T)'}
                 >
@@ -937,7 +937,7 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
                 {/* Browser Native Controls Toggle */}
                 <button
                   onClick={() => setUseNativeControls(true)}
-                  className="p-1.5 bg-black/50 hover:bg-black/80 text-slate-300 hover:text-white rounded-lg border border-white/10 text-xs transition-colors cursor-pointer backdrop-blur-md"
+                  className="p-1.5 bg-black/60 hover:bg-black/85 text-slate-300 hover:text-white rounded-lg border border-white/15 text-xs transition-colors cursor-pointer"
                   title="Switch to Browser Native Controls"
                 >
                   <Settings className="w-4 h-4" />
@@ -962,7 +962,7 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
                 {/* Hover Time Tooltip */}
                 {hoverTime !== null && (
                   <div
-                    className="absolute -top-7 px-2 py-0.5 bg-slate-900/90 text-white text-[11px] font-mono rounded border border-slate-700 shadow-lg pointer-events-none transform -translate-x-1/2 backdrop-blur-md"
+                    className="absolute -top-7 px-2 py-0.5 bg-slate-900 text-white text-[11px] font-mono rounded border border-slate-700 shadow-lg pointer-events-none transform -translate-x-1/2"
                     style={{ left: `${hoverPosition}%` }}
                   >
                     {formatTime(hoverTime)}
@@ -998,7 +998,7 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
                   {/* Play / Pause */}
                   <button
                     onClick={togglePlay}
-                    className="p-2 bg-white/10 hover:bg-white/25 rounded-full transition-all active:scale-95 cursor-pointer backdrop-blur-sm"
+                    className="p-2 bg-white/10 hover:bg-white/25 rounded-full transition-all active:scale-95 cursor-pointer"
                     title={isPlaying ? 'Pause (Space / K)' : 'Play (Space / K)'}
                   >
                     {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5 fill-white" />}
@@ -1066,14 +1066,14 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
                   <div className="relative">
                     <button
                       onClick={() => setShowSpeedMenu(!showSpeedMenu)}
-                      className="px-2 py-1 bg-white/10 hover:bg-white/20 rounded text-xs font-mono font-medium text-slate-200 transition-colors cursor-pointer backdrop-blur-sm"
+                      className="px-2 py-1 bg-white/10 hover:bg-white/20 rounded text-xs font-mono font-medium text-slate-200 transition-colors cursor-pointer"
                       title="Playback Speed"
                     >
                       {playbackSpeed}x
                     </button>
 
                     {showSpeedMenu && (
-                      <div className="absolute bottom-9 right-0 bg-slate-900 border border-slate-700 rounded-xl p-1.5 shadow-2xl z-50 flex flex-col gap-1 min-w-[90px] backdrop-blur-xl">
+                      <div className="absolute bottom-9 right-0 bg-slate-900 border border-slate-700 rounded-xl p-1.5 shadow-2xl z-50 flex flex-col gap-1 min-w-[90px]">
                         {[0.5, 0.75, 1.0, 1.25, 1.5, 2.0].map(sp => (
                           <button
                             key={sp}
@@ -1119,7 +1119,7 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
                   {/* Fullscreen Toggle */}
                   <button
                     onClick={toggleFullscreen}
-                    className="p-2 bg-white/10 hover:bg-white/25 text-white rounded-lg transition-all active:scale-95 cursor-pointer backdrop-blur-sm"
+                    className="p-2 bg-white/10 hover:bg-white/25 text-white rounded-lg transition-all active:scale-95 cursor-pointer"
                     title={isFullscreenActive ? 'Exit Fullscreen (F / Esc)' : 'Enter Fullscreen (F)'}
                   >
                     {isFullscreenActive ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -1133,7 +1133,7 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
 
       {/* CODEC & STREAM INSPECTOR MODAL */}
       {isInspectorOpen && (
-        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/75 animate-in fade-in duration-200">
           <div className="relative w-full max-w-2xl max-h-[90vh] bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl flex flex-col overflow-hidden text-slate-100">
             {/* Modal Header */}
             <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/40">

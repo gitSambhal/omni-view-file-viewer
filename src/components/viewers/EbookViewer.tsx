@@ -434,7 +434,7 @@ export const EbookViewer: React.FC<EbookViewerProps> = ({ arrayBuffer, textConte
       `}</style>
 
       {/* 1. Header Toolbar */}
-      <header className={`flex items-center justify-between px-3 py-2 ${themeStyles.headerBg} backdrop-blur-md shadow-2xs z-30 shrink-0 gap-2`}>
+      <header className={`flex items-center justify-between px-3 py-2 ${themeStyles.headerBg} border-b border-border shadow-2xs z-30 shrink-0 gap-2`}>
         {/* Left: Table of Contents & Title */}
         <div className="flex items-center gap-2 min-w-0">
           <button

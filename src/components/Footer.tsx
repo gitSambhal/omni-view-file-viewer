@@ -25,7 +25,7 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenLiveSyncDashboard
 }) => {
   return (
-    <footer className="flex flex-wrap items-center justify-between px-3 py-1.5 bg-background/95 backdrop-blur-md border-t border-border text-xs text-muted-foreground font-mono select-none gap-2 transition-colors z-20">
+    <footer className="flex flex-wrap items-center justify-between px-3 py-1 bg-card border-t border-border text-xs text-muted-foreground select-none gap-2 transition-colors z-20 shrink-0">
       {/* Active Tab File Details */}
       <div className="flex items-center gap-2 min-w-0">
         {activeTab ? (
@@ -35,31 +35,31 @@ export const Footer: React.FC<FooterProps> = ({
               <span className="truncate max-w-[180px]">{activeTab.name}</span>
             </div>
 
-            <span className="text-border">/</span>
+            <span className="text-border">·</span>
 
-            <span className="text-[11px] font-medium text-foreground">
+            <span className="text-[11px] font-mono tabular-nums text-foreground">
               {formatFileSize(activeTab.size)}
             </span>
 
-            <span className="text-border">/</span>
+            <span className="text-border">·</span>
 
-            <Badge variant="secondary" className="px-1.5 py-0 text-[10px] uppercase font-mono">
+            <span className="text-[10px] font-mono uppercase text-muted-foreground">
               {activeTab.extension || activeTab.category}
-            </Badge>
+            </span>
 
             {onToggleViewMode && (
               <>
-                <span className="text-border">/</span>
+                <span className="text-border">·</span>
                 <button
                   onClick={onToggleViewMode}
-                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded transition-colors cursor-pointer text-[10px] font-mono ${
+                  className={`flex items-center gap-1 px-2 py-0.5 rounded-md transition-all cursor-pointer text-[10px] font-mono ${
                     activeTab.viewMode === 'hex'
-                      ? 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 font-semibold'
-                      : 'hover:text-foreground text-muted-foreground'
+                      ? 'bg-primary text-primary-foreground font-semibold shadow-2xs'
+                      : 'hover:bg-secondary text-muted-foreground hover:text-foreground'
                   }`}
                   title={activeTab.viewMode === 'hex' ? 'Return to standard preview' : 'Inspect binary hex bytes'}
                 >
-                  <Binary className="w-3 h-3 text-cyan-500" />
+                  <Binary className="w-3 h-3" />
                   <span>{activeTab.viewMode === 'hex' ? 'HEX' : 'Hex'}</span>
                 </button>
               </>
@@ -67,7 +67,7 @@ export const Footer: React.FC<FooterProps> = ({
 
             {activeTab.liveSyncActive && (
               <>
-                <span className="text-border">/</span>
+                <span className="text-border">·</span>
                 <button
                   onClick={onOpenLiveSyncDashboard}
                   className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 font-medium border border-emerald-500/20 transition-colors cursor-pointer text-[11px]"
@@ -75,7 +75,7 @@ export const Footer: React.FC<FooterProps> = ({
                 >
                   <RefreshCw className={`w-3 h-3 ${activeTab.syncStatus === 'syncing' ? 'animate-spin text-emerald-500' : 'text-emerald-500'}`} />
                   <span>{activeTab.syncStatus === 'syncing' ? 'Syncing...' : 'Live Sync'}</span>
-                  <span className="text-[10px] opacity-75">
+                  <span className="text-[10px] opacity-75 font-mono tabular-nums">
                     ({activeTab.lastSyncedAt ? new Date(activeTab.lastSyncedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'Now'})
                   </span>
                 </button>
@@ -108,10 +108,10 @@ export const Footer: React.FC<FooterProps> = ({
           variant="outline"
           size="sm"
           onClick={onOpenChangelog}
-          className="h-6 px-2 text-[10px] font-mono text-muted-foreground hover:text-foreground"
+          className="h-5.5 px-2 text-[10px] font-mono text-muted-foreground hover:text-foreground rounded-md border-border"
           title="View Changelog & Release Notes"
         >
-          v2.9.4
+          v3.1.0
         </Button>
       </div>
     </footer>

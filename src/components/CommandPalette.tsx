@@ -387,11 +387,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={open => !open && onClose()}>
-      <DialogContent className="p-0 gap-0 max-w-2xl overflow-hidden border bg-background shadow-2xl rounded-2xl">
-        <DialogTitle className="sr-only">Command Palette</DialogTitle>
+      <DialogContent className="p-0 gap-0 max-w-2xl overflow-hidden border border-border bg-card shadow-[0_24px_64px_rgba(0,0,0,0.22)] rounded-2xl">
+        <DialogTitle className="sr-only">Spotlight Command Palette</DialogTitle>
 
-        {/* Search Header */}
-        <div className="flex items-center px-4 py-3.5 border-b border-border gap-3">
+        {/* Search Header - Apple Spotlight Style */}
+        <div className="flex items-center px-4.5 py-4 border-b border-border gap-3.5 bg-card">
           <Search className="w-5 h-5 text-muted-foreground shrink-0" />
           <input
             ref={inputRef}
@@ -401,8 +401,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
               setQuery(e.target.value);
               setSelectedIndex(0);
             }}
-            placeholder="Type a command, tool name, or search open files..."
-            className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+            placeholder="Search commands, tools, or open files..."
+            className="flex-1 bg-transparent text-sm sm:text-base text-foreground placeholder:text-muted-foreground/70 focus:outline-none font-sans"
           />
           {query && (
             <button
@@ -410,12 +410,12 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                 setQuery('');
                 inputRef.current?.focus();
               }}
-              className="p-1 rounded-md text-muted-foreground hover:text-foreground"
+              className="p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
             >
               <X className="w-4 h-4" />
             </button>
           )}
-          <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground bg-muted rounded border border-border">
+          <kbd className="hidden sm:inline-flex items-center gap-0.5 px-2 py-0.5 text-[10px] font-mono text-muted-foreground bg-secondary rounded-md border border-border">
             ESC
           </kbd>
         </div>
@@ -436,24 +436,24 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                     data-index={index}
                     onClick={() => item.action()}
                     onMouseEnter={() => setSelectedIndex(index)}
-                    className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-xs cursor-pointer transition-colors ${
+                    className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs cursor-pointer transition-colors ${
                       isSelected
-                        ? 'bg-accent text-accent-foreground font-medium'
-                        : 'text-foreground hover:bg-muted/50'
+                        ? 'bg-primary text-primary-foreground font-medium shadow-[0_1px_2px_rgba(0,0,0,0.12)]'
+                        : 'text-foreground hover:bg-secondary/70'
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className="p-1.5 rounded-md bg-muted/80 text-foreground shrink-0">
+                      <div className={`p-1.5 rounded-lg shrink-0 ${isSelected ? 'bg-white/20 text-white' : 'bg-secondary text-foreground'}`}>
                         {item.icon}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <span className="font-medium truncate">{item.title}</span>
-                          <span className="text-[10px] text-muted-foreground font-normal px-1.5 py-0.2 rounded bg-muted/60 shrink-0">
+                          <span className={`text-[10px] font-normal px-1.5 py-0.2 rounded-md shrink-0 ${isSelected ? 'bg-white/20 text-white' : 'bg-secondary text-muted-foreground'}`}>
                             {item.category}
                           </span>
                         </div>
-                        <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+                        <p className={`text-[11px] truncate mt-0.5 ${isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
                           {item.description}
                         </p>
                       </div>
@@ -461,11 +461,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
                     <div className="flex items-center gap-2 shrink-0 ml-3">
                       {item.shortcut && (
-                        <Badge variant="outline" className="text-[10px] font-mono py-0 px-1.5">
+                        <span className={`text-[10px] font-mono py-0.5 px-2 rounded-md ${isSelected ? 'bg-white/20 text-white' : 'bg-secondary text-muted-foreground'}`}>
                           {item.shortcut}
-                        </Badge>
+                        </span>
                       )}
-                      <ArrowRight className={`w-3.5 h-3.5 transition-opacity ${isSelected ? 'opacity-100 text-foreground' : 'opacity-0'}`} />
+                      <ArrowRight className={`w-3.5 h-3.5 transition-opacity ${isSelected ? 'opacity-100 text-primary-foreground' : 'opacity-0'}`} />
                     </div>
                   </div>
                 );
@@ -475,17 +475,17 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         </ScrollArea>
 
         {/* Footer Instructions */}
-        <div className="flex items-center justify-between px-4 py-2 border-t border-border bg-muted/30 text-[11px] text-muted-foreground">
+        <div className="flex items-center justify-between px-4 py-2.5 border-t border-border bg-secondary/40 text-[11px] text-muted-foreground">
           <div className="flex items-center gap-3">
             <span>
-              <kbd className="font-mono bg-muted px-1 py-0.5 rounded border border-border">↑</kbd>{' '}
-              <kbd className="font-mono bg-muted px-1 py-0.5 rounded border border-border">↓</kbd> navigate
+              <kbd className="font-mono bg-card px-1.5 py-0.5 rounded border border-border">↑</kbd>{' '}
+              <kbd className="font-mono bg-card px-1.5 py-0.5 rounded border border-border">↓</kbd> navigate
             </span>
             <span>
-              <kbd className="font-mono bg-muted px-1 py-0.5 rounded border border-border">↵</kbd> select
+              <kbd className="font-mono bg-card px-1.5 py-0.5 rounded border border-border">↵</kbd> select
             </span>
             <span>
-              <kbd className="font-mono bg-muted px-1 py-0.5 rounded border border-border">esc</kbd> close
+              <kbd className="font-mono bg-card px-1.5 py-0.5 rounded border border-border">esc</kbd> close
             </span>
           </div>
           <span className="font-mono">{filteredCommands.length} commands</span>

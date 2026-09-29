@@ -488,10 +488,10 @@ export const ReaderSwitcher: React.FC<ReaderSwitcherProps> = ({ activeTab, onSel
 
   return (
     <div className="flex items-center gap-1.5 relative select-none" ref={dropdownRef}>
-      {/* Intelligent Quick Switcher Chips */}
+      {/* Intelligent Quick Switcher Chips - Apple Segmented Control */}
       {quickChips.length > 1 && (
         <div
-          className="hidden sm:inline-flex items-center bg-muted p-0.5 rounded-lg text-xs border border-border"
+          className="apple-segmented-track hidden sm:inline-flex"
           role="group"
           aria-label="Supported file views"
         >
@@ -503,10 +503,8 @@ export const ReaderSwitcher: React.FC<ReaderSwitcherProps> = ({ activeTab, onSel
                 key={chip.id}
                 onClick={() => onSelectReader(chip.id)}
                 title={chip.tooltip}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
-                  isSelected
-                    ? 'bg-background text-foreground shadow-xs font-semibold'
-                    : 'text-muted-foreground hover:text-foreground'
+                className={`apple-segmented-item flex items-center gap-1.5 ${
+                  isSelected ? 'apple-segmented-item-active' : ''
                 }`}
               >
                 <ChipIcon className={`w-3.5 h-3.5 ${chip.color}`} />
@@ -522,7 +520,7 @@ export const ReaderSwitcher: React.FC<ReaderSwitcherProps> = ({ activeTab, onSel
         variant="outline"
         size="sm"
         onClick={() => setIsOpen(!isOpen)}
-        className="gap-1.5 h-8 text-xs font-medium border-border"
+        className="gap-1.5 h-7.5 text-xs font-medium border-border"
         title="Browse & switch rendering engine for this document"
         aria-expanded={isOpen}
       >
@@ -532,10 +530,10 @@ export const ReaderSwitcher: React.FC<ReaderSwitcherProps> = ({ activeTab, onSel
         <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform duration-150 ${isOpen ? 'rotate-180' : ''}`} />
       </Button>
 
-      {/* Search-Enabled Dropdown Menu */}
+      {/* Search-Enabled Dropdown Menu - Apple Solid Popover */}
       {isOpen && (
         <div
-          className="absolute right-0 top-full mt-1.5 w-80 max-h-[460px] flex flex-col bg-popover text-popover-foreground border border-border rounded-xl shadow-xl z-50 p-1 animate-in fade-in zoom-in-95 duration-100"
+          className="absolute right-0 top-full mt-1.5 w-80 max-h-[460px] flex flex-col bg-popover text-popover-foreground border border-border rounded-xl shadow-[0_12px_36px_rgba(0,0,0,0.18)] z-50 p-1.5 animate-in fade-in zoom-in-95 duration-100"
           style={{ zIndex: 9999 }}
         >
           {/* Header & Active File Tag */}
@@ -543,9 +541,9 @@ export const ReaderSwitcher: React.FC<ReaderSwitcherProps> = ({ activeTab, onSel
             <span className="font-semibold text-foreground flex items-center gap-1.5">
               <span>Rendering Engines</span>
             </span>
-            <Badge variant="secondary" className="font-mono text-[10px] uppercase">
+            <span className="font-mono text-[11px] text-muted-foreground uppercase">
               .{activeTab.extension || 'file'}
-            </Badge>
+            </span>
           </div>
 
           {/* Integrated Search Input */}
