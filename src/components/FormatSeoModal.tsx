@@ -59,19 +59,19 @@ export const FormatSeoModal: React.FC<FormatSeoModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={open => !open && onClose()}>
-      <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden">
+      <DialogContent className="max-w-2xl w-[95vw] h-[85vh] max-h-[800px] flex flex-col p-0 gap-0 overflow-hidden">
         {/* Header */}
-        <DialogHeader className="p-4 border-b border-border bg-muted/40 text-left">
-          <div className="flex items-center gap-3">
+        <DialogHeader className="p-4 pr-12 border-b border-border bg-muted/40 text-left shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
             <div className="p-2 bg-primary/10 text-primary rounded-xl shrink-0">
               <Globe className="w-5 h-5" />
             </div>
             <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <DialogTitle className="text-base font-bold truncate">
+              <div className="flex flex-wrap items-center gap-2">
+                <DialogTitle className="text-base font-bold leading-snug break-words">
                   {formatRecord.name}
                 </DialogTitle>
-                <span className="font-mono text-[11px] font-semibold text-primary px-2 py-0.5 rounded bg-primary/10">
+                <span className="font-mono text-[11px] font-semibold text-primary px-2 py-0.5 rounded bg-primary/10 shrink-0">
                   {formatRecord.extension}
                 </span>
               </div>
@@ -83,7 +83,7 @@ export const FormatSeoModal: React.FC<FormatSeoModalProps> = ({
         </DialogHeader>
 
         {/* Scrollable SEO Body */}
-        <ScrollArea className="max-h-[70vh] p-5">
+        <ScrollArea className="flex-1 min-h-0 overflow-y-auto p-5">
           <div className="space-y-5 text-left">
             {/* 1. Google Search Snippet Simulation */}
             <div className="space-y-1.5">

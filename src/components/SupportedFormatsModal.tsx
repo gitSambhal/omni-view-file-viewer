@@ -64,17 +64,17 @@ export const SupportedFormatsModal: React.FC<SupportedFormatsModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={open => !open && onClose()}>
-      <DialogContent className="max-w-4xl p-0 gap-0 overflow-hidden">
+      <DialogContent className="max-w-4xl w-[95vw] h-[85vh] max-h-[850px] flex flex-col p-0 gap-0 overflow-hidden">
         {/* Header */}
-        <DialogHeader className="p-4 border-b border-border bg-muted/40 text-left">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-primary/10 text-primary rounded-xl">
+        <DialogHeader className="p-4 pr-12 border-b border-border bg-muted/40 text-left shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="p-2.5 bg-primary/10 text-primary rounded-xl shrink-0">
               <Layers className="w-5 h-5" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
                 <DialogTitle className="text-base font-bold">Supported File Formats & Capabilities</DialogTitle>
-                <Badge variant="secondary" className="font-mono text-[10px]">
+                <Badge variant="secondary" className="font-mono text-[10px] shrink-0">
                   {SUPPORTED_FORMATS.length}+ Native Formats
                 </Badge>
               </div>
@@ -86,7 +86,7 @@ export const SupportedFormatsModal: React.FC<SupportedFormatsModalProps> = ({
         </DialogHeader>
 
         {/* Filter & Search Bar */}
-        <div className="p-3 bg-muted/20 border-b border-border space-y-2.5">
+        <div className="p-3 bg-muted/20 border-b border-border space-y-2.5 shrink-0">
           <div className="relative">
             <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
             <Input
@@ -115,39 +115,41 @@ export const SupportedFormatsModal: React.FC<SupportedFormatsModalProps> = ({
         </div>
 
         {/* Formats Grid */}
-        <ScrollArea className="max-h-[60vh] p-4 sm:p-5">
+        <ScrollArea className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
             {filteredFormats.map((fmt, idx) => {
               const IconComp = fmt.icon;
               return (
                 <div
                   key={idx}
-                  className="bg-card border border-border rounded-xl p-3.5 space-y-2.5 transition-all group shadow-2xs hover:border-primary/40"
+                  className="bg-card border border-border rounded-xl p-3.5 space-y-2.5 transition-all group shadow-2xs hover:border-primary/40 flex flex-col justify-between"
                 >
                   {/* Card Title & Ext Badge */}
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className={`p-1.5 rounded-lg bg-muted border border-border ${fmt.color}`}>
-                        <IconComp className="w-4 h-4" />
+                  <div className="space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className={`p-1.5 rounded-lg bg-muted border border-border ${fmt.color} shrink-0`}>
+                          <IconComp className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors leading-snug break-words">
+                            {fmt.name}
+                          </h4>
+                          <span className="text-[10px] font-mono text-muted-foreground">{fmt.categoryName}</span>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <h4 className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors truncate">
-                          {fmt.name}
-                        </h4>
-                        <span className="text-[10px] font-mono text-muted-foreground">{fmt.categoryName}</span>
-                      </div>
+
+                      <Badge variant="outline" className="font-mono font-bold text-[10px] shrink-0 text-right">
+                        {fmt.extension}
+                      </Badge>
                     </div>
 
-                    <Badge variant="outline" className="font-mono font-bold text-[10px] shrink-0">
-                      {fmt.extension}
-                    </Badge>
+                    {/* Description */}
+                    <p className="text-[11px] text-muted-foreground leading-relaxed break-words">{fmt.description}</p>
                   </div>
 
-                  {/* Description */}
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">{fmt.description}</p>
-
                   {/* Capabilities Tags & SEO Trigger */}
-                  <div className="flex items-center justify-between gap-2 pt-0.5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 border-t border-border/40 mt-1">
                     <div className="flex flex-wrap gap-1">
                       {fmt.capabilities.map((cap, cIdx) => (
                         <span
@@ -162,7 +164,7 @@ export const SupportedFormatsModal: React.FC<SupportedFormatsModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setSelectedSeoRecord(getFormatSeo(fmt.extension))}
-                      className="inline-flex items-center gap-1 font-mono text-[10px] text-muted-foreground hover:text-primary transition-colors cursor-pointer shrink-0"
+                      className="inline-flex items-center gap-1 font-mono text-[10px] text-muted-foreground hover:text-primary transition-colors cursor-pointer shrink-0 self-end sm:self-auto"
                       title="View SEO Snippet, Search Keywords & Schema.org JSON-LD"
                     >
                       <Globe className="w-3 h-3 text-primary" />
@@ -200,7 +202,7 @@ export const SupportedFormatsModal: React.FC<SupportedFormatsModalProps> = ({
         />
 
         {/* Footer */}
-        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-muted/40 border-t border-border">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-muted/40 border-t border-border shrink-0">
           <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
             <ShieldCheck className="w-4 h-4 shrink-0" />
             <span className="text-[11px]">All formats parse in-memory inside your browser with Zero Server Transmission.</span>

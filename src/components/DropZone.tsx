@@ -105,7 +105,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
           : 'bg-background'
       }`}
     >
-      <div className="w-full max-w-4xl lg:max-w-5xl flex flex-col items-center text-center space-y-7 my-auto py-8">
+      <div className="w-full max-w-4xl lg:max-w-5xl flex flex-col items-center text-center space-y-7 py-6 sm:py-8">
         {/* Hidden Multi-file input */}
         <input
           ref={fileInputRef}

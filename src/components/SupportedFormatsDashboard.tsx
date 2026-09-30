@@ -462,7 +462,7 @@ export const SupportedFormatsDashboard: React.FC<SupportedFormatsDashboardProps>
 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-1 mb-0.5">
-                      <span className="font-mono text-xs font-semibold text-foreground group-hover:text-primary transition-colors truncate">
+                      <span className="font-mono text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
                         {item.extension}
                       </span>
                       <span className="text-[10px] font-sans text-muted-foreground shrink-0">
@@ -470,11 +470,11 @@ export const SupportedFormatsDashboard: React.FC<SupportedFormatsDashboardProps>
                       </span>
                     </div>
 
-                    <h4 className="text-xs font-medium text-foreground/90 truncate">
+                    <h4 className="text-xs font-semibold text-foreground/90 leading-snug">
                       {item.name}
                     </h4>
 
-                    <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1 leading-snug">
+                    <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
                       {item.highlight}
                     </p>
                   </div>
