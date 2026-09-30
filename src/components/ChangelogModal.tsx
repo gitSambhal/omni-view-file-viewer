@@ -34,7 +34,7 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, onClose 
             <div>
               <DialogTitle className="text-base font-bold">What's New in OmniView File Studio</DialogTitle>
               <DialogDescription className="text-xs mt-0.5">
-                Release Version v3.1.0 with Electric Indigo & Dynamic Accent Theme Engine
+                Release Version v3.3.0 with Comprehensive Per-Format SEO & Schema.org Structured Data
               </DialogDescription>
             </div>
           </div>
@@ -42,14 +42,46 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, onClose 
 
         <ScrollArea className="max-h-[65vh] p-5">
           <div className="space-y-4 text-sm leading-relaxed">
-            {/* v3.1.0 Highlights */}
+            {/* v3.3.0 Highlights */}
             <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 font-semibold text-foreground">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <span>Version 3.3.0 - Per-Format SEO & Schema.org Structured Data</span>
+                </div>
+                <span className="text-[11px] font-mono font-semibold text-primary">Latest</span>
+              </div>
+              <ul className="space-y-1.5 text-xs text-muted-foreground list-disc list-inside">
+                <li><strong>Dynamic Head SEO & OpenGraph Synchronizer:</strong> Automatic page title, description, and social graph synchronization based on the active tab or format deep link (<code>?format=...</code>).</li>
+                <li><strong>Format SEO & Schema Inspector:</strong> 1-click modal to preview Google search snippets, copy Schema.org JSON-LD (<code>@type: WebApplication</code> and <code>FAQPage</code>), and inspect target search keywords.</li>
+                <li><strong>Comprehensive Root Crawling Metadata:</strong> Complete MIME <code>fileFormat</code> directory, <code>ItemList</code> of 60+ formats, and rich FAQ structured data in <code>index.html</code>.</li>
+              </ul>
+            </div>
+
+            {/* v3.2.0 Highlights */}
+            <div className="bg-secondary/40 border border-border rounded-xl p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 font-semibold text-foreground">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <span>Version 3.2.0 - Interactive Supported Formats & Readers Dashboard</span>
+                </div>
+                <span className="text-[11px] font-mono text-muted-foreground">v3.2.0</span>
+              </div>
+              <ul className="space-y-1.5 text-xs text-muted-foreground list-disc list-inside">
+                <li><strong>Dashboard Format Cards:</strong> Direct visual catalog of supported formats featuring authentic category icons, extension tags, and capability highlights right on the home landing page.</li>
+                <li><strong>Interactive Categories & Search:</strong> Quickly toggle between Documents, Code & Web, Data & SQL, Media & Assets, and System & Security, or search in real-time.</li>
+                <li><strong>1-Click Launch:</strong> Click any format card to launch its in-browser sandbox or open the file picker filtered for that specific file type.</li>
+              </ul>
+            </div>
+
+            {/* v3.1.0 Highlights */}
+            <div className="bg-secondary/40 border border-border rounded-xl p-4 space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 font-semibold text-foreground">
                   <Sparkles className="w-4 h-4 text-primary" />
                   <span>Version 3.1.0 - Electric Indigo Primary & Dynamic Accent Engine</span>
                 </div>
-                <span className="text-[11px] font-mono font-semibold text-primary">Latest</span>
+                <span className="text-[11px] font-mono text-muted-foreground">v3.1.0</span>
               </div>
               <ul className="space-y-1.5 text-xs text-muted-foreground list-disc list-inside">
                 <li><strong>Fresh Primary Identity:</strong> Modern Electric Indigo (<code>#4F46E5</code> / <code>#6366F1</code>) replaced legacy blue, giving the studio a bold, high-contrast, professional developer aesthetic.</li>

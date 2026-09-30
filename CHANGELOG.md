@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.3.0] - 2026-09-30
+
+### Added
+- **Comprehensive Search Engine Optimization (SEO) & Schema.org for Each Supported File Type**:
+  - Implemented dynamic runtime head meta synchronizer (`useFormatSeo`) that dynamically sets `<title>`, `<meta name="description">`, `<meta name="keywords">`, OpenGraph social share cards, Twitter cards, canonical links, and Schema.org structured data whenever files are opened or format deep links are accessed.
+  - Added dedicated **Format SEO & Structured Data Inspector Dialog** (`FormatSeoModal`):
+    - Google Search Result Snippet Simulation preview for every format.
+    - Official IANA MIME types and magic byte headers (%PDF-, SQLite format 3, PK\x03\x04, etc.).
+    - High-intent target search queries & keyword tags.
+    - Full Schema.org JSON-LD generation with 1-click "Copy JSON-LD Schema" and "Copy Canonical Link".
+    - FAQPage structured data entities for rich Google search snippets.
+  - Enriched root `index.html` with full `WebApplication` MIME `fileFormat` arrays, `ItemList` directory of supported formats, and search crawler `FAQPage` graphs.
+  - Added "SEO Specs" inspection buttons across dashboard format cards and the supported formats modal.
+
+## [3.2.0] - 2026-09-30
+
+### Added
+- **Interactive Supported File Types Dashboard**:
+  - Embedded an interactive format explorer directly on the home dropzone / dashboard with category icons, file extension tags, and capability highlights.
+  - Organized formats into 5 distinct categories: **Documents** (PDF, Word, Excel, PowerPoint, EPUB), **Code & Web** (TypeScript, JavaScript, Python, HTML, Markdown, REST API), **Data & SQL** (SQLite, DBF, Access MDB, JSON, GeoJSON), **Media & Assets** (Images, Audio, Video, Fonts), and **System & Security** (Archives, Certificates, Binaries, Hex Stream).
+  - Integrated real-time format search bar and instant category filtering tabs.
+  - 1-click launch from dashboard cards: launches in-browser sandboxes (Python, TypeScript, SQLite, Markdown) or triggers the native file picker pre-filtered with that format's extension.
+  - Maintained zero-pill design discipline and high-contrast dark/light mode visual consistency.
+
 ## [3.1.0] - 2026-09-29
 
 ### Added

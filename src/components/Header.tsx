@@ -88,44 +88,8 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="flex items-center justify-between px-3 md:px-4 py-2 bg-card border-b border-border text-foreground select-none gap-3 transition-colors z-40 shrink-0">
-      {/* Left: macOS Window Traffic Lights, Sidebar Toggle, Brand & Attribution */}
+      {/* Left: Sidebar Toggle, Brand & Attribution */}
       <div className="flex items-center gap-3 min-w-0">
-        {/* macOS Window Controls */}
-        <div className="hidden sm:flex items-center gap-2 pr-1">
-          <button
-            onClick={() => {
-              if (onOpenChangelog) onOpenChangelog();
-            }}
-            className="w-3 h-3 rounded-full bg-[#FF5F56] hover:brightness-90 transition-all border border-black/10 cursor-pointer flex items-center justify-center group"
-            title="About OmniView & Release Notes"
-            aria-label="Window Close / Info"
-          >
-            <span className="opacity-0 group-hover:opacity-100 text-[8px] font-bold leading-none text-[#7D0000]">×</span>
-          </button>
-          <button
-            onClick={onToggleSidebar}
-            className="w-3 h-3 rounded-full bg-[#FFBD2E] hover:brightness-90 transition-all border border-black/10 cursor-pointer flex items-center justify-center group"
-            title="Toggle Sidebar (⌘B)"
-            aria-label="Toggle Sidebar"
-          >
-            <span className="opacity-0 group-hover:opacity-100 text-[8px] font-bold leading-none text-[#995700]">–</span>
-          </button>
-          <button
-            onClick={() => {
-              if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(() => {});
-              } else {
-                document.exitFullscreen().catch(() => {});
-              }
-            }}
-            className="w-3 h-3 rounded-full bg-[#27C93F] hover:brightness-90 transition-all border border-black/10 cursor-pointer flex items-center justify-center group"
-            title="Toggle Fullscreen"
-            aria-label="Toggle Fullscreen"
-          >
-            <span className="opacity-0 group-hover:opacity-100 text-[7px] font-bold leading-none text-[#006500]">⤢</span>
-          </button>
-        </div>
-
         {onToggleSidebar && (
           <Button
             variant={isSidebarOpen ? "secondary" : "ghost"}
@@ -315,7 +279,7 @@ export const Header: React.FC<HeaderProps> = ({
             )}
             <DropdownMenuItem onClick={onOpenChangelog}>
               <Info className="w-3.5 h-3.5 text-primary mr-2" />
-              <span>Release Notes (v3.1.0)</span>
+              <span>Release Notes (v3.3.0)</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

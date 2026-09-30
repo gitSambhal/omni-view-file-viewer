@@ -4,7 +4,7 @@
  * OmniView File Studio - 100% Offline & Local File Previewer
  */
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Upload } from 'lucide-react';
 import { useTheme } from './hooks/useTheme';
 import { useToast } from './hooks/useToast';
@@ -53,6 +53,7 @@ import { BinaryInspectorViewer } from './components/viewers/BinaryInspectorViewe
 import { FontViewer } from './components/viewers/FontViewer';
 import { CertificateViewer } from './components/viewers/CertificateViewer';
 import { HtmlPreviewViewer } from './components/viewers/HtmlPreviewViewer';
+import { useFormatSeo } from './hooks/useFormatSeo';
 
 export default function App() {
   const { theme, toggleTheme } = useTheme();
@@ -203,6 +204,20 @@ export default function App() {
   }, [isPasteModalOpen, isUrlModalOpen, isNpmTesterOpen]);
 
   const activeTab = activeTabId === 'welcome' ? null : tabs.find(t => t.id === activeTabId) || null;
+
+  // Dynamic Head SEO for Active Files & Deep Links
+  const urlFormatParam = useMemo(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search).get('format');
+    }
+    return null;
+  }, []);
+
+  useFormatSeo({
+    activeFileName: activeTab?.name,
+    activeFormatId: urlFormatParam,
+    baseCanonicalUrl: 'https://file.suhail.top'
+  });
 
   // File Live Sync Callback
   const handleFileUpdated = useCallback((updated: Partial<TabFile> & { id: string }) => {

@@ -24,6 +24,7 @@ import {
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Card } from './ui/card';
+import { SupportedFormatsDashboard } from './SupportedFormatsDashboard';
 
 interface DropZoneProps {
   onFilesSelected: (files: FileList | File[]) => void;
@@ -78,6 +79,21 @@ export const DropZone: React.FC<DropZoneProps> = ({
     }
   };
 
+  const handleOpenFileWithExtension = (ext: string) => {
+    if (fileInputRef.current) {
+      const cleanExt = ext.startsWith('.') ? ext : `.${ext}`;
+      fileInputRef.current.accept = cleanExt;
+      fileInputRef.current.click();
+      setTimeout(() => {
+        if (fileInputRef.current) {
+          fileInputRef.current.accept = '';
+        }
+      }, 1000);
+    } else {
+      onOpenFilePicker();
+    }
+  };
+
   return (
     <div
       onDragOver={handleDragOver}
@@ -89,7 +105,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
           : 'bg-background'
       }`}
     >
-      <div className="w-full max-w-3xl flex flex-col items-center text-center space-y-6 my-auto py-6">
+      <div className="w-full max-w-4xl lg:max-w-5xl flex flex-col items-center text-center space-y-7 my-auto py-8">
         {/* Hidden Multi-file input */}
         <input
           ref={fileInputRef}
@@ -280,6 +296,14 @@ export const DropZone: React.FC<DropZoneProps> = ({
             </div>
           </div>
         )}
+
+        {/* Comprehensive Supported Formats & Native Readers Showcase */}
+        <SupportedFormatsDashboard
+          onOpenFileWithExtension={handleOpenFileWithExtension}
+          onOpenSupportedFormatsModal={onOpenSupportedFormats}
+          onNewScratchpad={onNewScratchpad}
+          onLoadSamples={onLoadSamples}
+        />
 
         {/* Feature Guarantees Row */}
         <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 pt-2 text-[11px] text-muted-foreground">

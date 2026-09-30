@@ -47,30 +47,168 @@
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "OmniView File Viewer",
-      "alternateName": "OmniView",
-      "url": "https://file.suhail.top",
-      "description": "100% offline & local file preview studio with multi-tab workspace, live file sync, dark mode, and support for 60+ file formats including PDFs, Office docs, code, databases, media & archives.",
-      "applicationCategory": "DeveloperApplication",
-      "operatingSystem": "All",
-      "browserRequirements": "Requires JavaScript. Requires HTML5.",
-      "author": {
-        "@type": "Person",
-        "name": "Suhail Akhtar",
-        "url": "https://suhail.top"
-      },
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "featureList": [
-        "100% Local Offline Parsing",
-        "Multi-Tab File Previewer",
-        "Live Local Disk Sync",
-        "PDF, Office, Code, Database & Media Viewing",
-        "In-Browser Python Pyodide Wasm Sandbox"
+      "@graph": [
+        {
+          "@type": "WebApplication",
+          "@id": "https://file.suhail.top/#app",
+          "name": "OmniView File Viewer",
+          "alternateName": "OmniView File Studio",
+          "url": "https://file.suhail.top",
+          "description": "100% offline & local file preview studio with multi-tab workspace, live file sync, dark mode, and support for 60+ file formats including PDFs, Office docs, code, databases, media & archives.",
+          "applicationCategory": "DeveloperApplication",
+          "operatingSystem": "All",
+          "browserRequirements": "Requires JavaScript. Requires HTML5.",
+          "author": {
+            "@type": "Person",
+            "name": "Suhail Akhtar",
+            "url": "https://suhail.top"
+          },
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "fileFormat": [
+            "application/pdf",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            "application/epub+zip",
+            "application/x-sqlite3",
+            "application/x-dbf",
+            "application/x-msaccess",
+            "text/x-python",
+            "application/typescript",
+            "text/javascript",
+            "text/html",
+            "text/markdown",
+            "application/json",
+            "text/yaml",
+            "application/geo+json",
+            "image/png",
+            "image/jpeg",
+            "image/svg+xml",
+            "video/mp4",
+            "audio/mpeg",
+            "font/ttf",
+            "font/woff2",
+            "application/zip",
+            "application/x-tar",
+            "application/x-msdownload",
+            "application/wasm",
+            "application/octet-stream"
+          ],
+          "featureList": [
+            "100% Client-Side In-Memory Parsing",
+            "Multi-Tab File Previewer Workspace",
+            "Local Disk Live Sync via File System Access API",
+            "Password-Protected PDF Decryption & HiDPI Retina Zoom",
+            "Excel & CSV Interactive Grid with Multi-Sheet Tabs",
+            "In-Browser Python 3.12 Pyodide WebAssembly Sandbox",
+            "SQLite, FoxPro DBF & Access MDB Query Consoles",
+            "Live TypeScript AST & In-Browser NPM CDN Playground",
+            "16-Column Memory Offset Hex Byte Inspector",
+            "100% Offline PWA Capabilities with Zero Server Uploads"
+          ]
+        },
+        {
+          "@type": "ItemList",
+          "@id": "https://file.suhail.top/#supported-formats",
+          "name": "Supported File Formats in OmniView",
+          "description": "Comprehensive directory of 60+ natively supported file types in OmniView.",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "PDF Document (.pdf)",
+              "description": "Client-side PDF rendering with password decryption, page navigation, and HiDPI retina zoom."
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Word Document (.docx)",
+              "description": "OpenXML Word document parser with formatting, tables, and embedded images."
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": "Excel Spreadsheet (.xlsx / .csv)",
+              "description": "Multi-sheet spreadsheet viewer with column sorting, filtering, and row search."
+            },
+            {
+              "@type": "ListItem",
+              "position": 4,
+              "name": "PowerPoint Presentation (.pptx)",
+              "description": "Slide deck presentation viewer with slide navigation and shape rendering."
+            },
+            {
+              "@type": "ListItem",
+              "position": 5,
+              "name": "SQLite Database (.sqlite / .db)",
+              "description": "In-browser SQLite query console and table schema introspection via WebAssembly."
+            },
+            {
+              "@type": "ListItem",
+              "position": 6,
+              "name": "Python Script (.py)",
+              "description": "Python 3.12 execution sandbox powered by Pyodide WebAssembly with live terminal stdout."
+            },
+            {
+              "@type": "ListItem",
+              "position": 7,
+              "name": "TypeScript & JavaScript (.ts / .tsx / .js)",
+              "description": "Live syntax AST inspector and NPM package playground runtime."
+            },
+            {
+              "@type": "ListItem",
+              "position": 8,
+              "name": "HTML & Live Web (.html / .htm)",
+              "description": "Isolated sandbox preview with split code mode and DOM tree explorer."
+            },
+            {
+              "@type": "ListItem",
+              "position": 9,
+              "name": "Compressed Archives (.zip / .tar / .gz)",
+              "description": "In-browser decompression with folder tree and 1-click nested file preview."
+            },
+            {
+              "@type": "ListItem",
+              "position": 10,
+              "name": "Raw Hex Byte Stream (Any File)",
+              "description": "16-column memory offset hex inspection with ASCII decoding for any binary format."
+            }
+          ]
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "https://file.suhail.top/#faq",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "Does OmniView upload any files to external cloud servers?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "No. OmniView operates 100% locally in your web browser. File bytes are read strictly in client memory using WebAssembly and HTML5 File APIs. No file contents, metadata, or telemetry are ever uploaded."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Can I open password-protected PDFs offline in OmniView?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes. OmniView includes client-side password decryption algorithms that unlock encrypted PDF documents directly on your device."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How does SQLite query execution work without a database server?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "OmniView runs SQLite compiled to WebAssembly (Wasm). It loads your .sqlite or .db file into an in-memory virtual file system and runs native SQL queries locally in milliseconds."
+              }
+            }
+          ]
+        }
       ]
     }
     </script>

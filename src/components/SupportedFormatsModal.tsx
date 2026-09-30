@@ -9,9 +9,12 @@ import {
   Search,
   Sparkles,
   Layers,
-  ShieldCheck
+  ShieldCheck,
+  Globe
 } from 'lucide-react';
 import { SUPPORTED_FORMATS, SUPPORTED_CATEGORIES } from '../data/supportedFormats';
+import { getFormatSeo, FormatSeoRecord } from '../data/formatSeoData';
+import { FormatSeoModal } from './FormatSeoModal';
 import {
   Dialog,
   DialogContent,
@@ -37,6 +40,7 @@ export const SupportedFormatsModal: React.FC<SupportedFormatsModalProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedSeoRecord, setSelectedSeoRecord] = useState<FormatSeoRecord | null>(null);
 
   const filteredFormats = useMemo(() => {
     return SUPPORTED_FORMATS.filter(fmt => {
@@ -142,16 +146,28 @@ export const SupportedFormatsModal: React.FC<SupportedFormatsModalProps> = ({
                   {/* Description */}
                   <p className="text-[11px] text-muted-foreground leading-relaxed">{fmt.description}</p>
 
-                  {/* Capabilities Tags */}
-                  <div className="flex flex-wrap gap-1 pt-0.5">
-                    {fmt.capabilities.map((cap, cIdx) => (
-                      <span
-                        key={cIdx}
-                        className="px-1.5 py-0.5 rounded bg-muted text-[9px] text-muted-foreground font-mono"
-                      >
-                        {cap}
-                      </span>
-                    ))}
+                  {/* Capabilities Tags & SEO Trigger */}
+                  <div className="flex items-center justify-between gap-2 pt-0.5">
+                    <div className="flex flex-wrap gap-1">
+                      {fmt.capabilities.map((cap, cIdx) => (
+                        <span
+                          key={cIdx}
+                          className="px-1.5 py-0.5 rounded bg-muted text-[9px] text-muted-foreground font-mono"
+                        >
+                          {cap}
+                        </span>
+                      ))}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedSeoRecord(getFormatSeo(fmt.extension))}
+                      className="inline-flex items-center gap-1 font-mono text-[10px] text-muted-foreground hover:text-primary transition-colors cursor-pointer shrink-0"
+                      title="View SEO Snippet, Search Keywords & Schema.org JSON-LD"
+                    >
+                      <Globe className="w-3 h-3 text-primary" />
+                      <span>SEO Specs</span>
+                    </button>
                   </div>
                 </div>
               );
@@ -175,6 +191,13 @@ export const SupportedFormatsModal: React.FC<SupportedFormatsModalProps> = ({
             </div>
           )}
         </ScrollArea>
+
+        {/* Format SEO & Structured Data Inspector Dialog */}
+        <FormatSeoModal
+          isOpen={!!selectedSeoRecord}
+          onClose={() => setSelectedSeoRecord(null)}
+          formatRecord={selectedSeoRecord}
+        />
 
         {/* Footer */}
         <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-muted/40 border-t border-border">
