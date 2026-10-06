@@ -79,22 +79,22 @@ export const FEATURED_FORMATS: SupportedFormatItem[] = [
   },
   {
     id: 'xlsx',
-    extension: '.xlsx / .csv',
-    name: 'Excel & Data Sheet',
+    extension: '.xlsx / .ods / .csv',
+    name: 'Excel & Spreadsheets',
     category: 'document',
     categoryLabel: 'Documents',
-    highlight: 'Multi-sheet tabs · Column sorting & search',
+    highlight: 'Multi-sheet tabs · OpenDocument ODS & Excel',
     icon: Table,
     iconColor: 'text-emerald-500 dark:text-emerald-400',
     iconBg: 'bg-emerald-500/10'
   },
   {
     id: 'pptx',
-    extension: '.pptx',
-    name: 'PowerPoint Deck',
+    extension: '.pptx / .ppt / .odp',
+    name: 'PowerPoint & Presentations',
     category: 'document',
     categoryLabel: 'Documents',
-    highlight: 'Slide deck navigator · Text & shape renderer',
+    highlight: 'Slide deck navigator · PPT, PPTX & ODP slides',
     icon: Presentation,
     iconColor: 'text-amber-500 dark:text-amber-400',
     iconBg: 'bg-amber-500/10'

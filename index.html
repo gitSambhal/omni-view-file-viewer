@@ -7,12 +7,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OmniView File Viewer - Offline & Local File Previewer</title>
+    <title>OmniView File Viewer – Offline Multi-Format File Previewer & Studio</title>
     
     <!-- Developer Attribution & SEO Meta -->
     <meta name="author" content="Suhail Akhtar (suhail.top)" />
-    <meta name="description" content="100% offline & local file preview studio with multi-tab workspace, live file sync, dark mode, and support for PDFs, Office docs, code, databases, media & archives." />
-    <meta name="keywords" content="file viewer, offline pdf viewer, docx viewer, excel viewer, code editor, live file sync, json viewer, database viewer, hex viewer, local file previewer, suhail akhtar" />
+    <meta name="description" content="100% offline in-browser file previewer supporting 150+ file types: PDFs, Word, Excel, PPTX, Virtual Hard Disks (VHD/ISO), Archives, Databases, Code, Media, Fonts & Hex." />
+    <meta name="keywords" content="file viewer, offline pdf viewer, docx viewer, excel viewer, pptx viewer, vhd viewer, mount vhd in browser, iso viewer, sqlite viewer, code editor, live file sync, json viewer, database viewer, hex viewer, font viewer, certificate inspector, geojson viewer, local file previewer, suhail akhtar" />
     <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#0f172a" />
     <link rel="canonical" href="https://file.suhail.top" />
@@ -29,8 +29,8 @@
     <link rel="manifest" href="/manifest.json" />
 
     <!-- Open Graph / Social Sharing -->
-    <meta property="og:title" content="OmniView File Viewer - Offline & Local File Previewer" />
-    <meta property="og:description" content="100% offline & local file preview studio with multi-tab workspace, live file sync, dark mode, and support for PDFs, Office docs, code, databases, media & archives." />
+    <meta property="og:title" content="OmniView File Viewer – Offline Multi-Format File Previewer & Studio" />
+    <meta property="og:description" content="100% offline in-browser file previewer supporting 150+ file types: PDFs, Word, Excel, PPTX, Virtual Hard Disks (VHD/ISO), Archives, Databases, Code, Media, Fonts & Hex." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://file.suhail.top" />
     <meta property="og:site_name" content="OmniView File Viewer" />
@@ -39,8 +39,8 @@
 
     <!-- Twitter Cards -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="OmniView File Viewer - Offline & Local File Previewer" />
-    <meta name="twitter:description" content="100% offline & local file preview studio with multi-tab workspace, live file sync, dark mode, and support for PDFs, Office docs, code, databases, media & archives." />
+    <meta name="twitter:title" content="OmniView File Viewer – Offline Multi-Format File Previewer & Studio" />
+    <meta name="twitter:description" content="100% offline in-browser file previewer supporting 150+ file types: PDFs, Word, Excel, PPTX, Virtual Hard Disks (VHD/ISO), Archives, Databases, Code, Media, Fonts & Hex." />
     <meta name="twitter:image" content="/favicon.svg" />
 
     <!-- Structured JSON-LD Schema for Search Crawlers -->
@@ -54,7 +54,7 @@
           "name": "OmniView File Viewer",
           "alternateName": "OmniView File Studio",
           "url": "https://file.suhail.top",
-          "description": "100% offline & local file preview studio with multi-tab workspace, live file sync, dark mode, and support for 60+ file formats including PDFs, Office docs, code, databases, media & archives.",
+          "description": "100% offline in-browser file preview studio supporting 150+ file formats: PDFs, Word docs, Excel spreadsheets, PPTX decks, Virtual Hard Disks (VHD/VHDX/ISO), Archives (ZIP/7Z/RAR/TAR), Databases (SQLite/DBF/MDB), Code, Cinema Media, Typographic Fonts, Certificates & Hex Byte Streams.",
           "applicationCategory": "DeveloperApplication",
           "operatingSystem": "All",
           "browserRequirements": "Requires JavaScript. Requires HTML5.",
@@ -73,10 +73,20 @@
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-            "application/epub+zip",
+            "application/x-vhd",
+            "application/x-iso9660-image",
+            "application/x-7z-compressed",
+            "application/vnd.rar",
+            "application/zip",
+            "application/x-tar",
             "application/x-sqlite3",
             "application/x-dbf",
             "application/x-msaccess",
+            "application/epub+zip",
+            "application/geo+json",
+            "application/x-x509-ca-cert",
+            "font/ttf",
+            "font/woff2",
             "text/x-python",
             "application/typescript",
             "text/javascript",
@@ -84,22 +94,18 @@
             "text/markdown",
             "application/json",
             "text/yaml",
-            "application/geo+json",
             "image/png",
             "image/jpeg",
             "image/svg+xml",
             "video/mp4",
             "audio/mpeg",
-            "font/ttf",
-            "font/woff2",
-            "application/zip",
-            "application/x-tar",
             "application/x-msdownload",
             "application/wasm",
             "application/octet-stream"
           ],
           "featureList": [
             "100% Client-Side In-Memory Parsing",
+            "Direct File Previews Inside Virtual Disks (VHD/ISO) & Archives",
             "Multi-Tab File Previewer Workspace",
             "Local Disk Live Sync via File System Access API",
             "Password-Protected PDF Decryption & HiDPI Retina Zoom",
@@ -107,6 +113,7 @@
             "In-Browser Python 3.12 Pyodide WebAssembly Sandbox",
             "SQLite, FoxPro DBF & Access MDB Query Consoles",
             "Live TypeScript AST & In-Browser NPM CDN Playground",
+            "X.509 Certificate & Cryptographic Key Inspector",
             "16-Column Memory Offset Hex Byte Inspector",
             "100% Offline PWA Capabilities with Zero Server Uploads"
           ]
@@ -115,65 +122,95 @@
           "@type": "ItemList",
           "@id": "https://file.suhail.top/#supported-formats",
           "name": "Supported File Formats in OmniView",
-          "description": "Comprehensive directory of 60+ natively supported file types in OmniView.",
+          "description": "Comprehensive directory of 150+ natively supported file types in OmniView across 23 categories.",
           "itemListElement": [
             {
               "@type": "ListItem",
               "position": 1,
               "name": "PDF Document (.pdf)",
-              "description": "Client-side PDF rendering with password decryption, page navigation, and HiDPI retina zoom."
+              "description": "Client-side PDF rendering with password decryption, page navigation, thumbnails, outline, and HiDPI retina zoom."
             },
             {
               "@type": "ListItem",
               "position": 2,
-              "name": "Word Document (.docx)",
-              "description": "OpenXML Word document parser with formatting, tables, and embedded images."
+              "name": "Virtual Hard Disk (.vhd / .vhdx)",
+              "description": "In-memory mounting of Fixed and Dynamic VHD disk images with MBR & GPT partition tables and FAT filesystems."
             },
             {
               "@type": "ListItem",
               "position": 3,
-              "name": "Excel Spreadsheet (.xlsx / .csv)",
-              "description": "Multi-sheet spreadsheet viewer with column sorting, filtering, and row search."
+              "name": "Optical Disc Image (.iso / .dmg)",
+              "description": "ISO 9660 and Apple DMG container parser with Joliet directory exploration and zero-extraction file preview."
             },
             {
               "@type": "ListItem",
               "position": 4,
-              "name": "PowerPoint Presentation (.pptx)",
-              "description": "Slide deck presentation viewer with slide navigation and shape rendering."
+              "name": "Multi-Format Archive Suite (.zip / .7z / .rar / .tar / .cab / .deb)",
+              "description": "Comprehensive client-side decompression with folder hierarchy and direct in-memory preview for all 21 file types."
             },
             {
               "@type": "ListItem",
               "position": 5,
-              "name": "SQLite Database (.sqlite / .db)",
-              "description": "In-browser SQLite query console and table schema introspection via WebAssembly."
+              "name": "Word Document (.docx / .doc)",
+              "description": "OpenXML Word document parser with formatting, tables, headings, and embedded images."
             },
             {
               "@type": "ListItem",
               "position": 6,
+              "name": "Excel Spreadsheet (.xlsx / .xls / .ods / .csv)",
+              "description": "Multi-sheet spreadsheet viewer with column sorting, filtering, row search, and formula results."
+            },
+            {
+              "@type": "ListItem",
+              "position": 7,
+              "name": "PowerPoint Presentation (.pptx / .ppt)",
+              "description": "Slide deck presentation viewer with slide thumbnails, navigation, and shape rendering."
+            },
+            {
+              "@type": "ListItem",
+              "position": 8,
+              "name": "SQLite & Database Files (.sqlite / .db / .dbf / .mdb / .sql)",
+              "description": "In-browser SQLite query console, FoxPro DBF record browser, and SQL syntax analyzer."
+            },
+            {
+              "@type": "ListItem",
+              "position": 9,
               "name": "Python Script (.py)",
               "description": "Python 3.12 execution sandbox powered by Pyodide WebAssembly with live terminal stdout."
             },
             {
               "@type": "ListItem",
-              "position": 7,
-              "name": "TypeScript & JavaScript (.ts / .tsx / .js)",
-              "description": "Live syntax AST inspector and NPM package playground runtime."
-            },
-            {
-              "@type": "ListItem",
-              "position": 8,
-              "name": "HTML & Live Web (.html / .htm)",
-              "description": "Isolated sandbox preview with split code mode and DOM tree explorer."
-            },
-            {
-              "@type": "ListItem",
-              "position": 9,
-              "name": "Compressed Archives (.zip / .tar / .gz)",
-              "description": "In-browser decompression with folder tree and 1-click nested file preview."
-            },
-            {
-              "@type": "ListItem",
               "position": 10,
+              "name": "TypeScript & JavaScript (.ts / .tsx / .js)",
+              "description": "Live syntax AST inspector and in-browser NPM CDN package playground runtime."
+            },
+            {
+              "@type": "ListItem",
+              "position": 11,
+              "name": "HTML & Live Web (.html / .htm / .xhtml)",
+              "description": "Isolated sandbox preview with split code mode, DOM tree explorer, and live console."
+            },
+            {
+              "@type": "ListItem",
+              "position": 12,
+              "name": "Typographic Fonts (.ttf / .otf / .woff / .woff2)",
+              "description": "Dynamic font registration, custom pangram studio, and glyph matrix preview."
+            },
+            {
+              "@type": "ListItem",
+              "position": 13,
+              "name": "SSL/TLS Certificates & Keys (.pem / .crt / .key / .csr)",
+              "description": "X.509 certificate inspector with validity dates, subject DN hierarchy, and fingerprint generator."
+            },
+            {
+              "@type": "ListItem",
+              "position": 14,
+              "name": "Geospatial Maps (.geojson / .gpx / .kml)",
+              "description": "Interactive spatial vector map viewer with feature property tables and coordinate inspection."
+            },
+            {
+              "@type": "ListItem",
+              "position": 15,
               "name": "Raw Hex Byte Stream (Any File)",
               "description": "16-column memory offset hex inspection with ASCII decoding for any binary format."
             }
@@ -189,6 +226,14 @@
               "acceptedAnswer": {
                 "@type": "Answer",
                 "text": "No. OmniView operates 100% locally in your web browser. File bytes are read strictly in client memory using WebAssembly and HTML5 File APIs. No file contents, metadata, or telemetry are ever uploaded."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Can I mount and preview files inside Virtual Hard Disks (VHD) and ISOs without installing software?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes. OmniView parses Microsoft VHD/VHDX disk containers and ISO 9660 optical images directly in your browser, mounting internal FAT partitions and previewing contained files in-memory without physical disk writes."
               }
             },
             {

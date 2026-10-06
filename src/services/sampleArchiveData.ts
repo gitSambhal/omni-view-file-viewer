@@ -14,8 +14,8 @@ import { getSampleStandardPdfBuffer } from './samplePdfData';
  * containing real files (README.TXT, CONFIG.SYS, DATA.CSV, SCRIPT.PY, LOGO.SVG).
  */
 export function generateSampleVhdBuffer(): ArrayBuffer {
-  // Let's create a 128KB disk (256 sectors of 512 bytes) + 512-byte VHD footer = 131,584 bytes
-  const NUM_SECTORS = 256;
+  // 512KB Virtual Hard Disk (1024 sectors of 512 bytes) + 512-byte VHD footer = 524,800 bytes
+  const NUM_SECTORS = 1024;
   const SECTOR_SIZE = 512;
   const DISK_SIZE = NUM_SECTORS * SECTOR_SIZE;
   const TOTAL_SIZE = DISK_SIZE + 512; // Data + 512-byte footer
@@ -25,9 +25,9 @@ export function generateSampleVhdBuffer(): ArrayBuffer {
   const view = new DataView(buffer);
 
   // 1. Write MBR at Sector 0 (LBA 0)
-  // Partition 1 at LBA 1, 250 sectors long, Type 0x06 (FAT16)
+  // Partition 1 at LBA 1, 1020 sectors long, Type 0x06 (FAT16)
   const PARTITION_START_LBA = 1;
-  const PARTITION_SECTORS = 250;
+  const PARTITION_SECTORS = 1020;
 
   // Boot signature at offset 510
   bytes[510] = 0x55;
@@ -39,11 +39,11 @@ export function generateSampleVhdBuffer(): ArrayBuffer {
   bytes[446 + 2] = 0x01; // Starting Sector
   bytes[446 + 3] = 0x00; // Starting Cylinder
   bytes[446 + 4] = 0x06; // Type: FAT16
-  bytes[446 + 5] = 0x0f; // Ending Head
-  bytes[446 + 6] = 0x10; // Ending Sector
-  bytes[446 + 7] = 0x00; // Ending Cylinder
+  bytes[446 + 5] = 0x03; // Ending Head (4 heads: 0..3)
+  bytes[446 + 6] = 0x10; // Ending Sector (16 sectors)
+  bytes[446 + 7] = 0x0f; // Ending Cylinder (16 cylinders: 0..15)
   view.setUint32(446 + 8, PARTITION_START_LBA, true); // Starting LBA = 1
-  view.setUint32(446 + 12, PARTITION_SECTORS, true); // Total Sectors = 250
+  view.setUint32(446 + 12, PARTITION_SECTORS, true); // Total Sectors = 1020
 
   // 2. Write FAT16 Boot Sector at Partition Start (LBA 1 = offset 512)
   const bootOffset = PARTITION_START_LBA * SECTOR_SIZE;
@@ -60,9 +60,9 @@ export function generateSampleVhdBuffer(): ArrayBuffer {
   view.setUint16(bootOffset + 14, 1, true); // Reserved sectors: 1
   bytes[bootOffset + 16] = 2; // Number of FATs: 2
   view.setUint16(bootOffset + 17, 64, true); // Root entries count: 64
-  view.setUint16(bootOffset + 19, PARTITION_SECTORS, true); // Total sectors: 250
+  view.setUint16(bootOffset + 19, PARTITION_SECTORS, true); // Total sectors: 1020
   bytes[bootOffset + 21] = 0xf8; // Media descriptor: Hard Disk
-  view.setUint16(bootOffset + 22, 2, true); // Sectors per FAT: 2
+  view.setUint16(bootOffset + 22, 4, true); // Sectors per FAT: 4 (supports 1024 clusters)
   view.setUint16(bootOffset + 24, 16, true); // Sectors per track: 16
   view.setUint16(bootOffset + 26, 4, true); // Number of heads: 4
   view.setUint32(bootOffset + 28, PARTITION_START_LBA, true); // Hidden sectors: 1
@@ -71,9 +71,9 @@ export function generateSampleVhdBuffer(): ArrayBuffer {
   bytes[bootOffset + 511] = 0xaa;
 
   // FAT Tables:
-  // Reserved = 1 sector (LBA 1), so FAT 1 is at LBA 2 (offset 1024), FAT 2 at LBA 4 (offset 2048)
+  // Reserved = 1 sector (LBA 1), FAT 1 at LBA 2 (offset 1024, 4 sectors), FAT 2 at LBA 6 (offset 3072, 4 sectors)
   const fat1Offset = (PARTITION_START_LBA + 1) * SECTOR_SIZE;
-  const fat2Offset = (PARTITION_START_LBA + 1 + 2) * SECTOR_SIZE;
+  const fat2Offset = (PARTITION_START_LBA + 1 + 4) * SECTOR_SIZE;
 
   // FAT16 initial entries (Media 0xFFF8, End-of-chain 0xFFFF)
   view.setUint16(fat1Offset, 0xfff8, true);
@@ -82,19 +82,56 @@ export function generateSampleVhdBuffer(): ArrayBuffer {
   view.setUint16(fat2Offset + 2, 0xffff, true);
 
   // Root Directory:
-  // Starts after FATs: LBA 1 + 1 (reserved) + 2*2 (FATs) = LBA 6 (offset 3072)
-  // Root dir entries = 64 * 32 bytes = 2048 bytes (4 sectors, LBA 6..9)
-  const rootDirOffset = (PARTITION_START_LBA + 1 + 4) * SECTOR_SIZE;
-  // Data clusters start after Root Directory = LBA 10 (offset 5120)
+  // Starts after FATs: LBA 1 + 1 (reserved) + 2*4 (FATs) = LBA 10 (offset 5120)
+  // Root dir entries = 64 * 32 bytes = 2048 bytes (4 sectors, LBA 10..13)
+  const rootDirOffset = (PARTITION_START_LBA + 1 + 8) * SECTOR_SIZE;
+  // Data clusters start after Root Directory = LBA 14 (offset 7168)
   const dataStartOffset = rootDirOffset + 64 * 32;
 
-  // Sample files to place into the FAT16 volume:
-  const files = [
+  // PDF Bytes
+  const samplePdfData = new Uint8Array(getSampleStandardPdfBuffer());
+
+  // SVG Vector Image
+  const sampleSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 320" width="100%" height="100%">
+  <defs>
+    <linearGradient id="vhdGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="50%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+  </defs>
+  <rect width="500" height="320" rx="20" fill="#0b0f19"/>
+  <rect x="20" y="20" width="460" height="280" rx="14" fill="#131c31" stroke="#25355a" stroke-width="2"/>
+  <circle cx="250" cy="120" r="56" fill="url(#vhdGrad)"/>
+  <path d="M225 120 L242 138 L275 102" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="250" y="215" text-anchor="middle" fill="#ffffff" font-family="system-ui, sans-serif" font-size="20" font-weight="700">OmniView VHD In-Memory Mount</text>
+  <text x="250" y="245" text-anchor="middle" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="13">Direct Vector Graphic Preview · 100% Client-Side</text>
+  <text x="250" y="270" text-anchor="middle" fill="#64748b" font-family="system-ui, sans-serif" font-size="11">Developer: Suhail Akhtar (https://suhail.top)</text>
+</svg>`;
+
+  // Binary Kernel Mock
+  const sampleBin = new Uint8Array([
+    0x7f, 0x45, 0x4c, 0x46, 0x02, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x02, 0x00, 0x3e, 0x00, 0x01, 0x00, 0x00, 0x00, 0x78, 0x10, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  ]);
+
+  // Sample files across ALL major categories to place into the FAT16 volume:
+  const files: Array<{ name: string; ext: string; data: Uint8Array }> = [
+    {
+      name: 'MANUAL  ',
+      ext: 'PDF',
+      data: samplePdfData
+    },
+    {
+      name: 'LOGO    ',
+      ext: 'SVG',
+      data: new TextEncoder().encode(sampleSvg)
+    },
     {
       name: 'README  ',
       ext: 'TXT',
-      cluster: 2,
-      content: `OmniView Virtual Hard Disk (VHD) Mount Test
+      data: new TextEncoder().encode(`OmniView Virtual Hard Disk (VHD) Mount Test
 ============================================
 Developer: Suhail Akhtar (https://suhail.top)
 
@@ -102,48 +139,108 @@ This virtual disk image has been parsed and mounted 100% locally in client memor
 Format: Microsoft VHD Fixed Hard Disk Image
 Partition: FAT16 Master Volume
 No external extraction or virtualization software required!
-`
+`)
+    },
+    {
+      name: 'DOCS    ',
+      ext: 'MD ',
+      data: new TextEncoder().encode(`# OmniView Virtual Hard Disk Architecture
+
+This VHD disk image demonstrates client-side filesystem traversal and direct in-memory previewing for **all file formats**.
+
+### Features
+* **Zero Disk Extraction**: Reads sectors and FAT cluster chains in memory.
+* **Full Multi-Format Previews**: PDFs, Images, Markdown, Code, JSON, HTML, CSV, Logs, and Binary inspection.
+* **Developer**: [Suhail Akhtar](https://suhail.top)
+`)
     },
     {
       name: 'CONFIG  ',
-      ext: 'SYS',
-      cluster: 3,
-      content: `[OmniView_VHD_Config]
-DEVICE=VHD_DRIVER.SYS /PORT:3000
-BUFFERS=32,0
-FILES=128
-LASTDRIVE=Z
-SECURITY=STRICT_LOCAL_IN_MEMORY
-AUTHOR=Suhail Akhtar (https://suhail.top)
-`
+      ext: 'JSO',
+      data: new TextEncoder().encode(JSON.stringify({
+        diskName: 'system_disk_c.vhd',
+        filesystem: 'FAT16',
+        directPreview: true,
+        clusterSize: 1024,
+        sectorSize: 512,
+        developer: 'Suhail Akhtar (https://suhail.top)',
+        status: 'mounted_in_ram'
+      }, null, 2))
+    },
+    {
+      name: 'INDEX   ',
+      ext: 'HTM',
+      data: new TextEncoder().encode(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>OmniView VHD Portal</title>
+  <style>
+    body { background: #0b0f19; color: #f8fafc; font-family: sans-serif; padding: 2rem; }
+    h1 { color: #38bdf8; }
+    .badge { background: #1e293b; padding: 4px 8px; border-radius: 6px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h1>OmniView Virtual Hard Disk Web Service</h1>
+  <p>Served directly from in-memory FAT16 cluster chains.</p>
+  <span class="badge">Created by Suhail Akhtar</span>
+</body>
+</html>`)
     },
     {
       name: 'METRICS ',
       ext: 'CSV',
-      cluster: 4,
-      content: `Timestamp,Sector_Read,Cluster_Alloc,Disk_IOPS,Status
+      data: new TextEncoder().encode(`Timestamp,Sector_Read,Cluster_Alloc,Disk_IOPS,Status
 2026-10-06T00:00:00Z,512,Cluster_2,12500,ACTIVE
 2026-10-06T00:01:00Z,1024,Cluster_3,14200,ACTIVE
 2026-10-06T00:02:00Z,2048,Cluster_4,16800,HEALTHY
-`
+`)
+    },
+    {
+      name: 'SERVER  ',
+      ext: 'LOG',
+      data: new TextEncoder().encode(`[2026-10-06T00:00:01Z] [INFO] VHD controller booted successfully
+[2026-10-06T00:00:02Z] [INFO] FAT16 volume mounted (Partition 1)
+[2026-10-06T00:00:03Z] [SUCCESS] All files mounted in memory without extraction
+[2026-10-06T00:00:04Z] [INFO] Developer: Suhail Akhtar (https://suhail.top)
+`)
     },
     {
       name: 'SCRIPT  ',
       ext: 'PY ',
-      cluster: 5,
-      content: `# Python script running inside VHD
+      data: new TextEncoder().encode(`# Python script running inside VHD
 def inspect_vhd():
     print("VHD Virtual Drive successfully inspected by OmniView!")
     return {"status": "ok", "developer": "Suhail Akhtar"}
 
 if __name__ == "__main__":
     inspect_vhd()
-`
+`)
+    },
+    {
+      name: 'CONFIG  ',
+      ext: 'SYS',
+      data: new TextEncoder().encode(`[OmniView_VHD_Config]
+DEVICE=VHD_DRIVER.SYS /PORT:3000
+BUFFERS=32,0
+FILES=128
+LASTDRIVE=Z
+SECURITY=STRICT_LOCAL_IN_MEMORY
+AUTHOR=Suhail Akhtar (https://suhail.top)
+`)
+    },
+    {
+      name: 'KERNEL  ',
+      ext: 'BIN',
+      data: sampleBin
     }
   ];
 
-  // Write files to FAT directory and data clusters
+  // Write files to FAT directory and data clusters with multi-cluster chaining
   let dirIdx = 0;
+  let currentCluster = 2;
+
   for (const f of files) {
     const entryOffset = rootDirOffset + dirIdx * 32;
     // Filename (8 bytes) + Extension (3 bytes)
@@ -152,23 +249,32 @@ if __name__ == "__main__":
     bytes[entryOffset + 11] = 0x20; // Archive attribute
 
     // Starting cluster (offset 26, uint16)
-    view.setUint16(entryOffset + 26, f.cluster, true);
+    view.setUint16(entryOffset + 26, currentCluster, true);
+    view.setUint32(entryOffset + 28, f.data.length, true); // File size
 
-    const contentBytes = new TextEncoder().encode(f.content);
-    view.setUint32(entryOffset + 28, contentBytes.length, true); // File size
+    // Write file data across cluster chain
+    const clusterCount = Math.max(1, Math.ceil(f.data.length / (2 * SECTOR_SIZE)));
+    for (let c = 0; c < clusterCount; c++) {
+      const clusterId = currentCluster + c;
+      const nextCluster = c === clusterCount - 1 ? 0xffff : clusterId + 1;
 
-    // Mark cluster in FAT table as end of chain (0xFFFF)
-    view.setUint16(fat1Offset + f.cluster * 2, 0xffff, true);
-    view.setUint16(fat2Offset + f.cluster * 2, 0xffff, true);
+      // Link FAT 1 and FAT 2
+      view.setUint16(fat1Offset + clusterId * 2, nextCluster, true);
+      view.setUint16(fat2Offset + clusterId * 2, nextCluster, true);
 
-    // Write content to data cluster (Cluster N is at dataStartOffset + (N - 2) * 1024)
-    const clusterOffset = dataStartOffset + (f.cluster - 2) * (2 * SECTOR_SIZE);
-    bytes.set(contentBytes, clusterOffset);
+      // Write 1024-byte chunk
+      const chunk = f.data.subarray(c * 1024, (c + 1) * 1024);
+      const clusterDataOffset = dataStartOffset + (clusterId - 2) * (2 * SECTOR_SIZE);
+      if (clusterDataOffset + chunk.length <= DISK_SIZE) {
+        bytes.set(chunk, clusterDataOffset);
+      }
+    }
 
+    currentCluster += clusterCount;
     dirIdx++;
   }
 
-  // 3. Write 512-byte VHD Footer at DISK_SIZE (offset 131,072)
+  // 3. Write 512-byte VHD Footer at DISK_SIZE (offset 524,288)
   const footerOffset = DISK_SIZE;
 
   // Cookie: "conectix"
@@ -197,12 +303,12 @@ if __name__ == "__main__":
   bytes[footerOffset + 38] = 0x32; // '2'
   bytes[footerOffset + 39] = 0x6b; // 'k'
 
-  // Original & Current Size: 131,072 bytes (128 KB)
+  // Original & Current Size: 524,288 bytes (512 KB)
   view.setBigUint64(footerOffset + 40, BigInt(DISK_SIZE), false);
   view.setBigUint64(footerOffset + 48, BigInt(DISK_SIZE), false);
 
-  // Disk Geometry: 4 cylinders, 4 heads, 16 sectors per track (4 * 4 * 16 = 256 sectors)
-  view.setUint16(footerOffset + 56, 4, false); // Cylinders: 4
+  // Disk Geometry: 16 cylinders, 4 heads, 16 sectors per track (16 * 4 * 16 = 1024 sectors)
+  view.setUint16(footerOffset + 56, 16, false); // Cylinders: 16
   bytes[footerOffset + 58] = 4; // Heads: 4
   bytes[footerOffset + 59] = 16; // Sectors per track: 16
 

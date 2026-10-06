@@ -4,6 +4,8 @@
  */
 
 import { TabFile } from '../types/file';
+import * as XLSX from 'xlsx';
+import JSZip from 'jszip';
 import { getSampleStandardPdfBuffer, getSampleEncryptedPdfBuffer } from './samplePdfData';
 import { generateSampleDbfBuffer, generateSampleMdbBuffer, generateSampleSqliteBuffer } from './sampleDbData';
 import { generateSampleVhdBuffer, generateSampleTarGzBuffer, generateSampleIsoBuffer, generateSampleZipBufferSync } from './sampleArchiveData';
@@ -824,8 +826,106 @@ export function getSampleTabFiles(): TabFile[] {
     zoomLevel: 100
   };
 
+  // Generate Sample ODS (OpenDocument Spreadsheet)
+  let odsBuf: ArrayBuffer;
+  try {
+    const wb = XLSX.utils.book_new();
+    const wsData = [
+      ['Quarter', 'Revenue ($)', 'Operating Expenses ($)', 'Net Profit ($)', 'Growth Rate'],
+      ['Q1 2026', 128500, 74200, 54300, '14.2%'],
+      ['Q2 2026', 152300, 81000, 71300, '18.5%'],
+      ['Q3 2026', 189400, 89500, 99900, '24.3%'],
+      ['Q4 2026', 225000, 96000, 129000, '18.8%'],
+      ['Total', 695200, 340700, 354500, '19.0%']
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    XLSX.utils.book_append_sheet(wb, ws, 'Financial Performance');
+    const u8 = XLSX.write(wb, { bookType: 'ods', type: 'array' });
+    odsBuf = new Uint8Array(u8).buffer;
+  } catch {
+    odsBuf = new Uint8Array(100).buffer;
+  }
+
+  const sampleOds: TabFile = {
+    id: 'sample-ods',
+    name: 'financial_performance.ods',
+    size: odsBuf.byteLength,
+    type: 'application/vnd.oasis.opendocument.spreadsheet',
+    lastModified: now - 1500,
+    extension: 'ods',
+    category: 'excel',
+    arrayBuffer: odsBuf,
+    liveSyncActive: false,
+    syncStatus: 'synced',
+    viewMode: 'preview',
+    zoomLevel: 100
+  };
+
+  // Generate Sample PowerPoint / PPTX Presentation
+  const pptZip = new JSZip();
+  pptZip.file(
+    'ppt/presentation.xml',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:presentation xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"></p:presentation>`
+  );
+  pptZip.file(
+    'ppt/slides/slide1.xml',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:p><a:t>OmniView Universal Presentation</a:t></a:p></p:txBody></p:sp>
+    <p:sp><p:txBody>
+      <a:p><a:t>High-Performance In-Memory File Studio</a:t></a:p>
+      <a:p><a:t>Supports PPTX, PPT, ODP, and Keynote presentation formats.</a:t></a:p>
+      <a:p><a:t>Developed by Suhail Akhtar (suhail.top)</a:t></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`
+  );
+  pptZip.file(
+    'ppt/slides/slide2.xml',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:p><a:t>Presentation Features & Keyboard Shortcuts</a:t></a:p></p:txBody></p:sp>
+    <p:sp><p:txBody>
+      <a:p><a:t>Navigate slides with Arrow Left / Right or Space bar.</a:t></a:p>
+      <a:p><a:t>Switch between Slide View, Grid Sorter, and Text Outline.</a:t></a:p>
+      <a:p><a:t>Search across all slide titles, bullets, and presenter notes.</a:t></a:p>
+      <a:p><a:t>100% Client-side execution with zero latency and zero data transfer.</a:t></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`
+  );
+
+  let pptBuf: ArrayBuffer = new Uint8Array(100).buffer;
+  try {
+    // Generate synchronously or with fallback
+    pptZip.generateAsync({ type: 'uint8array' }).then(u8 => {
+      pptBuf = u8.buffer;
+    });
+  } catch {
+    // Fallback
+  }
+
+  const samplePpt: TabFile = {
+    id: 'sample-pptx',
+    name: 'quarterly_keynote.pptx',
+    size: 24500,
+    type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    lastModified: now - 1000,
+    extension: 'pptx',
+    category: 'pptx',
+    textContent: `# OmniView Universal Presentation\n\n- High-Performance In-Memory File Studio\n- Supports PPTX, PPT, ODP, and Keynote presentation formats.\n- Developed by Suhail Akhtar (suhail.top)\n\n---\n\n## Presentation Features\n\n- Navigate slides with Arrow Left / Right or Space bar.\n- Switch between Slide View, Grid Sorter, and Text Outline.\n- Search across all slide titles, bullets, and notes.\n- 100% Client-side execution with zero server uploads.`,
+    liveSyncActive: false,
+    syncStatus: 'synced',
+    viewMode: 'preview',
+    zoomLevel: 100
+  };
+
   return [
     sampleMd,
+    sampleOds,
+    samplePpt,
     sampleZip,
     sampleVhd,
     sampleTar,

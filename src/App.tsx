@@ -140,22 +140,48 @@ export default function App() {
     const ext = getFileExtension(extracted.name);
     const category = extracted.category || detectFileCategory(extracted.name);
     const tabId = `file-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+
+    // Ensure textContent is decoded if not provided and file is text-based
+    let textContent = extracted.textContent;
+    if (textContent === undefined && extracted.arrayBuffer && [
+      'code', 'html', 'markdown', 'json', 'text', 'log', 'subtitle', 'geojson', 'http', 'certificate'
+    ].includes(category)) {
+      try {
+        textContent = new TextDecoder('utf-8').decode(new Uint8Array(extracted.arrayBuffer));
+      } catch (err) {
+        console.warn('Failed to decode text content for tab:', err);
+      }
+    }
+
     const size = extracted.arrayBuffer
       ? extracted.arrayBuffer.byteLength
-      : extracted.textContent
-      ? new TextEncoder().encode(extracted.textContent).length
+      : textContent
+      ? new TextEncoder().encode(textContent).length
       : 0;
 
     let objectUrl: string | undefined = undefined;
     if (['image', 'audio', 'video', 'pdf'].includes(category) && extracted.arrayBuffer) {
-      const mime =
-        category === 'pdf'
-          ? 'application/pdf'
-          : category === 'image'
-          ? ext === 'svg'
+      let mime = 'application/octet-stream';
+      if (category === 'pdf') {
+        mime = 'application/pdf';
+      } else if (category === 'image') {
+        mime =
+          ext === 'svg'
             ? 'image/svg+xml'
-            : 'image/png'
-          : 'application/octet-stream';
+            : ext === 'png'
+            ? 'image/png'
+            : ext === 'gif'
+            ? 'image/gif'
+            : ext === 'webp'
+            ? 'image/webp'
+            : ext === 'bmp'
+            ? 'image/bmp'
+            : 'image/jpeg';
+      } else if (category === 'audio') {
+        mime = ext === 'mp3' ? 'audio/mpeg' : ext === 'wav' ? 'audio/wav' : ext === 'ogg' ? 'audio/ogg' : 'audio/mp4';
+      } else if (category === 'video') {
+        mime = ext === 'webm' ? 'video/webm' : 'video/mp4';
+      }
       objectUrl = URL.createObjectURL(new Blob([extracted.arrayBuffer], { type: mime }));
     }
 
@@ -168,7 +194,7 @@ export default function App() {
       extension: ext,
       category,
       arrayBuffer: extracted.arrayBuffer,
-      textContent: extracted.textContent,
+      textContent,
       objectUrl,
       liveSyncActive: false,
       lastSyncedAt: Date.now(),
@@ -326,8 +352,9 @@ export default function App() {
       } catch (_) {}
     }
 
-    // 3. Read ArrayBuffer only when needed for binary parsing (E-Book, DLL, Binary, Font, Excel, Docx, Zip, PDF, small files < 35MB)
-    if (category !== 'video' && category !== 'audio' && file.size < 35 * 1024 * 1024) {
+    // 3. Read ArrayBuffer for binary/archive parsing (up to 150MB for archives/disk images, 40MB for others)
+    const maxBufferSize = category === 'archive' || category === 'binary' ? 150 * 1024 * 1024 : 40 * 1024 * 1024;
+    if (category !== 'video' && category !== 'audio' && file.size < maxBufferSize) {
       try {
         arrayBuffer = await file.arrayBuffer();
       } catch (_) {}

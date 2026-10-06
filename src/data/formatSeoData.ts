@@ -81,22 +81,22 @@ export const FORMAT_SEO_REGISTRY: Record<string, FormatSeoRecord> = {
   xlsx: {
     id: 'xlsx',
     extension: '.xlsx',
-    aliases: ['xlsx', 'xls', 'csv', 'tsv', 'spreadsheet', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
-    name: 'Microsoft Excel Spreadsheet (XLSX / CSV)',
+    aliases: ['xlsx', 'xls', 'ods', 'csv', 'tsv', 'spreadsheet', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.oasis.opendocument.spreadsheet'],
+    name: 'Spreadsheets (Excel XLSX / ODS / CSV)',
     category: 'Spreadsheets & Data',
     mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    magicBytes: 'PK\\x03\\x04 (ZIP container)',
-    title: 'Offline Excel XLSX & CSV Spreadsheet Viewer | OmniView',
-    metaDescription: 'Open, sort, and search Excel (.xlsx, .xls) and CSV sheets directly in your browser. Multi-sheet navigation, column filtering, and formula grid with zero uploads.',
-    ogTitle: 'OmniView - In-Browser Excel & CSV Grid Viewer',
-    ogDescription: 'High-speed spreadsheet viewer with multi-sheet tabs, column search, and instant sorting. 100% private and offline.',
-    keywords: ['excel viewer', 'xlsx viewer online', 'csv viewer', 'in-browser spreadsheet', 'offline excel reader', 'private data grid'],
-    capabilities: ['Multi-Sheet Workbook Tabs', 'Instant Column Sorting & Filtering', 'Search Across Thousands of Rows', 'Formula Display', 'Export to CSV'],
+    magicBytes: 'PK\\x03\\x04 (ZIP container) or ODS container',
+    title: 'Offline Excel XLSX, ODS & CSV Spreadsheet Viewer | OmniView',
+    metaDescription: 'Open, sort, and search Excel (.xlsx, .xls), OpenDocument (.ods) and CSV sheets directly in your browser. Multi-sheet navigation, column filtering, and formula grid with zero uploads.',
+    ogTitle: 'OmniView - In-Browser Excel & ODS Spreadsheet Viewer',
+    ogDescription: 'High-speed spreadsheet viewer with multi-sheet tabs, column search, and instant sorting for XLSX, ODS, and CSV. 100% private and offline.',
+    keywords: ['excel viewer', 'ods viewer online', 'xlsx viewer online', 'csv viewer', 'opendocument spreadsheet reader', 'offline excel reader', 'private data grid'],
+    capabilities: ['Multi-Sheet Workbook Tabs', 'OpenDocument ODS Support', 'Instant Column Sorting & Filtering', 'Search Across Thousands of Rows', 'Formula Display', 'Export to CSV'],
     schemaCategory: 'BusinessApplication',
     faqs: [
       {
-        question: 'Can I view large Excel files without sharing my private data?',
-        answer: 'Yes. OmniView parses Excel files in client-side memory using SheetJS. No telemetry or spreadsheet contents are ever uploaded to any cloud server.'
+        question: 'Can I view OpenDocument .ods and large Excel files without sharing my private data?',
+        answer: 'Yes. OmniView parses both Excel (.xlsx/.xls) and OpenDocument (.ods) spreadsheets in client-side memory using SheetJS. No telemetry or spreadsheet contents are ever uploaded to any cloud server.'
       }
     ]
   },
@@ -104,22 +104,22 @@ export const FORMAT_SEO_REGISTRY: Record<string, FormatSeoRecord> = {
   pptx: {
     id: 'pptx',
     extension: '.pptx',
-    aliases: ['pptx', 'ppt', 'presentation', 'application/vnd.openxmlformats-officedocument.presentationml.presentation'],
-    name: 'PowerPoint Presentation (PPTX)',
+    aliases: ['pptx', 'ppt', 'odp', 'pps', 'ppsx', 'presentation', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/vnd.oasis.opendocument.presentation'],
+    name: 'PowerPoint & Presentations (PPTX / PPT / ODP)',
     category: 'Documents & PDFs',
     mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-    magicBytes: 'PK\\x03\\x04 (ZIP container)',
-    title: 'Offline PowerPoint PPTX Slide Deck Viewer | OmniView',
-    metaDescription: 'Preview Microsoft PowerPoint presentations (.pptx) slide by slide in your browser. Inspect slide layouts, shapes, text, and graphics offline with zero uploads.',
-    ogTitle: 'OmniView - In-Browser PPTX Slide Deck Viewer',
-    ogDescription: 'Interactive PowerPoint slide viewer with slide thumbnails, keyboard arrow navigation, and fullscreen presentation mode.',
-    keywords: ['pptx viewer', 'powerpoint online viewer', 'offline pptx reader', 'view presentation without powerpoint', 'slide deck previewer'],
-    capabilities: ['Slide Deck Thumbnail Strip', 'Slide Navigation & Zoom', 'Embedded Text & Shape Rendering', 'Zero Cloud Uploads'],
+    magicBytes: 'PK\\x03\\x04 (ZIP) or 0xD0CF11E0 (OLE2 Compound File)',
+    title: 'Offline PowerPoint PPTX, PPT & ODP Slide Deck Viewer | OmniView',
+    metaDescription: 'Preview Microsoft PowerPoint presentations (.pptx, .ppt) and OpenDocument (.odp) slide by slide in your browser. Inspect slide layouts, shapes, text, and graphics offline with zero uploads.',
+    ogTitle: 'OmniView - In-Browser PPTX & PPT Slide Deck Viewer',
+    ogDescription: 'Interactive PowerPoint and presentation slide viewer with slide thumbnails, keyboard arrow navigation, grid sorter, and fullscreen presentation mode.',
+    keywords: ['pptx viewer', 'ppt viewer online', 'odp presentation viewer', 'powerpoint online viewer', 'offline pptx reader', 'view presentation without powerpoint', 'slide deck previewer'],
+    capabilities: ['Slide Deck Thumbnail Strip', 'Legacy PPT & Modern PPTX Support', 'OpenDocument ODP Slides', 'Slide Navigation & Zoom', 'Embedded Text & Shape Rendering', 'Zero Cloud Uploads'],
     schemaCategory: 'BusinessApplication',
     faqs: [
       {
-        question: 'Can I preview PPTX presentations on Linux or Chromebooks?',
-        answer: 'Yes, OmniView runs in any modern browser on Windows, macOS, Linux, ChromeOS, and mobile devices without requiring Microsoft Office.'
+        question: 'Can I preview legacy .ppt and modern .pptx presentations on Linux or Chromebooks?',
+        answer: 'Yes, OmniView runs in any modern browser on Windows, macOS, Linux, ChromeOS, and mobile devices without requiring Microsoft Office or any server conversion.'
       }
     ]
   },
@@ -418,120 +418,6 @@ export const FORMAT_SEO_REGISTRY: Record<string, FormatSeoRecord> = {
     ]
   },
 
-  font: {
-    id: 'font',
-    extension: '.ttf',
-    aliases: ['ttf', 'otf', 'woff', 'woff2', 'font/ttf', 'font/woff2'],
-    name: 'Typography Font & Glyph Inspector (.ttf / .otf / .woff2)',
-    category: 'Fonts & Glyphs',
-    mimeType: 'font/ttf',
-    title: 'In-Browser Font Viewer & Glyph Unicode Inspector | OmniView',
-    metaDescription: 'Preview TrueType, OpenType, and WOFF2 fonts with dynamic browser registration, specimen waterfall (12px to 72px), editable text tester, and full Unicode glyph grid.',
-    ogTitle: 'OmniView - In-Browser Typography Font & Glyph Viewer',
-    ogDescription: 'Inspect .ttf, .otf, and .woff2 fonts with waterfall size specimens, live customizer, and Unicode glyph grid.',
-    keywords: ['font viewer online', 'ttf viewer', 'otf glyph inspector', 'test woff2 font', 'typography specimen'],
-    capabilities: ['Dynamic FontFace Registration', 'Typographic Waterfall Specimen', 'Interactive Live Text Preview', 'Full Glyph & Unicode Character Grid', 'Font Metrics & Name Table'],
-    schemaCategory: 'DesignApplication',
-    faqs: [
-      {
-        question: 'Can I test my custom font before using it in development?',
-        answer: 'Yes! OmniView dynamically registers the font in browser memory, allowing you to test specimens, kerning, and ligatures.'
-      }
-    ]
-  },
-
-  cert: {
-    id: 'cert',
-    extension: '.pem',
-    aliases: ['pem', 'crt', 'cer', 'der', 'p7b', 'certificate'],
-    name: 'X.509 SSL/TLS Certificate (.pem / .crt)',
-    category: 'Certificates & Keys',
-    mimeType: 'application/x-x509-ca-cert',
-    magicBytes: '-----BEGIN CERTIFICATE-----',
-    title: 'In-Browser X.509 Certificate Decoder & SAN Inspector | OmniView',
-    metaDescription: 'Decode and inspect X.509 SSL/TLS certificates (.pem, .crt, .cer) in your browser. View Subject Alternative Names (SAN), issuer chain, validity period, and SHA256 fingerprints with zero uploads.',
-    ogTitle: 'OmniView - X.509 SSL/TLS Certificate Decoder',
-    ogDescription: 'Inspect certificate validity, SAN domains, public key algorithms, and fingerprints 100% privately in client-side memory.',
-    keywords: ['certificate decoder', 'x509 viewer', 'inspect pem file', 'ssl certificate reader', 'check cert validity'],
-    capabilities: ['ASN.1 / DER / PEM Decoding', 'Subject Alternative Name (SAN) List', 'Validity Expiration Countdown', 'Issuer & Subject DN Breakdown', 'SHA-1 & SHA-256 Fingerprints'],
-    schemaCategory: 'SecurityApplication',
-    faqs: [
-      {
-        question: 'Is it safe to inspect private certificates or keys in OmniView?',
-        answer: 'Yes! OmniView processes certificates strictly in-memory within your local browser sandbox. No certificate or key data is ever transmitted over the network.'
-      }
-    ]
-  },
-
-  vhd: {
-    id: 'vhd',
-    extension: '.vhd',
-    aliases: ['vhd', 'vhdx', 'virtual hard disk', 'application/x-vhd'],
-    name: 'Virtual Hard Disk (.vhd / .vhdx)',
-    category: 'Virtual Disks (VHD)',
-    mimeType: 'application/x-vhd',
-    magicBytes: 'conectix (VHD) / vhdxfile (VHDX)',
-    title: 'In-Browser VHD Virtual Hard Disk & Partition Explorer | OmniView',
-    metaDescription: 'Inspect and preview Microsoft VHD and VHDX virtual hard disk images directly in your browser. Browse MBR/GPT partition tables, mount FAT filesystems, and preview files directly without extraction.',
-    ogTitle: 'OmniView - VHD Virtual Hard Disk Inspector',
-    ogDescription: 'Mount and preview VHD and VHDX virtual disks in-memory with MBR partition tables, FAT filesystem mounting, and direct file preview without extraction.',
-    keywords: ['vhd viewer online', 'open vhd without hyper-v', 'inspect virtual hard disk', 'vhd partition explorer', 'read vhd files browser'],
-    capabilities: ['Fixed & Dynamic Sparse VHD Support', 'MBR & GPT Partition Table Parser', 'In-VHD FAT12/16/32 Filesystem Mounter', 'Direct File Preview Without Extraction', 'Disk Geometry (CHS) & Capacity Telemetry'],
-    schemaCategory: 'UtilitiesApplication',
-    faqs: [
-      {
-        question: 'Can I view files inside a VHD without mounting it in Windows or Hyper-V?',
-        answer: 'Yes! OmniView directly parses the VHD container, reads the partition boot record, mounts the FAT volume in client-side memory, and lets you view files directly without any virtualization tools.'
-      }
-    ]
-  },
-
-  iso: {
-    id: 'iso',
-    extension: '.iso',
-    aliases: ['iso', 'img', 'optical disc image', 'application/x-iso9660-image'],
-    name: 'Optical Disc Image (.iso / .img)',
-    category: 'Optical Discs (ISO)',
-    mimeType: 'application/x-iso9660-image',
-    magicBytes: 'CD001 (ISO 9660 Primary Volume Descriptor)',
-    title: 'In-Browser ISO 9660 Disc Image Explorer | OmniView',
-    metaDescription: 'Inspect and explore ISO 9660 and Joliet optical disc images directly in your browser. Traverse directory trees and preview files directly in-memory with zero server uploads.',
-    ogTitle: 'OmniView - ISO 9660 Disc Image Explorer',
-    ogDescription: 'Mount and browse ISO disc images 100% in-browser with directory hierarchy navigation and instant file previewing.',
-    keywords: ['iso viewer online', 'open iso file without extraction', 'iso 9660 explorer', 'read iso in browser', 'inspect iso image'],
-    capabilities: ['ISO 9660 & Joliet Volume Descriptor Parser', 'Directory Hierarchy Tree Navigation', 'Direct In-Memory File Preview', 'Selective File Download', 'Volume Label & Space Telemetry'],
-    schemaCategory: 'UtilitiesApplication',
-    faqs: [
-      {
-        question: 'Does OmniView require burning or mounting the ISO image to a virtual drive?',
-        answer: 'No. OmniView parses the ISO 9660 filesystem records in client-side memory and displays the files directly in your browser.'
-      }
-    ]
-  },
-
-  archive: {
-    id: 'archive',
-    extension: '.zip',
-    aliases: ['zip', 'tar', 'gz', 'tgz', '7z', 'rar', 'bz2', 'cab', 'deb', 'cpio', 'archive', 'application/zip', 'application/x-tar', 'application/gzip', 'application/x-7z-compressed', 'application/x-rar-compressed'],
-    name: 'Universal Archive Suite (ZIP, TAR, GZ, 7Z, RAR, CAB, DEB)',
-    category: 'Archives (ZIP/TAR/7Z/RAR)',
-    mimeType: 'application/zip',
-    magicBytes: 'PK\\x03\\x04 (ZIP) / ustar (TAR) / 7z\\xBC\\xAF (7Z) / Rar! (RAR) / 0x1F 0x8B (GZ)',
-    title: 'In-Browser Universal Archive Explorer & Direct Previewer | OmniView',
-    metaDescription: 'Inspect, extract, and preview ZIP, TAR, GZ, 7Z, RAR, CAB, and DEB archives directly in your browser. View nested documents, images, code, and SQLite tables in-memory without extraction.',
-    ogTitle: 'OmniView - Universal Archive Explorer & Direct Previewer',
-    ogDescription: 'Browse multi-format archives in client-side memory with instant in-place preview of code, docs, images, and audio without manual extraction.',
-    keywords: ['zip viewer online', 'open 7z in browser', 'rar inspector without software', 'tar.gz explorer', 'preview archive files directly'],
-    capabilities: ['Multi-Format Decompression (ZIP, TAR, GZ, 7Z, RAR, CAB, DEB)', 'Direct In-Memory Preview Without Extraction', 'Interactive Folder Tree Hierarchy', 'Open Extracted Files in New Workspace Tabs', '1-Click Export All as ZIP'],
-    schemaCategory: 'UtilitiesApplication',
-    faqs: [
-      {
-        question: 'Can I preview files inside an archive without extracting the whole file to disk?',
-        answer: 'Yes! OmniView parses archive directory records in-memory and allows you to view images, documents, code, or databases directly in the browser.'
-      }
-    ]
-  },
-
   binary: {
     id: 'binary',
     extension: '.dll',
@@ -551,6 +437,123 @@ export const FORMAT_SEO_REGISTRY: Record<string, FormatSeoRecord> = {
       {
         question: 'What binaries can I inspect in OmniView?',
         answer: 'OmniView supports Windows PE (.exe, .dll), WebAssembly (.wasm), Linux ELF (.so), macOS Mach-O (.dylib), and Java class files (.class).'
+      }
+    ]
+  },
+
+  vhd: {
+    id: 'vhd',
+    extension: '.vhd',
+    aliases: ['vhd', 'vhdx', 'virtual-disk', 'application/x-vhd'],
+    name: 'Microsoft Virtual Hard Disk (VHD / VHDX)',
+    category: 'Archives & Virtual Disks',
+    mimeType: 'application/x-vhd',
+    magicBytes: 'conectix (0x63 0x6f 0x6e 0x65 0x63 0x74 0x69 0x78)',
+    title: 'Offline Virtual Hard Disk (VHD & VHDX) Mount & File Explorer | OmniView',
+    metaDescription: 'Mount Microsoft VHD & VHDX virtual hard disks in your browser 100% offline. Parses MBR & GPT partition tables, FAT filesystems, and previews all files without extraction.',
+    ogTitle: 'OmniView - Client-Side Virtual Hard Disk (VHD) Mounter',
+    ogDescription: 'Direct in-memory mounting and file browsing for Microsoft VHD & VHDX disk images with zero installation or extraction required.',
+    keywords: ['vhd viewer', 'open vhd online', 'mount vhd in browser', 'vhdx reader', 'offline vhd explorer', 'vhd fat16 fat32 partition viewer'],
+    capabilities: ['In-Memory VHD/VHDX Footer Parser', 'Fixed & Dynamic (BAT) Disk Support', 'MBR & GPT Partition Table Detection', 'FAT12/16/32 Volume Mounter', 'Direct File Previews Across 21 Categories', 'Export All Files as ZIP'],
+    schemaCategory: 'DeveloperApplication',
+    faqs: [
+      {
+        question: 'Can I view files inside a VHD without installing Hyper-V or 7-Zip?',
+        answer: 'Yes! OmniView parses the VHD sector layout and FAT filesystem structure entirely in client memory, letting you preview documents, images, code, and PDFs instantly.'
+      },
+      {
+        question: 'Does OmniView extract the whole virtual disk to my local drive?',
+        answer: 'No. OmniView uses lazy cluster chain streaming in RAM so files are extracted and rendered on-demand with zero physical disk writes.'
+      }
+    ]
+  },
+
+  iso: {
+    id: 'iso',
+    extension: '.iso',
+    aliases: ['iso', 'img', 'dmg', 'application/x-iso9660-image', 'application/x-apple-diskimage'],
+    name: 'ISO 9660 Optical Disc Image & Apple DMG',
+    category: 'Archives & Virtual Disks',
+    mimeType: 'application/x-iso9660-image',
+    magicBytes: 'CD001 (ISO 9660) / koly (Apple DMG)',
+    title: 'Offline ISO 9660 & Apple DMG Disc Image Explorer | OmniView',
+    metaDescription: 'Inspect and browse ISO 9660 optical disc images and Apple DMG containers 100% in your browser. Traverses Joliet directory records and previews files without burning or mounting.',
+    ogTitle: 'OmniView - Optical ISO & Apple DMG Disc Image Explorer',
+    ogDescription: 'Instant in-memory exploration of ISO and Apple DMG disk images with zero uploads and direct file previews.',
+    keywords: ['iso viewer', 'open iso online', 'extract iso in browser', 'apple dmg reader', 'offline iso reader'],
+    capabilities: ['ISO 9660 Primary Volume Descriptor Parser', 'Joliet Unicode Filename Support', 'Apple UDIF DMG Trailer Reader', 'Recursive Directory Tree Navigation', '1-Click File Download & Tab Promotion'],
+    schemaCategory: 'DeveloperApplication',
+    faqs: [
+      {
+        question: 'Can I browse ISO files on mobile devices or Chromebooks?',
+        answer: 'Yes. OmniView runs anywhere a modern web browser is available, allowing you to open and explore ISO files without any third-party disk mounting tools.'
+      }
+    ]
+  },
+
+  archive: {
+    id: 'archive',
+    extension: '.zip',
+    aliases: ['zip', 'tar', 'gz', 'tgz', '7z', 'rar', 'cab', 'deb', 'ar', 'cpio', 'bz2', 'application/zip', 'application/x-tar', 'application/x-7z-compressed', 'application/vnd.rar'],
+    name: 'Universal Archive Suite (ZIP, TAR, 7Z, RAR, CAB, DEB)',
+    category: 'Archives & Virtual Disks',
+    mimeType: 'application/zip',
+    magicBytes: 'PK\\x03\\x04 (ZIP) / 7z\\xBC\\xAF\\x27\\x1C (7Z) / Rar! (RAR) / MSCF (CAB)',
+    title: 'Offline Multi-Format Archive Decompressor & Viewer | OmniView',
+    metaDescription: 'Extract and preview ZIP, TAR, GZ, 7-Zip, RAR, CAB, DEB, AR, and CPIO archives in your browser without uploading. Directly preview PDFs, images, code, and tables in-memory.',
+    ogTitle: 'OmniView - Universal Offline Archive Decompressor',
+    ogDescription: 'Instant client-side decompression for ZIP, 7Z, RAR, TAR, and CAB archives with direct multi-format file previewing.',
+    keywords: ['zip viewer', '7z reader online', 'rar extractor in browser', 'open tar gz online', 'private archive reader'],
+    capabilities: ['Multi-Archive Format Engine', 'Direct In-Memory Preview Without Extraction', 'Recursive Nested Archive Navigation', 'Single File Extract & Download', 'Export Entire Container as ZIP'],
+    schemaCategory: 'DeveloperApplication',
+    faqs: [
+      {
+        question: 'Are my archive contents protected when uncompressing?',
+        answer: 'Yes. All decompression happens strictly inside your local browser memory. No files or folder lists are ever sent to any remote server.'
+      }
+    ]
+  },
+
+  font: {
+    id: 'font',
+    extension: '.ttf',
+    aliases: ['ttf', 'otf', 'woff', 'woff2', 'eot', 'font/ttf', 'font/woff2'],
+    name: 'Typographic Font & Glyph Specimen (.ttf, .otf, .woff2)',
+    category: 'Fonts & Glyphs',
+    mimeType: 'font/ttf',
+    title: 'Offline Font Viewer & Glyph Specimen Studio | OmniView',
+    metaDescription: 'Preview TrueType (.ttf), OpenType (.otf), and WOFF/WOFF2 font specimens in your browser. Test custom pangrams, inspect glyph tables, and test font weights 100% locally.',
+    ogTitle: 'OmniView - Typographic Font Specimen Studio',
+    ogDescription: 'Inspect typographic font files with interactive pangram testing, glyph tables, and font metric previews.',
+    keywords: ['font viewer', 'ttf viewer', 'otf inspector', 'woff2 previewer', 'glyph table viewer'],
+    capabilities: ['In-Browser @font-face Registration', 'Custom Pangram Studio', 'Glyph Table Matrix', 'Font Weight & Size Sliders', 'Font Metadata Inspector'],
+    schemaCategory: 'DeveloperApplication',
+    faqs: [
+      {
+        question: 'Can I test my custom font before installing it on my operating system?',
+        answer: 'Yes! OmniView dynamically registers your font in the browser runtime so you can test typography, pangrams, and glyph rendering instantly without installing it to your system.'
+      }
+    ]
+  },
+
+  certificate: {
+    id: 'certificate',
+    extension: '.pem',
+    aliases: ['pem', 'crt', 'cer', 'key', 'pub', 'pfx', 'p12', 'csr', 'der'],
+    name: 'SSL/TLS Certificate & Cryptographic Key Inspector',
+    category: 'Certificates & Keys',
+    mimeType: 'application/x-x509-ca-cert',
+    title: 'Offline X.509 Certificate & Private Key Inspector | OmniView',
+    metaDescription: 'Inspect SSL/TLS certificates (.crt, .pem, .cer), CSR requests, and public/private keys 100% locally. View subject, issuer, validity period, fingerprints, and SAN extensions.',
+    ogTitle: 'OmniView - Secure Offline Certificate & Key Inspector',
+    ogDescription: 'Analyze X.509 SSL certificates, validity dates, subject alternative names, and fingerprints with complete cryptographic privacy.',
+    keywords: ['certificate viewer', 'inspect x509 cert online', 'pem key viewer', 'ssl certificate decoder', 'offline cert reader'],
+    capabilities: ['X.509 ASN.1 Parser', 'Validity Date Range & Expiry Alerts', 'Issuer & Subject DN Hierarchy', 'SHA-256 Fingerprint Generator', 'Subject Alternative Names (SAN) Explorer'],
+    schemaCategory: 'SecurityApplication',
+    faqs: [
+      {
+        question: 'Is it safe to inspect private keys and corporate certificates?',
+        answer: 'Yes! Because OmniView runs 100% on your local machine with zero network traffic, your private keys, certificates, and credentials never touch a remote server.'
       }
     ]
   },

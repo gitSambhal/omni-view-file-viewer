@@ -7,6 +7,87 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.3.5] - 2026-10-06
+
+### Fixed
+- **OpenDocument Spreadsheet (.ods) Categorization**:
+  - Corrected MIME-type and extension detection order so that `.ods` (OpenDocument Spreadsheet) files properly open in the high-performance SheetJS Excel/Spreadsheet viewer with multi-sheet tabs, column sorting, formulas, and search, instead of falling into the E-book viewer.
+- **PowerPoint (.ppt & .pptx & .odp) Universal Presentation Engine**:
+  - Resolved loading failure for legacy Microsoft PowerPoint 97-2003 binary format (`.ppt`, `.pps`, `.pot` OLE2 compound files) and OpenDocument Presentations (`.odp`).
+  - Added dedicated `presentationParser.ts` supporting binary PowerPoint records (`rtTextCharsAtom`, `rtTextBytesAtom`, `rtSlide`, `rtSlideListWithText`), OpenDocument XML pages (`draw:page`), and modern OOXML (`ppt/slides/slide*.xml`).
+  - Enhanced viewer with keyboard arrow navigation, slide thumbnails, 16:9 presentation card stage, grid sorter view, outline text extraction, presenter notes, and fullscreen slideshow.
+
+### Changed
+- **Launch Page Streamlined to Popular Formats**:
+  - Redesigned the launch page hero and format showcase to focus on the most popular file types:
+    1. **Docs & PDF**: PDF, Word (`.docx`, `.doc`), OpenDocument (`.odt`), RTF, Plain Text.
+    2. **Spreadsheets**: Excel (`.xlsx`, `.xls`), OpenDocument (`.ods`), CSV, TSV.
+    3. **Presentations**: PowerPoint (`.pptx`, `.ppt`), OpenDocument Presentation (`.odp`), Keynote.
+    4. **Images & Photos**: PNG, JPG, WebP, SVG, GIF, PSD.
+    5. **Audio & Video**: MP4, WebM, MKV, MP3, WAV, FLAC.
+    6. **Code & Archives**: ZIP, RAR, 7Z, TypeScript, Python, JSON, SQL.
+  - Included sample `.ods` and `.pptx` files in "Try Sample Files" for instant testing.
+  - Maintained developer attribution for **Suhail Akhtar** ([suhail.top](https://suhail.top)).
+
+## [4.3.4] - 2026-10-06
+
+### Changed
+- **SEO & Launch Page Alignment for 150+ File Formats**:
+  - **Comprehensive Format Registry & Directory**: Verified and documented all 150+ native file types across 23 distinct categories (PDF, Word DOCX, Excel XLSX, PPTX, Virtual Hard Disks VHD/VHDX, ISO, 7Z, RAR, CAB, DEB, Databases SQLite/DBF/MDB, Code in 50+ languages, Cinema Media, Fonts, Certificates, GeoJSON, and E-Books).
+  - **Enhanced Applet SEO & Metadata**:
+    - Updated HTML `<title>` and `<meta name="description">` to accurately communicate the full 150+ format coverage and in-memory virtual disk mounting capabilities.
+    - Synchronized OpenGraph (`og:title`, `og:description`, `og:image`) and Twitter Card metadata.
+    - Expanded Schema.org JSON-LD structured data with extensive `WebApplication`, `ItemList` (15 key format specifications), and `FAQPage` schemas.
+    - Synchronized `metadata.json` application description.
+  - **Updated Launch Drop Zone & Modal**:
+    - Refreshed the drop zone description and quick clusters ("PDF & Office", "VHD, ISO & 7Z Disks", "SQLite, DBF & MDB", "Code (50+ Languages)", "Fonts & Certificates").
+    - Added dedicated SEO records and directory cards for VHD, ISO, 7Z, RAR, CAB, DEB, Fonts, Certificates, GeoJSON, and E-Books.
+  - **Developer Attribution**: Maintained attribution for **Suhail Akhtar** ([suhail.top](https://suhail.top)).
+
+## [4.3.3] - 2026-10-06
+
+### Fixed
+- **Virtual Hard Disk (VHD) & Dynamic Disk Stability**:
+  - Resolved `RangeError: Array buffer allocation failed` when parsing and mounting Virtual Hard Disks (VHD), disk images, and non-standard FAT partitions.
+  - Added strict FAT12/FAT16/FAT32 boot sector validation (checking `0x55 0xaa` magic, valid sector sizes 512–4096 bytes, and power-of-2 cluster metrics).
+  - Capped directory cluster chain traversal (maximum 64–128 clusters) to eliminate runaway while loops on unformatted or corrupt disk blocks.
+  - Safeguarded lazy file extraction with a 50MB browser allocation ceiling and defensive try/catch blocks.
+  - Added full GUID Partition Table (GPT) header inspection at LBA 1 alongside standard MBR partitioning.
+  - Increased ArrayBuffer reading threshold to 150MB for virtual disk images and large archives.
+- **Universal Multi-Format In-Memory Previews**:
+  - Full preview support verified across all 21 file categories inside ZIP, TAR, VHD, ISO, 7Z, RAR, CAB, DEB, AR, and CPIO archives without disk extraction.
+  - Developer Attribution: Maintained for **Suhail Akhtar** ([suhail.top](https://suhail.top)).
+
+## [4.3.2] - 2026-10-06
+
+### Added
+- **Universal Multi-Format In-Memory Previews for Archives & Virtual Hard Disks (VHD)**:
+  - **Complete File Format Support Inside Archives & VHDs**:
+    - **PDF Documents**: Direct PDF.js canvas rendering with page navigation, thumbnails, zoom, rotation, and search.
+    - **Vector & Raster Images**: `ImageViewer` with pan/zoom, rotation, CSS photo filters, dimensions inspection, and SVG support.
+    - **Word Documents (.docx/.doc)**: Native in-memory `DocxViewer` rendering formatted typography and tables.
+    - **Excel & Spreadsheets (.xlsx, .xls, .ods, .csv, .tsv)**: Interactive `ExcelViewer` with multi-sheet tabs and tabular grid navigation.
+    - **PowerPoint Presentations (.pptx, .ppt)**: `PptxViewer` slide deck explorer with slide-by-slide and grid view modes.
+    - **Databases & SQL**: `DatabaseViewer` supporting SQLite binary tables, DBF records, and SQL schema scripts.
+    - **Markdown (.md)**: `MarkdownViewer` with GitHub-flavored markdown rendering, headers, lists, and syntax blocks.
+    - **Web Pages (.html, .htm)**: `HtmlPreviewViewer` with live interactive responsive preview, DOM explorer, and console logging.
+    - **JSON, XML, YAML**: `JsonXmlViewer` with collapsible tree nodes, color-coded types, search, and formatting.
+    - **System Logs (.log)**: `LogViewer` with severity filtering (INFO, WARN, ERROR, DEBUG), timestamps, and search.
+    - **Audio & Video**: Cinema-grade `MediaViewer` with playback speed, audio waveforms, timeline seeking, and media inspector.
+    - **Typographic Fonts (.ttf, .otf, .woff, .woff2)**: `FontViewer` with custom pangram specimen studio and glyph preview.
+    - **Certificates & Keys (.pem, .crt, .cer, .key)**: `CertificateViewer` inspecting validity dates, issuers, fingerprints, and keys.
+    - **E-Books (.epub)**: `EbookViewer` with chapter navigation, themes (paper/sepia/dark), and typography settings.
+    - **GeoJSON (.geojson, .kml)**: `GeoJsonViewer` with spatial feature inspection and map layer previews.
+    - **Subtitles (.srt, .vtt)**: `SubtitleViewer` with timestamped cues and search.
+    - **HTTP/REST (.http, .rest)**: `HttpRestViewer` parsing endpoints, headers, query parameters, and payloads.
+    - **Binary Executables & System Drivers (.bin, .sys, .dll, .exe, .so)**: `BinaryInspectorViewer` with deep PE/ELF analysis and full Hex editor.
+    - **Nested Archives & Disks**: Recursive in-memory `ZipViewer` to explore archives inside archives without extracting!
+  - **Expanded 512KB Virtual Hard Disk Sample (`system_disk_c.vhd`)**:
+    - Formatted with standard FAT16 filesystem and multi-cluster chaining.
+    - Packed with real files across all categories: `MANUAL.PDF` (real multi-page PDF), `LOGO.SVG` (vector diagram), `DOCS.MD`, `CONFIG.JSO`, `INDEX.HTM`, `METRICS.CSV`, `SERVER.LOG`, `SCRIPT.PY`, `CONFIG.SYS`, `KERNEL.BIN`, and `README.TXT`.
+  - **Seamless Tab Promotion**: "Open in Workspace Tab" button properly decodes text, sets MIME types, and initializes full workspace tab state for all file categories.
+  - **Developer Attribution**: Maintained attribution for **Suhail Akhtar** ([suhail.top](https://suhail.top)).
+
 ## [4.3.1] - 2026-10-06
 
 ### Fixed

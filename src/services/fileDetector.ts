@@ -15,17 +15,59 @@ export function detectFileCategory(filename: string, mimeType: string = ''): Fil
   const ext = getFileExtension(filename);
   const lowerName = filename.toLowerCase();
 
-  // PDF
+  // 1. PDF Documents
   if (ext === 'pdf' || mimeType.includes('pdf')) {
     return 'pdf';
   }
 
-  // HTTP & REST Request files (.http, .rest)
+  // 2. Excel & Spreadsheets (.xlsx, .xls, .ods, .fods, .csv, .tsv, .numbers, .parquet, .feather)
+  if (
+    ['xlsx', 'xls', 'ods', 'fods', 'csv', 'tsv', 'parquet', 'feather', 'numbers'].includes(ext) ||
+    mimeType.includes('spreadsheet') ||
+    mimeType.includes('excel') ||
+    mimeType.includes('oasis.opendocument.spreadsheet') ||
+    mimeType.includes('comma-separated-values') ||
+    mimeType.includes('tab-separated-values')
+  ) {
+    return 'excel';
+  }
+
+  // 3. PowerPoint & Presentations (.pptx, .ppt, .odp, .pps, .ppsx, .key, .pot, .potx)
+  if (
+    ['pptx', 'ppt', 'odp', 'pps', 'ppsx', 'key', 'pot', 'potx'].includes(ext) ||
+    mimeType.includes('presentation') ||
+    mimeType.includes('powerpoint') ||
+    mimeType.includes('oasis.opendocument.presentation')
+  ) {
+    return 'pptx';
+  }
+
+  // 4. Word & Rich Text Documents (.docx, .doc, .odt, .fodt, .pages, .rtf)
+  if (
+    ['docx', 'doc', 'odt', 'fodt', 'pages', 'rtf'].includes(ext) ||
+    mimeType.includes('wordprocessingml') ||
+    mimeType.includes('msword') ||
+    mimeType.includes('oasis.opendocument.text') ||
+    mimeType.includes('rtf')
+  ) {
+    return 'docx';
+  }
+
+  // 5. E-books (.epub, .mobi, .azw, .azw3, .fb2, .cbr, .cbz)
+  if (
+    ['epub', 'mobi', 'azw', 'azw3', 'fb2', 'cbr', 'cbz'].includes(ext) ||
+    mimeType.includes('epub') ||
+    mimeType.includes('mobipocket')
+  ) {
+    return 'ebook';
+  }
+
+  // 6. HTTP & REST Request files (.http, .rest)
   if (['http', 'rest'].includes(ext)) {
     return 'http';
   }
 
-  // Binary, Executables, DLLs & Libraries (.dll, .exe, .so, .dylib, .bin, .sys, .class, .pyc, .o, .obj, .wasm, .dex, .elf, .msi, .drv, .ocx, .ax, .cpl, .scr, .ko)
+  // 7. Binary, Executables, DLLs & Libraries (.dll, .exe, .so, .dylib, .bin, .sys, .class, .pyc, .o, .obj, .wasm, .dex, .elf, .msi, .drv, .ocx, .ax, .cpl, .scr, .ko)
   if (
     ['dll', 'exe', 'so', 'dylib', 'bin', 'sys', 'class', 'pyc', 'o', 'obj', 'wasm', 'dex', 'elf', 'msi', 'drv', 'ocx', 'ax', 'cpl', 'scr', 'ko', 'dat'].includes(ext) ||
     mimeType.includes('application/x-msdownload') ||
@@ -35,36 +77,27 @@ export function detectFileCategory(filename: string, mimeType: string = ''): Fil
     return 'binary';
   }
 
-  // Fonts & Typographic Specimen files (.ttf, .otf, .woff, .woff2, .eot)
+  // 8. Fonts & Typographic Specimen files (.ttf, .otf, .woff, .woff2, .eot)
   if (['ttf', 'otf', 'woff', 'woff2', 'eot'].includes(ext) || mimeType.startsWith('font/')) {
     return 'font';
   }
 
-  // Certificates, Keys & Security Credentials (.pem, .crt, .cer, .key, .pub, .pfx, .p12, .csr, .der)
-  if (['pem', 'crt', 'cer', 'key', 'pub', 'pfx', 'p12', 'csr', 'der'].includes(ext)) {
+  // 9. Certificates, Keys & Security Credentials (.pem, .crt, .cer, .key, .pub, .pfx, .p12, .csr, .der)
+  if (['pem', 'crt', 'cer', 'pub', 'pfx', 'p12', 'csr', 'der'].includes(ext)) {
     return 'certificate';
   }
 
-  // E-books & OpenDocument / iWork (.epub, .mobi, .azw, .odt, .rtf, .pages, .key, .numbers, .odp)
-  if (
-    ['epub', 'mobi', 'azw', 'azw3', 'odt', 'rtf', 'pages', 'key', 'numbers', 'odp'].includes(ext) ||
-    mimeType.includes('epub') ||
-    mimeType.includes('opendocument')
-  ) {
-    return 'ebook';
-  }
-
-  // GeoJSON & Spatial map files (.geojson, .gpx, .kml, .topojson)
+  // 10. GeoJSON & Spatial map files (.geojson, .gpx, .kml, .topojson)
   if (['geojson', 'gpx', 'kml', 'topojson'].includes(ext)) {
     return 'geojson';
   }
 
-  // Subtitles & Captions (.srt, .vtt, .ass, .ssa, .sub, .sbv)
+  // 11. Subtitles & Captions (.srt, .vtt, .ass, .ssa, .sub, .sbv)
   if (['srt', 'vtt', 'ass', 'ssa', 'sub', 'sbv'].includes(ext)) {
     return 'subtitle';
   }
 
-  // Logs & Diagnostics (.log, .out, .err, access.log, error.log, syslog)
+  // 12. Logs & Diagnostics (.log, .out, .err, access.log, error.log, syslog)
   if (
     ['log', 'out', 'err', 'syslog', 'journal'].includes(ext) ||
     lowerName.endsWith('.log') ||
@@ -74,27 +107,12 @@ export function detectFileCategory(filename: string, mimeType: string = ''): Fil
     return 'log';
   }
 
-  // HTML & Web Documents (.html, .htm, .xhtml)
+  // 13. HTML & Web Documents (.html, .htm, .xhtml)
   if (['html', 'htm', 'xhtml'].includes(ext) || mimeType === 'text/html') {
     return 'html';
   }
 
-  // Word (.docx, .doc)
-  if (['docx', 'doc'].includes(ext) || mimeType.includes('wordprocessingml') || mimeType.includes('msword')) {
-    return 'docx';
-  }
-
-  // Excel (.xlsx, .xls, .ods, .csv, .tsv, .parquet, .feather)
-  if (['xlsx', 'xls', 'ods', 'csv', 'tsv', 'parquet', 'feather'].includes(ext) || mimeType.includes('spreadsheet') || mimeType.includes('excel')) {
-    return 'excel';
-  }
-
-  // PowerPoint (.pptx, .ppt)
-  if (['pptx', 'ppt'].includes(ext) || mimeType.includes('presentationml') || mimeType.includes('powerpoint')) {
-    return 'pptx';
-  }
-
-  // Markdown
+  // 14. Markdown (.md, .markdown)
   if (['md', 'markdown', 'mdown', 'mkd'].includes(ext)) {
     return 'markdown';
   }

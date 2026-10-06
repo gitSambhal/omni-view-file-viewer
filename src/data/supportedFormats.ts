@@ -699,15 +699,51 @@ export const SUPPORTED_FORMATS: FormatDefinition[] = [
     badgeBg: 'bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/30'
   },
 
-  // 14. Archives (ZIP, TAR, GZ)
+  // 14. Archives, Virtual Disks & Disk Images
   {
-    extension: '.zip / .tar / .gz',
-    name: 'Compressed Archive',
+    extension: '.vhd / .vhdx',
+    name: 'Microsoft Virtual Hard Disk (VHD & VHDX)',
     category: 'archive',
-    categoryName: 'Archives (ZIP/TAR)',
+    categoryName: 'Archives & Virtual Disks',
+    mimeType: 'application/x-vhd',
+    description: 'Mounts Fixed & Dynamic VHD/VHDX containers in client memory, parses MBR & GPT partition tables, reads FAT12/16/32 volumes, and renders all contained files directly without extraction.',
+    capabilities: ['In-Memory Disk Mounter', 'MBR & GPT Partition Inspection', 'FAT12/16/32 Filesystem Traversal', 'Direct File Previews Without Extraction', 'Export All as ZIP'],
+    icon: Archive,
+    color: 'text-amber-500 dark:text-amber-400',
+    badgeBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+  },
+  {
+    extension: '.iso / .img / .dmg',
+    name: 'Optical Disc Image & Apple DMG (ISO 9660)',
+    category: 'archive',
+    categoryName: 'Archives & Virtual Disks',
+    mimeType: 'application/x-iso9660-image',
+    description: 'Parses Primary Volume Descriptors (PVD CD001), Joliet directory records, and Apple UDIF DMG trailers in-memory for immediate disc content browsing.',
+    capabilities: ['ISO 9660 & Joliet Directory Traversal', 'Apple DMG Container Support', 'Zero-Extraction Direct Preview', 'Volume Label & Disc Telemetry'],
+    icon: Archive,
+    color: 'text-amber-500 dark:text-amber-400',
+    badgeBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+  },
+  {
+    extension: '.7z / .rar / .cab / .deb / .ar / .cpio',
+    name: 'Multi-Format Archive Suite (7Z, RAR, CAB, DEB, CPIO)',
+    category: 'archive',
+    categoryName: 'Archives & Virtual Disks',
+    mimeType: 'application/x-7z-compressed',
+    description: 'Decompresses and inspects 7-Zip, RAR4/5, Microsoft Cabinet (CAB), Debian (.deb), UNIX AR, CPIO, and BZIP2 archives with recursive folder navigation.',
+    capabilities: ['7-Zip UTF-16LE Header Inspector', 'RAR4 & RAR5 Block Parser', 'Microsoft Cabinet File Stream', 'Nested DEB / TAR.GZ Extraction', '1-Click Save & Workspace Tab Promotion'],
+    icon: Archive,
+    color: 'text-amber-500 dark:text-amber-400',
+    badgeBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+  },
+  {
+    extension: '.zip / .tar / .gz / .bz2',
+    name: 'Standard Compressed Archives (ZIP, TAR, GZ, BZ2)',
+    category: 'archive',
+    categoryName: 'Archives & Virtual Disks',
     mimeType: 'application/zip',
-    description: 'In-browser archive decompression, folder hierarchy explorer, and 1-click nested file extraction.',
-    capabilities: ['Folder Tree Hierarchy', 'File Size Analysis', 'Extract Nested Files', 'Instant Preview'],
+    description: 'In-browser archive decompression, folder hierarchy explorer, recursive nested archive navigation, and direct in-memory preview across all 21 file types.',
+    capabilities: ['Folder Tree Hierarchy', 'File Size & Compression Analysis', 'Extract Nested Files Without Disk Write', 'Export Full Archive as ZIP'],
     icon: Archive,
     color: 'text-amber-500 dark:text-amber-400',
     badgeBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
@@ -716,7 +752,7 @@ export const SUPPORTED_FORMATS: FormatDefinition[] = [
   // 15. Hex & Low-level Inspection
   {
     extension: 'Any Binary File',
-    name: 'Raw Binary Byte Stream',
+    name: 'Raw Binary Byte Stream & Hex Inspector',
     category: 'hex',
     categoryName: 'Hex & Low-level',
     mimeType: 'application/octet-stream',

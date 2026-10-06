@@ -92,75 +92,85 @@ export async function parseArchive(
   arrayBuffer: ArrayBuffer,
   filename: string
 ): Promise<ParsedArchive> {
-  const bytes = new Uint8Array(arrayBuffer);
+  let bytes: Uint8Array;
+  try {
+    bytes = new Uint8Array(arrayBuffer);
+  } catch (err: any) {
+    console.warn(`Could not allocate byte array for ${filename}:`, err);
+    return createFallbackArchive(new Uint8Array(0), filename);
+  }
   const ext = getFileExtension(filename).toLowerCase();
 
-  // 1. Check for VHD (Virtual Hard Disk)
-  if (isVhdBuffer(bytes, ext)) {
-    return parseVhdArchive(bytes, filename);
-  }
-
-  // 2. Check for VHDX
-  if (isVhdxBuffer(bytes, ext)) {
-    return parseVhdxArchive(bytes, filename);
-  }
-
-  // 3. Check for ISO 9660 Disk Image
-  if (isIsoBuffer(bytes, ext)) {
-    return parseIsoArchive(bytes, filename);
-  }
-
-  // 4. Check for Apple DMG
-  if (isDmgBuffer(bytes, ext)) {
-    return parseDmgArchive(bytes, filename);
-  }
-
-  // 5. Check for 7-Zip (.7z)
-  if (is7zBuffer(bytes, ext)) {
-    return parse7zArchive(bytes, filename);
-  }
-
-  // 6. Check for RAR (.rar)
-  if (isRarBuffer(bytes, ext)) {
-    return parseRarArchive(bytes, filename);
-  }
-
-  // 7. Check for Microsoft Cabinet (.cab)
-  if (isCabBuffer(bytes, ext)) {
-    return parseCabArchive(bytes, filename);
-  }
-
-  // 8. Check for AR / DEB (.deb, .ar)
-  if (isArBuffer(bytes, ext)) {
-    return parseArArchive(bytes, filename);
-  }
-
-  // 9. Check for CPIO (.cpio)
-  if (isCpioBuffer(bytes, ext)) {
-    return parseCpioArchive(bytes, filename);
-  }
-
-  // 10. Check for GZIP (.gz, .tgz, .tar.gz)
-  if (isGzipBuffer(bytes, ext)) {
-    return parseGzipArchive(bytes, filename);
-  }
-
-  // 11. Check for TAR (.tar)
-  if (isTarBuffer(bytes, ext)) {
-    return parseTarArchive(bytes, filename);
-  }
-
-  // 12. Check for BZIP2 (.bz2, .tbz, .tar.bz2)
-  if (isBzip2Buffer(bytes, ext)) {
-    return parseBzip2Archive(bytes, filename);
-  }
-
-  // 13. Default to ZIP (or try ZIP parser)
   try {
-    return await parseZipArchive(arrayBuffer, filename);
-  } catch (zipErr) {
-    // If ZIP fails, fallback to general container inspection
-    console.warn('Standard ZIP parser failed, trying fallback container inspection:', zipErr);
+    // 1. Check for VHD (Virtual Hard Disk)
+    if (isVhdBuffer(bytes, ext)) {
+      return await parseVhdArchive(bytes, filename);
+    }
+
+    // 2. Check for VHDX
+    if (isVhdxBuffer(bytes, ext)) {
+      return await parseVhdxArchive(bytes, filename);
+    }
+
+    // 3. Check for ISO 9660 Disk Image
+    if (isIsoBuffer(bytes, ext)) {
+      return await parseIsoArchive(bytes, filename);
+    }
+
+    // 4. Check for Apple DMG
+    if (isDmgBuffer(bytes, ext)) {
+      return await parseDmgArchive(bytes, filename);
+    }
+
+    // 5. Check for 7-Zip (.7z)
+    if (is7zBuffer(bytes, ext)) {
+      return await parse7zArchive(bytes, filename);
+    }
+
+    // 6. Check for RAR (.rar)
+    if (isRarBuffer(bytes, ext)) {
+      return await parseRarArchive(bytes, filename);
+    }
+
+    // 7. Check for Microsoft Cabinet (.cab)
+    if (isCabBuffer(bytes, ext)) {
+      return await parseCabArchive(bytes, filename);
+    }
+
+    // 8. Check for AR / DEB (.deb, .ar)
+    if (isArBuffer(bytes, ext)) {
+      return await parseArArchive(bytes, filename);
+    }
+
+    // 9. Check for CPIO (.cpio)
+    if (isCpioBuffer(bytes, ext)) {
+      return await parseCpioArchive(bytes, filename);
+    }
+
+    // 10. Check for GZIP (.gz, .tgz, .tar.gz)
+    if (isGzipBuffer(bytes, ext)) {
+      return await parseGzipArchive(bytes, filename);
+    }
+
+    // 11. Check for TAR (.tar)
+    if (isTarBuffer(bytes, ext)) {
+      return await parseTarArchive(bytes, filename);
+    }
+
+    // 12. Check for BZIP2 (.bz2, .tbz, .tar.bz2)
+    if (isBzip2Buffer(bytes, ext)) {
+      return await parseBzip2Archive(bytes, filename);
+    }
+
+    // 13. Default to ZIP (or try ZIP parser)
+    try {
+      return await parseZipArchive(arrayBuffer, filename);
+    } catch (zipErr) {
+      console.warn('Standard ZIP parser failed, trying fallback container inspection:', zipErr);
+      return createFallbackArchive(bytes, filename);
+    }
+  } catch (err: any) {
+    console.warn(`Archive parser failed for ${filename}, generating fallback container inspection:`, err);
     return createFallbackArchive(bytes, filename);
   }
 }
@@ -606,14 +616,19 @@ export async function parseVhdArchive(
   bytes: Uint8Array,
   filename: string
 ): Promise<ParsedArchive> {
+  if (bytes.length < 512) {
+    return createFallbackArchive(bytes, filename);
+  }
+
   // Read 512-byte footer at end of file (or offset 0)
   let footerOffset = bytes.length - 512;
   let cookie = String.fromCharCode(...bytes.slice(footerOffset, footerOffset + 8));
 
   if (cookie !== 'conectix' && bytes.length >= 512) {
-    cookie = String.fromCharCode(...bytes.slice(0, 8));
-    if (cookie === 'conectix' || cookie === 'cxsparse') {
+    const startCookie = String.fromCharCode(...bytes.slice(0, 8));
+    if (startCookie === 'conectix' || startCookie === 'cxsparse') {
       footerOffset = 0;
+      cookie = startCookie;
     }
   }
 
@@ -621,9 +636,9 @@ export async function parseVhdArchive(
 
   // Features (offset + 8): 4 bytes BE
   // Version (offset + 12): 4 bytes BE (0x00010000 = 1.0)
-  const dataOffset = Number(view.getBigUint64(footerOffset + 16, false)); // 0xFFFFFFFFFFFFFFFF for fixed
+  const dataOffsetRaw = view.getBigUint64(footerOffset + 16, false);
   const timestampSec = view.getUint32(footerOffset + 24, false); // seconds since Jan 1 2000
-  const vhdDate = new Date(Date.UTC(2000, 0, 1, 0, 0, timestampSec));
+  const vhdDate = new Date(Date.UTC(2000, 0, 1, 0, 0, timestampSec || 0));
 
   const creatorApp = String.fromCharCode(
     ...bytes.slice(footerOffset + 28, footerOffset + 32)
@@ -632,12 +647,12 @@ export async function parseVhdArchive(
     ...bytes.slice(footerOffset + 36, footerOffset + 40)
   ).trim();
 
-  const originalSize = Number(view.getBigUint64(footerOffset + 40, false));
-  const currentSize = Number(view.getBigUint64(footerOffset + 48, false));
+  const originalSize = Number(view.getBigUint64(footerOffset + 40, false)) || bytes.length;
+  const currentSize = Number(view.getBigUint64(footerOffset + 48, false)) || bytes.length;
 
-  const cylinders = view.getUint16(footerOffset + 56, false);
-  const heads = bytes[footerOffset + 58];
-  const sectorsPerTrack = bytes[footerOffset + 59];
+  const cylinders = view.getUint16(footerOffset + 56, false) || 16;
+  const heads = bytes[footerOffset + 58] || 4;
+  const sectorsPerTrack = bytes[footerOffset + 59] || 16;
 
   const diskTypeNum = view.getUint32(footerOffset + 60, false);
   const diskTypeStr =
@@ -658,7 +673,15 @@ export async function parseVhdArchive(
   // Sector Reader function: given LBA, return 512 bytes
   let readSector: (lba: number) => Uint8Array;
 
-  if (diskTypeNum === 2 || dataOffset === 0xffffffffffffffff || dataOffset === -1) {
+  const isFixedDisk =
+    diskTypeNum === 2 ||
+    dataOffsetRaw === 0xffffffffffffffffn ||
+    dataOffsetRaw === 0n ||
+    (cookie !== 'cxsparse' && cookie !== 'conectix') ||
+    Number(dataOffsetRaw) <= 0 ||
+    Number(dataOffsetRaw) >= bytes.length - 512;
+
+  if (isFixedDisk) {
     // Fixed Disk: Sector LBA is directly at lba * 512
     readSector = (lba: number) => {
       const off = lba * 512;
@@ -668,36 +691,59 @@ export async function parseVhdArchive(
       return new Uint8Array(512);
     };
   } else {
-    // Dynamic Disk: Read cxsparse header
-    const dynHeaderOffset = dataOffset;
-    const batOffset = Number(view.getBigUint64(dynHeaderOffset + 16, false));
-    const blockSize = view.getUint32(dynHeaderOffset + 28, false) || 2097152; // 2MB default
-    const sectorsPerBlock = Math.floor(blockSize / 512);
-    const batEntries = view.getUint32(dynHeaderOffset + 36, false);
-
-    const bat = new Uint32Array(batEntries);
-    for (let i = 0; i < batEntries; i++) {
-      const batEntryOffset = batOffset + i * 4;
-      if (batEntryOffset + 4 <= bytes.length) {
-        bat[i] = view.getUint32(batEntryOffset, false);
+    // Dynamic Disk: Read cxsparse header safely with strict allocation guards
+    try {
+      const dynHeaderOffset = Number(dataOffsetRaw);
+      const dynCookie = String.fromCharCode(...bytes.slice(dynHeaderOffset, dynHeaderOffset + 8));
+      if (dynCookie !== 'cxsparse' && dynCookie !== 'conectix') {
+        throw new Error('Invalid dynamic header cookie');
       }
-    }
 
-    readSector = (lba: number) => {
-      const blockIndex = Math.floor(lba / sectorsPerBlock);
-      const sectorInBlock = lba % sectorsPerBlock;
-      if (blockIndex < bat.length) {
-        const blockSector = bat[blockIndex];
-        if (blockSector !== 0xffffffff) {
-          // Block payload starts after sector bitmap (512 bytes)
-          const targetOffset = blockSector * 512 + 512 + sectorInBlock * 512;
-          if (targetOffset + 512 <= bytes.length) {
-            return bytes.subarray(targetOffset, targetOffset + 512);
-          }
+      const batOffsetRaw = view.getBigUint64(dynHeaderOffset + 16, false);
+      const batOffset = Number(batOffsetRaw);
+      const blockSize = view.getUint32(dynHeaderOffset + 28, false) || 2097152; // 2MB default
+      const sectorsPerBlock = Math.max(1, Math.floor(blockSize / 512));
+      const rawBatEntries = view.getUint32(dynHeaderOffset + 36, false);
+
+      const maxSafeBat = Math.min(200000, Math.max(1, Math.ceil(bytes.length / 512)));
+      if (batOffset <= 0 || batOffset >= bytes.length || rawBatEntries > 200000 || batOffset + rawBatEntries * 4 > bytes.length + 512) {
+        throw new Error('Invalid BAT table layout');
+      }
+
+      const batEntries = Math.min(rawBatEntries, maxSafeBat);
+      const bat = new Uint32Array(batEntries);
+      for (let i = 0; i < batEntries; i++) {
+        const batEntryOffset = batOffset + i * 4;
+        if (batEntryOffset + 4 <= bytes.length) {
+          bat[i] = view.getUint32(batEntryOffset, false);
         }
       }
-      return new Uint8Array(512);
-    };
+
+      readSector = (lba: number) => {
+        const blockIndex = Math.floor(lba / sectorsPerBlock);
+        const sectorInBlock = lba % sectorsPerBlock;
+        if (blockIndex < bat.length) {
+          const blockSector = bat[blockIndex];
+          if (blockSector !== 0xffffffff && blockSector > 0) {
+            // Block payload starts after sector bitmap (512 bytes)
+            const targetOffset = blockSector * 512 + 512 + sectorInBlock * 512;
+            if (targetOffset + 512 <= bytes.length) {
+              return bytes.subarray(targetOffset, targetOffset + 512);
+            }
+          }
+        }
+        return new Uint8Array(512);
+      };
+    } catch (dynErr) {
+      console.warn('Failed to parse dynamic VHD header, falling back to linear sector mapping:', dynErr);
+      readSector = (lba: number) => {
+        const off = lba * 512;
+        if (off + 512 <= bytes.length) {
+          return bytes.subarray(off, off + 512);
+        }
+        return new Uint8Array(512);
+      };
+    }
   }
 
   // Parse Partition Table (MBR) at LBA 0
@@ -747,9 +793,64 @@ export async function parseVhdArchive(
         }
       }
     }
+
+    // Check for GPT (GUID Partition Table) header at LBA 1 if protective MBR exists or no FAT files found
+    const hasGptProtective = partitions.some(p => p.type.includes('GPT'));
+    if (hasGptProtective || partitions.length === 0) {
+      try {
+        const gptSector = readSector(1);
+        const gptMagic = String.fromCharCode(...gptSector.subarray(0, 8));
+        if (gptMagic === 'EFI PART') {
+          const gptView = new DataView(gptSector.buffer, gptSector.byteOffset, 512);
+          const partEntryLba = Number(gptView.getBigUint64(72, true)) || 2;
+          const numPartEntries = Math.min(gptView.getUint32(80, true) || 128, 64);
+          const partEntrySize = gptView.getUint32(84, true) || 128;
+
+          for (let e = 0; e < numPartEntries; e++) {
+            const entryOffsetInBytes = e * partEntrySize;
+            const entrySectorLba = partEntryLba + Math.floor(entryOffsetInBytes / 512);
+            const entrySectorOffset = entryOffsetInBytes % 512;
+            const sec = readSector(entrySectorLba);
+            if (entrySectorOffset + partEntrySize <= sec.length) {
+              const entrySlice = sec.subarray(entrySectorOffset, entrySectorOffset + partEntrySize);
+              const isNonZero = entrySlice.subarray(0, 16).some(b => b !== 0);
+              if (isNonZero) {
+                const entryView = new DataView(entrySlice.buffer, entrySlice.byteOffset, partEntrySize);
+                const startLba = Number(entryView.getBigUint64(32, true));
+                const endLba = Number(entryView.getBigUint64(40, true));
+                const sectorCount = Math.max(0, endLba - startLba + 1);
+
+                let partName = '';
+                for (let c = 56; c < Math.min(partEntrySize, 128); c += 2) {
+                  const ch = entrySlice[c] | (entrySlice[c + 1] << 8);
+                  if (ch === 0) break;
+                  partName += String.fromCharCode(ch);
+                }
+
+                const gptPartIndex = partitions.length + 1;
+                partitions.push({
+                  index: gptPartIndex,
+                  type: partName ? `GPT (${partName.trim()})` : 'GPT Basic Data',
+                  bootable: false,
+                  startLba,
+                  sectorCount,
+                  sizeBytes: sectorCount * 512,
+                  filesystem: 'GPT Partition'
+                });
+
+                try {
+                  const gptFat = mountFatVolume(readSector, startLba, sectorCount);
+                  entries.push(...gptFat);
+                } catch (_) {}
+              }
+            }
+          }
+        }
+      } catch (_) {}
+    }
   }
 
-  // If no files were parsed via FAT (or unformatted/raw), provide Virtual Disk Telemetry & Sector Inspection
+  // If no files were parsed via FAT (or unformatted/raw/NTFS), provide Virtual Disk Telemetry & Sector Inspection
   if (entries.length === 0) {
     // Add virtual MBR and Master Partition entry
     entries.push({
@@ -856,17 +957,44 @@ function mountFatVolume(
   partitionSectorCount: number
 ): ArchiveEntry[] {
   const bootSector = readSector(partitionStartLba);
+  if (!bootSector || bootSector.length < 512 || bootSector[510] !== 0x55 || bootSector[511] !== 0xaa) {
+    return [];
+  }
+
   const bootView = new DataView(
     bootSector.buffer,
     bootSector.byteOffset,
     bootSector.byteLength
   );
 
-  const bytesPerSector = bootView.getUint16(11, true) || 512;
-  const sectorsPerCluster = bootSector[13] || 1;
-  const reservedSectors = bootView.getUint16(14, true) || 1;
-  const numFats = bootSector[16] || 2;
-  const rootEntriesCount = bootView.getUint16(17, true) || 512;
+  const bytesPerSector = bootView.getUint16(11, true);
+  if (![512, 1024, 2048, 4096].includes(bytesPerSector)) {
+    return [];
+  }
+
+  const sectorsPerCluster = bootSector[13];
+  if (![1, 2, 4, 8, 16, 32, 64, 128].includes(sectorsPerCluster)) {
+    return [];
+  }
+
+  const clusterSize = sectorsPerCluster * bytesPerSector;
+  if (clusterSize <= 0 || clusterSize > 65536) {
+    return [];
+  }
+
+  const reservedSectors = bootView.getUint16(14, true);
+  if (reservedSectors <= 0 || reservedSectors > 32768) {
+    return [];
+  }
+
+  const numFats = bootSector[16];
+  if (numFats < 1 || numFats > 4) {
+    return [];
+  }
+
+  const rawRootEntries = bootView.getUint16(17, true);
+  const rootEntriesCount = Math.min(Math.max(0, rawRootEntries), 4096);
+
   let totalSectors = bootView.getUint16(19, true);
   if (totalSectors === 0) {
     totalSectors = bootView.getUint32(32, true);
@@ -881,17 +1009,26 @@ function mountFatVolume(
     rootCluster = bootView.getUint32(44, true) || 2;
   }
 
-  const rootDirSectors = Math.ceil((rootEntriesCount * 32) / bytesPerSector);
+  if (sectorsPerFat <= 0 || (partitionSectorCount > 0 && sectorsPerFat > partitionSectorCount)) {
+    return [];
+  }
+
+  const rootDirSectors = Math.min(256, Math.ceil((rootEntriesCount * 32) / bytesPerSector));
   const firstDataSector =
     partitionStartLba + reservedSectors + numFats * sectorsPerFat + (isFat32 ? 0 : rootDirSectors);
 
-  // Helper to read a cluster
+  // Helper to read a cluster safely
   function readCluster(cluster: number): Uint8Array {
     const clusterLba = firstDataSector + (cluster - 2) * sectorsPerCluster;
-    const clusterBytes = new Uint8Array(sectorsPerCluster * bytesPerSector);
+    const clusterBytes = new Uint8Array(clusterSize);
     for (let s = 0; s < sectorsPerCluster; s++) {
       const sec = readSector(clusterLba + s);
-      clusterBytes.set(sec, s * bytesPerSector);
+      if (sec && sec.length > 0) {
+        const toCopy = Math.min(bytesPerSector, sec.length, clusterSize - s * bytesPerSector);
+        if (toCopy > 0) {
+          clusterBytes.set(sec.subarray(0, toCopy), s * bytesPerSector);
+        }
+      }
     }
     return clusterBytes;
   }
@@ -899,21 +1036,27 @@ function mountFatVolume(
   // Read FAT table to follow cluster chains
   const fatStartLba = partitionStartLba + reservedSectors;
   function getNextCluster(cluster: number): number {
-    if (isFat32) {
-      const fatOffset = cluster * 4;
-      const fatSectorNum = Math.floor(fatOffset / bytesPerSector);
-      const fatSectorOffset = fatOffset % bytesPerSector;
-      const sec = readSector(fatStartLba + fatSectorNum);
-      const v = new DataView(sec.buffer, sec.byteOffset, sec.byteLength);
-      return v.getUint32(fatSectorOffset, true) & 0x0fffffff;
-    } else {
-      // FAT16
-      const fatOffset = cluster * 2;
-      const fatSectorNum = Math.floor(fatOffset / bytesPerSector);
-      const fatSectorOffset = fatOffset % bytesPerSector;
-      const sec = readSector(fatStartLba + fatSectorNum);
-      const v = new DataView(sec.buffer, sec.byteOffset, sec.byteLength);
-      return v.getUint16(fatSectorOffset, true);
+    try {
+      if (isFat32) {
+        const fatOffset = cluster * 4;
+        const fatSectorNum = Math.floor(fatOffset / bytesPerSector);
+        const fatSectorOffset = fatOffset % bytesPerSector;
+        const sec = readSector(fatStartLba + fatSectorNum);
+        if (!sec || fatSectorOffset + 4 > sec.length) return 0x0fffffff;
+        const v = new DataView(sec.buffer, sec.byteOffset, sec.byteLength);
+        return v.getUint32(fatSectorOffset, true) & 0x0fffffff;
+      } else {
+        // FAT16
+        const fatOffset = cluster * 2;
+        const fatSectorNum = Math.floor(fatOffset / bytesPerSector);
+        const fatSectorOffset = fatOffset % bytesPerSector;
+        const sec = readSector(fatStartLba + fatSectorNum);
+        if (!sec || fatSectorOffset + 2 > sec.length) return 0xffff;
+        const v = new DataView(sec.buffer, sec.byteOffset, sec.byteLength);
+        return v.getUint16(fatSectorOffset, true);
+      }
+    } catch {
+      return isFat32 ? 0x0fffffff : 0xffff;
     }
   }
 
@@ -925,6 +1068,7 @@ function mountFatVolume(
 
     for (let i = 0; i < dirBytes.length; i += 32) {
       const entry = dirBytes.subarray(i, i + 32);
+      if (entry.length < 32) break;
       const firstByte = entry[0];
       if (firstByte === 0x00) break; // No more entries
       if (firstByte === 0xe5) {
@@ -972,7 +1116,7 @@ function mountFatVolume(
         filename = extPart ? `${namePart}.${extPart}` : namePart;
       }
 
-      if (filename === '.' || filename === '..') continue;
+      if (filename === '.' || filename === '..' || !filename) continue;
 
       const entryView = new DataView(entry.buffer, entry.byteOffset, entry.byteLength);
       const isDir = Boolean(attr & 0x10);
@@ -997,13 +1141,22 @@ function mountFatVolume(
           extract: async () => new Uint8Array(0)
         });
 
-        // Traverse subdirectory if valid cluster
+        // Traverse subdirectory if valid cluster with bound
         if (startCluster >= 2) {
           let subDirBytes = new Uint8Array(0);
           let curCluster = startCluster;
           const visited = new Set<number>();
-          while (curCluster >= 2 && curCluster < (isFat32 ? 0x0ffffff8 : 0xfff8) && !visited.has(curCluster)) {
+          let dirClusterCount = 0;
+          const MAX_DIR_CLUSTERS = 64;
+
+          while (
+            dirClusterCount < MAX_DIR_CLUSTERS &&
+            curCluster >= 2 &&
+            curCluster < (isFat32 ? 0x0ffffff8 : 0xfff8) &&
+            !visited.has(curCluster)
+          ) {
             visited.add(curCluster);
+            dirClusterCount++;
             const clData = readCluster(curCluster);
             const combined = new Uint8Array(subDirBytes.length + clData.length);
             combined.set(subDirBytes, 0);
@@ -1027,37 +1180,53 @@ function mountFatVolume(
           category: detectFileCategory(filename),
           extract: async () => {
             if (fileSize === 0 || startCluster < 2) return new Uint8Array(0);
+            // Cap extraction size to safe 50MB browser limit to prevent allocation failures
+            const safeFileSize = Math.min(fileSize, 50 * 1024 * 1024);
             const chunks: Uint8Array[] = [];
             let curCluster = startCluster;
             let bytesRead = 0;
             const visited = new Set<number>();
+            const maxClusters = Math.min(10000, Math.ceil(safeFileSize / clusterSize));
+            let clusterCount = 0;
 
             while (
+              clusterCount < maxClusters &&
               curCluster >= 2 &&
               curCluster < (isFat32 ? 0x0ffffff8 : 0xfff8) &&
-              bytesRead < fileSize &&
+              bytesRead < safeFileSize &&
               !visited.has(curCluster)
             ) {
               visited.add(curCluster);
+              clusterCount++;
               const clData = readCluster(curCluster);
               chunks.push(clData);
               bytesRead += clData.length;
               curCluster = getNextCluster(curCluster);
             }
 
-            const result = new Uint8Array(fileSize);
-            let written = 0;
-            for (const ch of chunks) {
-              const toCopy = Math.min(ch.length, fileSize - written);
-              result.set(ch.subarray(0, toCopy), written);
-              written += toCopy;
-              if (written >= fileSize) break;
+            try {
+              const result = new Uint8Array(safeFileSize);
+              let written = 0;
+              for (const ch of chunks) {
+                const toCopy = Math.min(ch.length, safeFileSize - written);
+                result.set(ch.subarray(0, toCopy), written);
+                written += toCopy;
+                if (written >= safeFileSize) break;
+              }
+              return result;
+            } catch {
+              return new Uint8Array(0);
             }
-            return result;
           },
           extractText: async () => {
-            const fileBytes = await entries.find(e => e.name === fullEntryPath)!.extract();
-            return new TextDecoder().decode(fileBytes);
+            try {
+              const target = entries.find(e => e.name === fullEntryPath);
+              if (!target) return '';
+              const fileBytes = await target.extract();
+              return new TextDecoder().decode(fileBytes);
+            } catch {
+              return '';
+            }
           }
         });
       }
@@ -1069,8 +1238,17 @@ function mountFatVolume(
     let rootBytes = new Uint8Array(0);
     let curCluster = rootCluster;
     const visited = new Set<number>();
-    while (curCluster >= 2 && curCluster < 0x0ffffff8 && !visited.has(curCluster)) {
+    let rootClusterCount = 0;
+    const MAX_ROOT_CLUSTERS = 128;
+
+    while (
+      rootClusterCount < MAX_ROOT_CLUSTERS &&
+      curCluster >= 2 &&
+      curCluster < 0x0ffffff8 &&
+      !visited.has(curCluster)
+    ) {
       visited.add(curCluster);
+      rootClusterCount++;
       const clData = readCluster(curCluster);
       const combined = new Uint8Array(rootBytes.length + clData.length);
       combined.set(rootBytes, 0);
@@ -1085,7 +1263,10 @@ function mountFatVolume(
     const rootBytes = new Uint8Array(rootDirSectors * bytesPerSector);
     for (let s = 0; s < rootDirSectors; s++) {
       const sec = readSector(rootDirLba + s);
-      rootBytes.set(sec, s * bytesPerSector);
+      if (sec && sec.length > 0) {
+        const toCopy = Math.min(bytesPerSector, sec.length);
+        rootBytes.set(sec.subarray(0, toCopy), s * bytesPerSector);
+      }
     }
     parseDirectory(rootBytes, '');
   }

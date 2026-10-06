@@ -50,9 +50,23 @@ import JSZip from 'jszip';
 import { PdfViewer } from './PdfViewer';
 import { DocxViewer } from './DocxViewer';
 import { ExcelViewer } from './ExcelViewer';
+import { PptxViewer } from './PptxViewer';
 import { MarkdownViewer } from './MarkdownViewer';
 import { CodeViewer } from './CodeViewer';
 import { DatabaseViewer } from './DatabaseViewer';
+import { ImageViewer } from './ImageViewer';
+import { MediaViewer } from './MediaViewer';
+import { HtmlPreviewViewer } from './HtmlPreviewViewer';
+import { JsonXmlViewer } from './JsonXmlViewer';
+import { LogViewer } from './LogViewer';
+import { FontViewer } from './FontViewer';
+import { CertificateViewer } from './CertificateViewer';
+import { EbookViewer } from './EbookViewer';
+import { GeoJsonViewer } from './GeoJsonViewer';
+import { SubtitleViewer } from './SubtitleViewer';
+import { HttpRestViewer } from './HttpRestViewer';
+import { TextViewer } from './TextViewer';
+import { BinaryInspectorViewer } from './BinaryInspectorViewer';
 
 interface ZipViewerProps {
   arrayBuffer?: ArrayBuffer;
@@ -87,24 +101,52 @@ export const ZipViewer: React.FC<ZipViewerProps> = ({
     bytes?: Uint8Array;
     arrayBuffer?: ArrayBuffer;
     blobUrl?: string;
+    category?: FileCategory;
     isImage?: boolean;
     isAudio?: boolean;
     isVideo?: boolean;
     isPdf?: boolean;
     isDocx?: boolean;
     isExcel?: boolean;
+    isPptx?: boolean;
     isDatabase?: boolean;
     isMarkdown?: boolean;
+    isHtml?: boolean;
     isCode?: boolean;
+    isJson?: boolean;
+    isLog?: boolean;
+    isSubtitle?: boolean;
+    isGeoJson?: boolean;
+    isEbook?: boolean;
+    isFont?: boolean;
+    isCertificate?: boolean;
+    isHttp?: boolean;
+    isArchive?: boolean;
+    isText?: boolean;
+    isBinary?: boolean;
     isCsv?: boolean;
     csvRows?: string[][];
-    isHex?: boolean;
     error?: string;
   } | null>(null);
 
   const [copied, setCopied] = useState<boolean>(false);
   const [imageZoom, setImageZoom] = useState<number>(100);
   const [isExportingAll, setIsExportingAll] = useState<boolean>(false);
+
+  // Helper to detect if byte array is printable text
+  const isAsciiOrText = (buffer: Uint8Array): boolean => {
+    if (buffer.length === 0) return true;
+    const sample = buffer.subarray(0, Math.min(buffer.length, 4096));
+    let nonPrintable = 0;
+    for (let i = 0; i < sample.length; i++) {
+      const b = sample[i];
+      if (b === 0) return false;
+      if (b < 32 && b !== 9 && b !== 10 && b !== 13) {
+        nonPrintable++;
+      }
+    }
+    return nonPrintable / sample.length < 0.05;
+  };
 
   // Parse archive or virtual disk whenever arrayBuffer changes
   useEffect(() => {
@@ -122,8 +164,8 @@ export const ZipViewer: React.FC<ZipViewerProps> = ({
         const result = await parseArchive(arrayBuffer, filename);
         if (isMounted) {
           setParsedArchive(result);
-          // Auto-select first readable file if available for immediate direct preview
-          const firstFile = result.entries.find(e => !e.isFolder);
+          // Auto-select first readable file if available and <= 15MB for immediate preview
+          const firstFile = result.entries.find(e => !e.isFolder && (e.size || 0) <= 15 * 1024 * 1024);
           if (firstFile) {
             handleSelectEntry(firstFile);
           }
@@ -168,15 +210,118 @@ export const ZipViewer: React.FC<ZipViewerProps> = ({
 
     try {
       const bytes = await entry.extract();
-      const cleanBuffer = bytes.buffer.slice(
-        bytes.byteOffset,
-        bytes.byteOffset + bytes.byteLength
-      ) as ArrayBuffer;
+      let cleanBuffer: ArrayBuffer;
+      try {
+        cleanBuffer = bytes.buffer.slice(
+          bytes.byteOffset,
+          bytes.byteOffset + bytes.byteLength
+        ) as ArrayBuffer;
+      } catch {
+        const copy = new Uint8Array(bytes.length);
+        copy.set(bytes);
+        cleanBuffer = copy.buffer;
+      }
       const ext = getFileExtension(entry.name).toLowerCase();
       const cat = entry.category || detectFileCategory(entry.name);
 
-      // Check for image
-      if (
+      // 1. PDF Documents
+      if (ext === 'pdf' || cat === 'pdf') {
+        const blob = new Blob([cleanBuffer], { type: 'application/pdf' });
+        const blobUrl = URL.createObjectURL(blob);
+        setPreviewData({ bytes, arrayBuffer: cleanBuffer, isPdf: true, blobUrl, category: 'pdf' });
+      }
+      // 2. Word / DOCX
+      else if (['docx', 'doc'].includes(ext) || cat === 'docx') {
+        setPreviewData({ bytes, arrayBuffer: cleanBuffer, isDocx: true, category: 'docx' });
+      }
+      // 3. PowerPoint / PPTX
+      else if (['pptx', 'ppt'].includes(ext) || cat === 'pptx') {
+        setPreviewData({ bytes, arrayBuffer: cleanBuffer, isPptx: true, category: 'pptx' });
+      }
+      // 4. Excel / Spreadsheets (XLSX, XLS, ODS, CSV, TSV)
+      else if (['xlsx', 'xls', 'ods', 'csv', 'tsv'].includes(ext) || cat === 'excel') {
+        let text: string | undefined;
+        let rows: string[][] | undefined;
+        if (ext === 'csv' || ext === 'tsv') {
+          try {
+            text = new TextDecoder('utf-8').decode(bytes);
+            const delimiter = ext === 'tsv' ? '\t' : ',';
+            rows = text
+              .split(/\r?\n/)
+              .filter(r => r.trim().length > 0)
+              .slice(0, 100)
+              .map(r => r.split(delimiter).map(c => c.trim().replace(/^["']|["']$/g, '')));
+          } catch {}
+        }
+        setPreviewData({
+          bytes,
+          arrayBuffer: cleanBuffer,
+          text,
+          isExcel: true,
+          isCsv: ext === 'csv' || ext === 'tsv',
+          csvRows: rows,
+          category: 'excel'
+        });
+      }
+      // 5. Database (SQLite, DBF, SQL dumps)
+      else if (['sqlite', 'db', 'sqlite3', 'dbf', 'sql', 'dump', 'ddl', 'accdb', 'mdb'].includes(ext) || cat === 'database') {
+        let text: string | undefined;
+        if (['sql', 'dump', 'ddl'].includes(ext)) {
+          text = new TextDecoder('utf-8').decode(bytes);
+        }
+        setPreviewData({ bytes, arrayBuffer: cleanBuffer, text, isDatabase: true, category: 'database' });
+      }
+      // 6. Markdown
+      else if (['md', 'markdown', 'mdown'].includes(ext) || cat === 'markdown') {
+        const text = new TextDecoder('utf-8').decode(bytes);
+        setPreviewData({ bytes, arrayBuffer: cleanBuffer, text, isMarkdown: true, category: 'markdown' });
+      }
+      // 7. HTML Web Pages
+      else if (['html', 'htm', 'xhtml'].includes(ext) || cat === 'html') {
+        const text = new TextDecoder('utf-8').decode(bytes);
+        setPreviewData({ bytes, arrayBuffer: cleanBuffer, text, isHtml: true, category: 'html' });
+      }
+      // 8. JSON / XML / YAML
+      else if (['json', 'xml', 'yaml', 'yml'].includes(ext) || cat === 'json') {
+        const text = new TextDecoder('utf-8').decode(bytes);
+        setPreviewData({ bytes, arrayBuffer: cleanBuffer, text, isJson: true, category: 'json' });
+      }
+      // 9. Logs
+      else if (['log', 'out', 'err', 'syslog'].includes(ext) || cat === 'log' || entry.name.toLowerCase().endsWith('.log')) {
+        const text = new TextDecoder('utf-8').decode(bytes);
+        setPreviewData({ bytes, arrayBuffer: cleanBuffer, text, isLog: true, category: 'log' });
+      }
+      // 10. Subtitles
+      else if (['srt', 'vtt', 'ass', 'ssa', 'sub'].includes(ext) || cat === 'subtitle') {
+        const text = new TextDecoder('utf-8').decode(bytes);
+        setPreviewData({ bytes, arrayBuffer: cleanBuffer, text, isSubtitle: true, category: 'subtitle' });
+      }
+      // 11. GeoJSON / Maps
+      else if (['geojson', 'gpx', 'kml', 'topojson'].includes(ext) || cat === 'geojson') {
+        const text = new TextDecoder('utf-8').decode(bytes);
+        setPreviewData({ bytes, arrayBuffer: cleanBuffer, text, isGeoJson: true, category: 'geojson' });
+      }
+      // 12. E-Books
+      else if (['epub', 'mobi', 'azw', 'azw3'].includes(ext) || cat === 'ebook') {
+        setPreviewData({ bytes, arrayBuffer: cleanBuffer, isEbook: true, category: 'ebook' });
+      }
+      // 13. Fonts
+      else if (['ttf', 'otf', 'woff', 'woff2', 'eot'].includes(ext) || cat === 'font') {
+        setPreviewData({ bytes, arrayBuffer: cleanBuffer, isFont: true, category: 'font' });
+      }
+      // 14. Certificates & Keys
+      else if (['pem', 'crt', 'cer', 'key', 'pub', 'pfx', 'p12', 'csr'].includes(ext) || cat === 'certificate') {
+        let text: string | undefined;
+        try { text = new TextDecoder('utf-8').decode(bytes); } catch {}
+        setPreviewData({ bytes, arrayBuffer: cleanBuffer, text, isCertificate: true, category: 'certificate' });
+      }
+      // 15. HTTP / REST Requests
+      else if (['http', 'rest'].includes(ext) || cat === 'http') {
+        const text = new TextDecoder('utf-8').decode(bytes);
+        setPreviewData({ bytes, arrayBuffer: cleanBuffer, text, isHttp: true, category: 'http' });
+      }
+      // 16. Images (PNG, JPG, SVG, WEBP, GIF, BMP, ICO)
+      else if (
         ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico', 'avif'].includes(ext) ||
         cat === 'image'
       ) {
@@ -187,78 +332,76 @@ export const ZipViewer: React.FC<ZipViewerProps> = ({
             ? 'image/png'
             : ext === 'gif'
             ? 'image/gif'
+            : ext === 'webp'
+            ? 'image/webp'
+            : ext === 'bmp'
+            ? 'image/bmp'
             : 'image/jpeg';
         const blob = new Blob([cleanBuffer], { type: mime });
         const blobUrl = URL.createObjectURL(blob);
-        setPreviewData({ bytes, arrayBuffer: cleanBuffer, isImage: true, blobUrl });
-      }
-      // Check for PDF
-      else if (ext === 'pdf' || cat === 'pdf') {
-        const blob = new Blob([cleanBuffer], { type: 'application/pdf' });
-        const blobUrl = URL.createObjectURL(blob);
-        setPreviewData({ bytes, arrayBuffer: cleanBuffer, isPdf: true, blobUrl });
-      }
-      // Check for Word / DOCX
-      else if (['docx', 'doc'].includes(ext) || cat === 'docx') {
-        setPreviewData({ bytes, arrayBuffer: cleanBuffer, isDocx: true });
-      }
-      // Check for Excel / Spreadsheet
-      else if (['xlsx', 'xls', 'ods'].includes(ext) || cat === 'excel') {
-        setPreviewData({ bytes, arrayBuffer: cleanBuffer, isExcel: true });
-      }
-      // Check for Database
-      else if (['sqlite', 'db', 'sqlite3', 'dbf', 'sql', 'dump'].includes(ext) || cat === 'database') {
         let text: string | undefined;
-        if (ext === 'sql' || ext === 'dump') {
-          text = new TextDecoder('utf-8').decode(bytes);
+        if (ext === 'svg') {
+          try { text = new TextDecoder('utf-8').decode(bytes); } catch {}
         }
-        setPreviewData({ bytes, arrayBuffer: cleanBuffer, text, isDatabase: true });
+        setPreviewData({ bytes, arrayBuffer: cleanBuffer, text, isImage: true, blobUrl, category: 'image' });
       }
-      // Check for Markdown
-      else if (['md', 'markdown'].includes(ext) || cat === 'markdown') {
-        const text = new TextDecoder('utf-8').decode(bytes);
-        setPreviewData({ bytes, text, isMarkdown: true });
-      }
-      // Check for Audio
+      // 17. Audio
       else if (['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac'].includes(ext) || cat === 'audio') {
-        const mime = ext === 'mp3' ? 'audio/mpeg' : ext === 'wav' ? 'audio/wav' : 'audio/ogg';
+        const mime = ext === 'mp3' ? 'audio/mpeg' : ext === 'wav' ? 'audio/wav' : ext === 'ogg' ? 'audio/ogg' : 'audio/mp4';
         const blob = new Blob([cleanBuffer], { type: mime });
         const blobUrl = URL.createObjectURL(blob);
-        setPreviewData({ bytes, arrayBuffer: cleanBuffer, isAudio: true, blobUrl });
+        setPreviewData({ bytes, arrayBuffer: cleanBuffer, isAudio: true, blobUrl, category: 'audio' });
       }
-      // Check for Video
+      // 18. Video
       else if (['mp4', 'webm', 'mov', 'mkv'].includes(ext) || cat === 'video') {
-        const blob = new Blob([cleanBuffer], { type: 'video/mp4' });
+        const blob = new Blob([cleanBuffer], { type: ext === 'webm' ? 'video/webm' : 'video/mp4' });
         const blobUrl = URL.createObjectURL(blob);
-        setPreviewData({ bytes, arrayBuffer: cleanBuffer, isVideo: true, blobUrl });
+        setPreviewData({ bytes, arrayBuffer: cleanBuffer, isVideo: true, blobUrl, category: 'video' });
       }
-      // Check for CSV / TSV
-      else if (ext === 'csv' || ext === 'tsv') {
-        const text = new TextDecoder('utf-8').decode(bytes);
-        const delimiter = ext === 'tsv' ? '\t' : ',';
-        const rows = text
-          .split(/\r?\n/)
-          .filter(r => r.trim().length > 0)
-          .slice(0, 100)
-          .map(r => r.split(delimiter).map(c => c.trim().replace(/^["']|["']$/g, '')));
-        setPreviewData({ bytes, text, isCsv: true, csvRows: rows });
+      // 19. Nested Archive / Disk Images
+      else if (
+        ['zip', 'tar', 'gz', 'tgz', 'bz2', '7z', 'rar', 'iso', 'vhd', 'vhdx', 'dmg', 'cab', 'deb', 'ar', 'cpio'].includes(ext) ||
+        cat === 'archive'
+      ) {
+        setPreviewData({ bytes, arrayBuffer: cleanBuffer, isArchive: true, category: 'archive' });
       }
-      // Text / Code / JSON / Config / Scripts
+      // 20. Code / Programming
       else if (
         [
-          'txt', 'ts', 'js', 'jsx', 'tsx', 'py', 'json', 'yaml', 'yml',
-          'html', 'htm', 'css', 'scss', 'sh', 'bash', 'ini', 'conf', 'xml', 'log',
-          'toml', 'env', 'rs', 'go', 'c', 'cpp', 'h', 'java', 'php', 'rb'
+          'ts', 'js', 'jsx', 'tsx', 'py', 'sh', 'bash', 'css', 'scss', 'rs', 'go',
+          'c', 'cpp', 'h', 'java', 'php', 'rb', 'lua', 'dart', 'swift', 'kt', 'sql'
         ].includes(ext) ||
-        ['code', 'text', 'json', 'log', 'html'].includes(cat)
+        cat === 'code'
       ) {
         const text = new TextDecoder('utf-8').decode(bytes);
-        const isCodeCategory = ['code', 'html'].includes(cat) || ['ts', 'js', 'jsx', 'tsx', 'py', 'json', 'html', 'css', 'scss', 'sh', 'bash', 'rs', 'go', 'c', 'cpp', 'java', 'php', 'rb'].includes(ext);
-        setPreviewData({ bytes, text, isCode: isCodeCategory });
+        setPreviewData({ bytes, arrayBuffer: cleanBuffer, text, isCode: true, category: 'code' });
       }
-      // Binary / Hex / Executable fallback
+      // 21. Plain Text / Config Files
+      else if (
+        ['txt', 'ini', 'conf', 'env', 'toml', 'cfg', 'properties', 'inf'].includes(ext) ||
+        cat === 'text'
+      ) {
+        const text = new TextDecoder('utf-8').decode(bytes);
+        setPreviewData({ bytes, arrayBuffer: cleanBuffer, text, isText: true, category: 'text' });
+      }
+      // 22. Binary / System / Fallback
       else {
-        setPreviewData({ bytes, arrayBuffer: cleanBuffer, isHex: true });
+        let text: string | undefined;
+        let isTextReadable = false;
+        if (isAsciiOrText(bytes)) {
+          try {
+            text = new TextDecoder('utf-8').decode(bytes);
+            isTextReadable = true;
+          } catch {}
+        }
+        setPreviewData({
+          bytes,
+          arrayBuffer: cleanBuffer,
+          text,
+          isBinary: true,
+          isText: isTextReadable,
+          category: isTextReadable ? 'text' : 'binary'
+        });
       }
     } catch (e: any) {
       console.error('Failed to preview archive file entry in-memory:', e);
@@ -299,11 +442,16 @@ export const ZipViewer: React.FC<ZipViewerProps> = ({
     if (!activeEntry || !onOpenFileInNewTab) return;
     try {
       const bytes = await activeEntry.extract();
+      const cleanBuffer = bytes.buffer.slice(
+        bytes.byteOffset,
+        bytes.byteOffset + bytes.byteLength
+      ) as ArrayBuffer;
+      const cat = previewData?.category || activeEntry.category || detectFileCategory(activeEntry.name);
       onOpenFileInNewTab({
-        name: activeEntry.name,
-        arrayBuffer: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer,
+        name: activeEntry.displayName || activeEntry.name,
+        arrayBuffer: cleanBuffer,
         textContent: previewData?.text,
-        category: activeEntry.category
+        category: cat
       });
     } catch (e) {
       console.error('Could not promote file to new workspace tab:', e);
@@ -399,6 +547,7 @@ export const ZipViewer: React.FC<ZipViewerProps> = ({
       case 'text':
       case 'docx':
       case 'pdf':
+      case 'pptx':
         return <FileText className="w-4 h-4 text-blue-500 shrink-0" />;
       case 'database':
         return <Database className="w-4 h-4 text-purple-500 shrink-0" />;
@@ -408,6 +557,10 @@ export const ZipViewer: React.FC<ZipViewerProps> = ({
         return <Music className="w-4 h-4 text-amber-500 shrink-0" />;
       case 'video':
         return <Video className="w-4 h-4 text-purple-500 shrink-0" />;
+      case 'binary':
+        return <Binary className="w-4 h-4 text-orange-500 shrink-0" />;
+      case 'archive':
+        return <Archive className="w-4 h-4 text-indigo-500 shrink-0" />;
       default:
         return <File className="w-4 h-4 text-muted-foreground shrink-0" />;
     }
@@ -642,10 +795,24 @@ export const ZipViewer: React.FC<ZipViewerProps> = ({
                               onClick={async e => {
                                 e.stopPropagation();
                                 const bytes = await entry.extract();
+                                const cleanBuffer = bytes.buffer.slice(
+                                  bytes.byteOffset,
+                                  bytes.byteOffset + bytes.byteLength
+                                ) as ArrayBuffer;
+                                const cat = entry.category || detectFileCategory(entry.name);
+                                let textContent: string | undefined;
+                                if ([
+                                  'code', 'html', 'markdown', 'json', 'text', 'log', 'subtitle', 'geojson', 'http', 'certificate'
+                                ].includes(cat) || isAsciiOrText(bytes)) {
+                                  try {
+                                    textContent = new TextDecoder('utf-8').decode(bytes);
+                                  } catch {}
+                                }
                                 onOpenFileInNewTab({
-                                  name: entry.name,
-                                  arrayBuffer: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer,
-                                  category: entry.category
+                                  name: entry.displayName || entry.name,
+                                  arrayBuffer: cleanBuffer,
+                                  textContent,
+                                  category: cat
                                 });
                               }}
                               className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-primary"
@@ -756,6 +923,14 @@ export const ZipViewer: React.FC<ZipViewerProps> = ({
                       filename={activeEntry.displayName || activeEntry.name}
                     />
                   </div>
+                ) : previewData?.isPptx && previewData.arrayBuffer ? (
+                  /* PowerPoint PPTX Direct Preview */
+                  <div className="w-full h-full flex-1 min-h-0 flex flex-col overflow-hidden">
+                    <PptxViewer
+                      arrayBuffer={previewData.arrayBuffer}
+                      filename={activeEntry.displayName || activeEntry.name}
+                    />
+                  </div>
                 ) : previewData?.isExcel && previewData.arrayBuffer ? (
                   /* Excel Spreadsheet Direct Preview */
                   <div className="w-full h-full flex-1 min-h-0 flex flex-col overflow-hidden">
@@ -781,8 +956,82 @@ export const ZipViewer: React.FC<ZipViewerProps> = ({
                       filename={activeEntry.displayName || activeEntry.name}
                     />
                   </div>
+                ) : previewData?.isHtml && previewData.text !== undefined ? (
+                  /* HTML Web Page Direct Preview */
+                  <div className="w-full h-full flex-1 min-h-0 flex flex-col overflow-hidden">
+                    <HtmlPreviewViewer
+                      textContent={previewData.text}
+                      filename={activeEntry.displayName || activeEntry.name}
+                    />
+                  </div>
+                ) : previewData?.isJson && previewData.text !== undefined ? (
+                  /* JSON / XML / YAML Direct Tree Preview */
+                  <div className="w-full h-full flex-1 min-h-0 flex flex-col overflow-hidden">
+                    <JsonXmlViewer
+                      textContent={previewData.text}
+                      filename={activeEntry.displayName || activeEntry.name}
+                    />
+                  </div>
+                ) : previewData?.isLog && previewData.text !== undefined ? (
+                  /* Log Diagnostics Direct Preview */
+                  <div className="w-full h-full flex-1 min-h-0 flex flex-col overflow-hidden">
+                    <LogViewer
+                      textContent={previewData.text}
+                      filename={activeEntry.displayName || activeEntry.name}
+                    />
+                  </div>
+                ) : previewData?.isSubtitle && previewData.text !== undefined ? (
+                  /* Subtitle / Caption Direct Preview */
+                  <div className="w-full h-full flex-1 min-h-0 flex flex-col overflow-hidden">
+                    <SubtitleViewer
+                      textContent={previewData.text}
+                      filename={activeEntry.displayName || activeEntry.name}
+                    />
+                  </div>
+                ) : previewData?.isGeoJson && previewData.text !== undefined ? (
+                  /* GeoJSON Spatial Direct Preview */
+                  <div className="w-full h-full flex-1 min-h-0 flex flex-col overflow-hidden">
+                    <GeoJsonViewer
+                      textContent={previewData.text}
+                      filename={activeEntry.displayName || activeEntry.name}
+                    />
+                  </div>
+                ) : previewData?.isFont && previewData.arrayBuffer ? (
+                  /* Typographic Font Direct Preview */
+                  <div className="w-full h-full flex-1 min-h-0 flex flex-col overflow-hidden">
+                    <FontViewer
+                      arrayBuffer={previewData.arrayBuffer}
+                      filename={activeEntry.displayName || activeEntry.name}
+                    />
+                  </div>
+                ) : previewData?.isCertificate ? (
+                  /* Certificate & Key Inspector Direct Preview */
+                  <div className="w-full h-full flex-1 min-h-0 flex flex-col overflow-hidden">
+                    <CertificateViewer
+                      textContent={previewData.text}
+                      arrayBuffer={previewData.arrayBuffer}
+                      filename={activeEntry.displayName || activeEntry.name}
+                    />
+                  </div>
+                ) : previewData?.isEbook ? (
+                  /* E-Book EPUB Direct Preview */
+                  <div className="w-full h-full flex-1 min-h-0 flex flex-col overflow-hidden">
+                    <EbookViewer
+                      arrayBuffer={previewData.arrayBuffer}
+                      textContent={previewData.text}
+                      filename={activeEntry.displayName || activeEntry.name}
+                    />
+                  </div>
+                ) : previewData?.isHttp && previewData.text !== undefined ? (
+                  /* HTTP & REST Request Direct Preview */
+                  <div className="w-full h-full flex-1 min-h-0 flex flex-col overflow-hidden">
+                    <HttpRestViewer
+                      textContent={previewData.text}
+                      filename={activeEntry.displayName || activeEntry.name}
+                    />
+                  </div>
                 ) : previewData?.isCode && previewData.text !== undefined ? (
-                  /* Code Direct Preview */
+                  /* Source Code Direct Preview */
                   <div className="w-full h-full flex-1 min-h-0 flex flex-col overflow-hidden">
                     <CodeViewer
                       textContent={previewData.text}
@@ -790,126 +1039,50 @@ export const ZipViewer: React.FC<ZipViewerProps> = ({
                     />
                   </div>
                 ) : previewData?.isImage ? (
-                  /* Image Direct Preview */
-                  <div className="w-full h-full flex flex-col items-center justify-center p-4 space-y-3 overflow-auto">
-                    <div className="flex items-center gap-1 bg-card border border-border px-2 py-1 rounded-md text-xs shrink-0">
-                      <button
-                        onClick={() => setImageZoom(z => Math.max(25, z - 25))}
-                        className="p-1 hover:bg-muted rounded text-muted-foreground"
-                      >
-                        <ZoomOut className="w-3.5 h-3.5" />
-                      </button>
-                      <span className="font-mono tabular-nums px-1.5">{imageZoom}%</span>
-                      <button
-                        onClick={() => setImageZoom(z => Math.min(300, z + 25))}
-                        className="p-1 hover:bg-muted rounded text-muted-foreground"
-                      >
-                        <ZoomIn className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-
-                    <div className="flex-1 min-h-0 w-full flex items-center justify-center overflow-auto p-4 bg-muted/20 rounded-xl border border-border/60">
-                      <img
-                        src={previewData.blobUrl}
-                        alt={activeEntry.displayName}
-                        style={{ transform: `scale(${imageZoom / 100})`, transformOrigin: 'center center' }}
-                        className="max-w-full max-h-full object-contain shadow-md rounded transition-transform"
-                      />
-                    </div>
-                  </div>
-                ) : previewData?.isAudio ? (
-                  /* Audio Direct Preview */
-                  <div className="w-full h-full flex items-center justify-center p-6">
-                    <div className="w-full max-w-md p-6 bg-card border border-border rounded-xl shadow-xs text-center space-y-4">
-                      <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto">
-                        <Music className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-semibold truncate">{activeEntry.displayName}</h4>
-                        <p className="text-xs text-muted-foreground mt-0.5">Direct in-memory audio playback</p>
-                      </div>
-                      <audio controls src={previewData.blobUrl} className="w-full" />
-                    </div>
-                  </div>
-                ) : previewData?.isVideo ? (
-                  /* Video Direct Preview */
-                  <div className="w-full h-full flex items-center justify-center p-6">
-                    <video
-                      controls
-                      src={previewData.blobUrl}
-                      className="max-w-full max-h-full rounded-lg shadow-md border border-border"
+                  /* Image Studio Direct Preview */
+                  <div className="w-full h-full flex-1 min-h-0 flex flex-col overflow-hidden">
+                    <ImageViewer
+                      objectUrl={previewData.blobUrl}
+                      arrayBuffer={previewData.arrayBuffer}
+                      textContent={previewData.text}
+                      filename={activeEntry.displayName || activeEntry.name}
+                      size={activeEntry.size}
                     />
                   </div>
-                ) : previewData?.isCsv && previewData.csvRows ? (
-                  /* Tabular CSV / Spreadsheet Direct Preview */
-                  <div className="w-full h-full flex flex-col min-h-0 overflow-auto p-4">
-                    <div className="w-full h-full flex flex-col min-h-0 overflow-auto bg-card rounded-lg border border-border">
-                      <table className="w-full text-left text-xs font-mono border-collapse">
-                        <thead>
-                          <tr className="bg-secondary/70 text-foreground border-b border-border">
-                            {previewData.csvRows[0]?.map((col, idx) => (
-                              <th key={idx} className="p-2.5 font-semibold">
-                                {col}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border/60">
-                          {previewData.csvRows.slice(1).map((row, rIdx) => (
-                            <tr key={rIdx} className="hover:bg-muted/40 transition-colors">
-                              {row.map((cell, cIdx) => (
-                                <td key={cIdx} className="p-2 text-muted-foreground whitespace-nowrap">
-                                  {cell}
-                                </td>
-                              ))}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                ) : previewData?.isAudio || previewData?.isVideo ? (
+                  /* Media Audio / Video Direct Preview */
+                  <div className="w-full h-full flex-1 min-h-0 flex flex-col overflow-hidden">
+                    <MediaViewer
+                      objectUrl={previewData.blobUrl}
+                      arrayBuffer={previewData.arrayBuffer}
+                      filename={activeEntry.displayName || activeEntry.name}
+                      isAudio={Boolean(previewData.isAudio)}
+                    />
                   </div>
-                ) : previewData?.text !== undefined ? (
+                ) : previewData?.isArchive && previewData.arrayBuffer ? (
+                  /* Nested Archive / Disk Direct In-Memory Recursive Preview */
+                  <div className="w-full h-full flex-1 min-h-0 flex flex-col overflow-hidden">
+                    <ZipViewer
+                      arrayBuffer={previewData.arrayBuffer}
+                      filename={activeEntry.displayName || activeEntry.name}
+                      onOpenFileInNewTab={onOpenFileInNewTab}
+                    />
+                  </div>
+                ) : previewData?.isText && previewData.text !== undefined ? (
                   /* Text Direct Preview */
-                  <div className="w-full h-full flex flex-col min-h-0 p-4">
-                    <div className="w-full h-full flex flex-col min-h-0 bg-card rounded-lg border border-border overflow-hidden">
-                      <div className="px-3 py-1.5 bg-secondary/50 border-b border-border flex items-center justify-between text-[11px] text-muted-foreground">
-                        <span>{activeEntry.name.split('.').pop()?.toUpperCase() || 'TEXT'} Source Stream</span>
-                        <span className="font-mono">
-                          {previewData.text.split('\n').length} lines · {previewData.text.length} chars
-                        </span>
-                      </div>
-                      <pre className="flex-1 p-3.5 text-xs font-mono text-foreground whitespace-pre-wrap overflow-auto leading-relaxed select-text">
-                        {previewData.text}
-                      </pre>
-                    </div>
+                  <div className="w-full h-full flex-1 min-h-0 flex flex-col overflow-hidden">
+                    <TextViewer
+                      textContent={previewData.text}
+                      filename={activeEntry.displayName || activeEntry.name}
+                    />
                   </div>
                 ) : (
-                  /* Hex Byte Inspector Preview */
-                  <div className="w-full h-full flex flex-col min-h-0 p-4">
-                    <div className="w-full h-full flex flex-col min-h-0 bg-card rounded-lg border border-border overflow-hidden">
-                      <div className="px-3 py-1.5 bg-secondary/50 border-b border-border text-[11px] font-mono text-muted-foreground">
-                        Memory Byte Stream ({previewData?.bytes?.length || 0} bytes)
-                      </div>
-                      <div className="flex-1 p-3 overflow-auto font-mono text-[11px] leading-tight select-text text-foreground">
-                        {previewData?.bytes ? (
-                          Array.from(previewData.bytes.slice(0, 1024)).reduce<string[]>((acc, byte, idx) => {
-                            const lineIdx = Math.floor(idx / 16);
-                            if (!acc[lineIdx]) {
-                              const offsetStr = (lineIdx * 16).toString(16).padStart(6, '0');
-                              acc[lineIdx] = `${offsetStr}:  `;
-                            }
-                            acc[lineIdx] += byte.toString(16).padStart(2, '0') + ' ';
-                            return acc;
-                          }, []).map((line, lIdx) => (
-                            <div key={lIdx} className="hover:bg-muted/30 px-1 rounded">
-                              {line}
-                            </div>
-                          ))
-                        ) : (
-                          <span>No binary data</span>
-                        )}
-                      </div>
-                    </div>
+                  /* Binary Deep PE/ELF/Mach-O Inspector & Hex Viewer */
+                  <div className="w-full h-full flex-1 min-h-0 flex flex-col overflow-hidden">
+                    <BinaryInspectorViewer
+                      arrayBuffer={previewData?.arrayBuffer}
+                      filename={activeEntry.displayName || activeEntry.name}
+                    />
                   </div>
                 )}
               </div>
