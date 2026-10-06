@@ -909,13 +909,13 @@ export function getSampleTabFiles(): TabFile[] {
 
   const samplePpt: TabFile = {
     id: 'sample-pptx',
-    name: 'quarterly_keynote.pptx',
-    size: 24500,
+    name: 'Quarterly_Strategy_Keynote.pptx',
+    size: 48500,
     type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     lastModified: now - 1000,
     extension: 'pptx',
     category: 'pptx',
-    textContent: `# OmniView Universal Presentation\n\n- High-Performance In-Memory File Studio\n- Supports PPTX, PPT, ODP, and Keynote presentation formats.\n- Developed by Suhail Akhtar (suhail.top)\n\n---\n\n## Presentation Features\n\n- Navigate slides with Arrow Left / Right or Space bar.\n- Switch between Slide View, Grid Sorter, and Text Outline.\n- Search across all slide titles, bullets, and notes.\n- 100% Client-side execution with zero server uploads.`,
+    textContent: `# OmniView Universal Presentation Engine\nNext-Generation In-Browser Slide Studio\n\n---\n\n## Architecture & Core Features\n- 100% Client-side in-memory rendering with zero server uploads\n- Universal support for PPTX, legacy PPT (97-2003), and OpenDocument ODP\n- Interactive Thumbnail Sidebar Navigator with auto-scroll and quick jump\n- Fullscreen Presenter Mode with keyboard navigation and timer\n\n---\n\n## Keyboard Shortcuts & Navigation\n- Right Arrow / Space / PageDown: Next slide\n- Left Arrow / PageUp: Previous slide\n- Press F: Enter / Exit Fullscreen Slideshow\n- Press N: Toggle Speaker Notes Drawer\n- Home / End: First / Last slide in presentation\n\n---\n\n## Multi-View Sorter & Outlines\n- Standard Slide View with widescreen 16:9 canvas\n- Grid Sorter to visually organize and scan all slides\n- Outline Reader mode with one-click full deck markdown copy\n- High-DPI typography and responsive layout scaling`,
     liveSyncActive: false,
     syncStatus: 'synced',
     viewMode: 'preview',

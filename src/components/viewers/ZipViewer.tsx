@@ -234,8 +234,8 @@ export const ZipViewer: React.FC<ZipViewerProps> = ({
       else if (['docx', 'doc'].includes(ext) || cat === 'docx') {
         setPreviewData({ bytes, arrayBuffer: cleanBuffer, isDocx: true, category: 'docx' });
       }
-      // 3. PowerPoint / PPTX
-      else if (['pptx', 'ppt'].includes(ext) || cat === 'pptx') {
+      // 3. PowerPoint & Presentations (PPTX, PPT, ODP, KEY, PPS, PPSX)
+      else if (['pptx', 'ppt', 'odp', 'key', 'pps', 'ppsx', 'pot', 'potx'].includes(ext) || cat === 'pptx') {
         setPreviewData({ bytes, arrayBuffer: cleanBuffer, isPptx: true, category: 'pptx' });
       }
       // 4. Excel / Spreadsheets (XLSX, XLS, ODS, CSV, TSV)

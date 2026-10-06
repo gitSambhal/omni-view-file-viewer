@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.3.6] - 2026-10-06
+
+### Fixed
+- **PowerPoint PPT & PPTX High-Fidelity Rendering & Layouts**:
+  - Re-engineered `presentationParser.ts` to parse complete OOXML shape trees (`p:sp`), graphic frames, tables (`a:tbl`), embedded media images (`p:pic` -> `ppt/media/*`), and speaker notes.
+  - Implemented OLE2 Compound File FAT/sector chain stream reassembly for legacy PowerPoint 97–2003 (`.ppt`) files to decode `rtSlide`, `rtTextHeaderAtom`, `rtTextCharsAtom` (UTF-16LE), and `rtTextBytesAtom` (ASCII).
+  - Enhanced `PptxViewer.tsx` with:
+    - **True Presentation Canvas**: Supports Title slides with hero typography, Title & Content slides with custom styled bullets, Two-Column comparisons, Tables, and Image slides.
+    - **Slide Navigator Thumbnail Sidebar**: Vertical thumbnail strip with auto-scrolling, slide counter, and quick jump.
+    - **Presenter Slideshow Mode**: Fullscreen view with session timer, auto-advance play/pause, keyboard navigation (Space, Arrows, PageUp/Down, Home/End, F key for fullscreen, N key for notes).
+    - **Multi-View Modes**: Seamless switching between Single Slide View, Grid Sorter, and Outline Document View.
+  - Developer Attribution: Maintained for **Suhail Akhtar** ([suhail.top](https://suhail.top)).
+
 ## [4.3.5] - 2026-10-06
 
 ### Fixed
