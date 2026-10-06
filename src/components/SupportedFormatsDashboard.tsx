@@ -24,6 +24,8 @@ import {
   ShieldCheck,
   Binary,
   Layers,
+  HardDrive,
+  Disc,
   Search,
   ArrowRight,
   FolderOpen,
@@ -253,14 +255,36 @@ export const FEATURED_FORMATS: SupportedFormatItem[] = [
     iconBg: 'bg-pink-500/10'
   },
 
-  // System & Security
+  // System, Virtual Disks & Security
   {
-    id: 'archive',
-    extension: '.zip / .tar / .gz',
-    name: 'Compressed Archives',
+    id: 'vhd',
+    extension: '.vhd / .vhdx',
+    name: 'Virtual Hard Disk',
     category: 'system',
     categoryLabel: 'System & Security',
-    highlight: 'In-browser decompression · File tree & single extract',
+    highlight: 'Fixed & Dynamic BAT · MBR/GPT partitions · FAT mounter · Direct preview',
+    icon: HardDrive,
+    iconColor: 'text-primary dark:text-primary',
+    iconBg: 'bg-primary/10'
+  },
+  {
+    id: 'iso',
+    extension: '.iso / .img',
+    name: 'Optical Disc Image',
+    category: 'system',
+    categoryLabel: 'System & Security',
+    highlight: 'ISO-9660 & Joliet volume records · Full tree traversal · In-memory extraction',
+    icon: Disc,
+    iconColor: 'text-amber-500 dark:text-amber-400',
+    iconBg: 'bg-amber-500/10'
+  },
+  {
+    id: 'archive',
+    extension: '.zip / .tar.gz / .7z / .rar / .cab',
+    name: 'Universal Archive Suite',
+    category: 'system',
+    categoryLabel: 'System & Security',
+    highlight: 'ZIP, TAR, GZ, 7Z, RAR, CAB, DEB · Direct in-memory preview without extraction',
     icon: Archive,
     iconColor: 'text-amber-500 dark:text-amber-400',
     iconBg: 'bg-amber-500/10'

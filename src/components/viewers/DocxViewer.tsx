@@ -15,7 +15,8 @@ import {
   Copy,
   Printer,
   Sparkles,
-  Search
+  Search,
+  Check
 } from 'lucide-react';
 
 interface DocxViewerProps {
@@ -127,127 +128,86 @@ export const DocxViewer: React.FC<DocxViewerProps> = ({ arrayBuffer, textContent
   const charCount = rawText ? rawText.length : 0;
 
   return (
-    <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 overflow-hidden transition-colors">
-      {/* Header Bar */}
-      <div className="flex flex-wrap items-center justify-between p-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 gap-2 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded border border-blue-500/20">
-            <FileText className="w-3.5 h-3.5" />
-            Word Document Studio (.docx)
-          </div>
-
-          <span className="text-xs text-slate-500 font-mono hidden sm:inline">
-            {wordCount} words | {charCount} chars
+    <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 bg-[#F8F9FA] dark:bg-[#1F1F1F] text-foreground overflow-hidden font-sans">
+      {/* Document Sub-bar */}
+      <div className="flex flex-wrap items-center justify-between px-3 py-1.5 bg-card border-b border-border/80 gap-2 shrink-0">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span className="font-medium text-foreground flex items-center gap-1">
+            <FileText className="w-3.5 h-3.5 text-primary" />
+            <span>Document</span>
           </span>
+          <span aria-hidden="true" className="text-border">·</span>
+          <span className="hidden sm:inline"><strong className="font-mono text-foreground font-normal">{wordCount}</strong> words</span>
+          <span aria-hidden="true" className="text-border hidden sm:inline">·</span>
+          <span className="hidden sm:inline"><strong className="font-mono text-foreground font-normal">{charCount}</strong> chars</span>
         </div>
 
         {/* Search Input */}
         <div className="flex items-center gap-2 flex-1 max-w-xs mx-2">
           <div className="relative w-full">
-            <Search className="w-3.5 h-3.5 absolute left-2.5 top-2 text-slate-400" />
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-2 text-muted-foreground" />
             <input
               type="text"
               placeholder="Search in document..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-1 bg-slate-100 dark:bg-slate-800 text-xs text-slate-800 dark:text-slate-200 rounded-md border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full pl-8 pr-3 py-1 bg-secondary/60 text-xs text-foreground placeholder:text-muted-foreground rounded-md border border-border/60 focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
         </div>
 
-        {/* Toolbar Controls */}
+        {/* Mode switch & Search */}
         <div className="flex items-center gap-2">
-          {/* Zoom */}
-          <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-300 dark:border-slate-700 p-0.5">
+          {/* Mode switch */}
+          <div className="flex items-center p-0.5 bg-secondary/80 rounded-md border border-border/60">
             <button
-              onClick={() => setZoomLevel(z => Math.max(50, z - 10))}
-              className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-300 cursor-pointer"
-              title="Zoom Out"
+              onClick={() => setViewMode('formatted')}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors cursor-pointer ${
+                viewMode === 'formatted'
+                  ? 'bg-card text-foreground shadow-2xs font-semibold'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
             >
-              <ZoomOut className="w-3.5 h-3.5" />
+              <Eye className="w-3.5 h-3.5" />
+              <span>Formatted</span>
             </button>
-
-            <span className="text-xs font-mono px-2 text-slate-700 dark:text-slate-300 w-12 text-center">
-              {zoomLevel}%
-            </span>
-
             <button
-              onClick={() => setZoomLevel(z => Math.min(200, z + 10))}
-              className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-300 cursor-pointer"
-              title="Zoom In"
+              onClick={() => setViewMode('raw')}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors cursor-pointer ${
+                viewMode === 'raw'
+                  ? 'bg-card text-foreground shadow-2xs font-semibold'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
             >
-              <ZoomIn className="w-3.5 h-3.5" />
+              <Code className="w-3.5 h-3.5" />
+              <span>Plain Text</span>
             </button>
           </div>
-
-          <button
-            onClick={handleCopyText}
-            className="flex items-center gap-1 px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs border border-slate-300 dark:border-slate-700 transition-colors cursor-pointer"
-            title="Copy Raw Text"
-          >
-            <Copy className="w-3.5 h-3.5" />
-            <span>{copied ? 'Copied!' : 'Copy Text'}</span>
-          </button>
-
-          <button
-            onClick={handlePrint}
-            className="flex items-center gap-1 px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs border border-slate-300 dark:border-slate-700 transition-colors cursor-pointer"
-            title="Print Document"
-          >
-            <Printer className="w-3.5 h-3.5" />
-            <span>Print</span>
-          </button>
-
-          <div className="h-4 w-px bg-slate-300 dark:bg-slate-700" />
-
-          {/* Mode switch */}
-          <button
-            onClick={() => setViewMode('formatted')}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs transition-colors cursor-pointer ${
-              viewMode === 'formatted'
-                ? 'bg-blue-600 text-white font-medium shadow-sm'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-            }`}
-          >
-            <Eye className="w-3.5 h-3.5" />
-            Formatted Document
-          </button>
-          <button
-            onClick={() => setViewMode('raw')}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs transition-colors cursor-pointer ${
-              viewMode === 'raw'
-                ? 'bg-blue-600 text-white font-medium shadow-sm'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-            }`}
-          >
-            <Code className="w-3.5 h-3.5" />
-            Plain Text
-          </button>
         </div>
       </div>
 
-      {/* Main Document View Stage */}
-      <div className="flex-1 min-h-0 min-w-0 overflow-auto p-4 md:p-8 bg-slate-200 dark:bg-slate-950 flex justify-center items-start">
+      {/* Main Document View Stage: QuickLook & Notion Clean Canvas */}
+      <div className="flex-1 min-h-0 min-w-0 overflow-auto p-4 md:p-8 bg-muted/30 dark:bg-background flex justify-center items-start">
         {loading ? (
-          <div className="flex flex-col items-center justify-center p-12 text-slate-500 dark:text-slate-400">
-            <div className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin mb-3"></div>
-            <p className="text-sm font-medium">Parsing Word document layout & embedded images...</p>
+          <div className="flex flex-col items-center justify-center p-12 text-muted-foreground">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-3"></div>
+            <p className="text-xs font-medium">Parsing document layout & embedded media...</p>
           </div>
         ) : error ? (
-          <div className="max-w-xl p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-700 dark:text-amber-200 text-xs">
+          <div className="max-w-xl p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-700 dark:text-amber-200 text-xs">
             <div className="flex items-center gap-2 font-semibold text-amber-600 dark:text-amber-300 mb-1">
               <AlertCircle className="w-4 h-4" />
               {error}
             </div>
-            <pre className="mt-3 p-3 bg-white dark:bg-slate-900 rounded text-slate-800 dark:text-slate-200 whitespace-pre-wrap font-mono text-xs max-h-96 overflow-auto border border-slate-300 dark:border-slate-800">
+            <pre className="mt-3 p-3 bg-card rounded-lg text-foreground whitespace-pre-wrap font-mono text-xs max-h-96 overflow-auto border border-border">
               {rawText}
             </pre>
           </div>
         ) : viewMode === 'formatted' ? (
-          /* Realistic A4 Paper Sheet Canvas */
+          /* Elevated Document Sheet */
           <div
             style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'top center' }}
-            className="w-full max-w-4xl bg-white text-slate-900 p-10 md:p-16 rounded-sm shadow-2xl border border-slate-300 dark:border-slate-700 transition-all min-h-[900px] my-4"
+            className="w-full max-w-[850px] bg-card text-card-foreground p-10 md:p-14 rounded-xl shadow-md border border-border/70 transition-all min-h-[1056px] my-4"
           >
             {/* Embedded CSS rules for Word DOCX styling */}
             <style>{`

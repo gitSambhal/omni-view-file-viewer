@@ -179,8 +179,21 @@ export function detectFileCategory(filename: string, mimeType: string = ''): Fil
     return 'video';
   }
 
-  // Archive files
-  if (['zip', 'tar', 'gz', 'tgz', 'rar', '7z', 'bz2', 'xz', 'iso'].includes(ext) || mimeType.includes('zip') || mimeType.includes('tar') || mimeType.includes('compressed')) {
+  // Archive & Virtual Hard Disk / Disk Image files (ZIP, TAR, GZ, 7Z, RAR, VHD, VHDX, ISO, DMG, CAB, etc.)
+  const archiveExtensions = [
+    'zip', 'tar', 'gz', 'tgz', 'rar', '7z', 'bz2', 'tbz', 'tbz2', 'xz', 'txz',
+    'iso', 'vhd', 'vhdx', 'dmg', 'cab', 'wim', 'img', 'vdi', 'vmdk', 'qcow2',
+    'cpio', 'ar', 'deb', 'rpm', 'apk', 'ipa', 'jar', 'war', 'xpi', 'crx'
+  ];
+  if (
+    archiveExtensions.includes(ext) ||
+    mimeType.includes('zip') ||
+    mimeType.includes('tar') ||
+    mimeType.includes('compressed') ||
+    mimeType.includes('x-vhd') ||
+    mimeType.includes('x-iso9660-image') ||
+    mimeType.includes('x-apple-diskimage')
+  ) {
     return 'archive';
   }
 
@@ -241,6 +254,48 @@ export function probeAmbiguousCategory(
   // Check for PDF magic bytes (%PDF-) regardless of extension
   if (bytes.length >= 4 && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) {
     return 'pdf';
+  }
+
+  // Check for ZIP magic bytes (PK\x03\x04)
+  if (bytes.length >= 4 && bytes[0] === 0x50 && bytes[1] === 0x4b && bytes[2] === 0x03 && bytes[3] === 0x04) {
+    return 'archive';
+  }
+
+  // Check for 7-Zip magic bytes (7z\xbc\xaf'\x1c)
+  if (bytes.length >= 6 && bytes[0] === 0x37 && bytes[1] === 0x7a && bytes[2] === 0xbc && bytes[3] === 0xaf && bytes[4] === 0x27 && bytes[5] === 0x1c) {
+    return 'archive';
+  }
+
+  // Check for GZIP magic bytes (\x1f\x8b)
+  if (bytes.length >= 2 && bytes[0] === 0x1f && bytes[1] === 0x8b) {
+    return 'archive';
+  }
+
+  // Check for RAR magic bytes (Rar!\x1a\x07)
+  if (bytes.length >= 7 && bytes[0] === 0x52 && bytes[1] === 0x61 && bytes[2] === 0x72 && bytes[3] === 0x21 && bytes[4] === 0x1a && bytes[5] === 0x07) {
+    return 'archive';
+  }
+
+  // Check for VHD / VHDX magic bytes (conectix / vhdxfile)
+  if (bytes.length >= 8) {
+    const magicStart = String.fromCharCode(...bytes.slice(0, 8));
+    if (magicStart === 'conectix' || magicStart === 'cxsparse' || magicStart === 'vhdxfile') {
+      return 'archive';
+    }
+    if (bytes.length >= 512) {
+      const footerMagic = String.fromCharCode(...bytes.slice(bytes.length - 512, bytes.length - 504));
+      if (footerMagic === 'conectix') {
+        return 'archive';
+      }
+    }
+  }
+
+  // Check for ISO-9660 identifier (CD001 at sector 16)
+  if (bytes.length >= 0x8006) {
+    const isoId = String.fromCharCode(...bytes.slice(0x8001, 0x8006));
+    if (isoId === 'CD001') {
+      return 'archive';
+    }
   }
 
   // Check for SQLite 3 magic header ("SQLite format 3\0")

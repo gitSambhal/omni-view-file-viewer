@@ -7,6 +7,102 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.3.1] - 2026-10-06
+
+### Fixed
+- **In-Memory PDF Preview Inside Archives & Containers**:
+  - Replaced the blocked iframe preview with OmniView's native `PdfViewer` component powered by PDF.js (`pdfjs-dist`).
+  - Added clean ArrayBuffer extraction slicing (`bytes.buffer.slice(byteOffset, byteOffset + byteLength)`) to guarantee zero-offset memory alignment for PDF.js document loading.
+  - Enabled multi-page canvas rendering, page navigation controls, zoom, rotation, search, thumbnails, outline, and security decryption for PDFs directly inside ZIP, TAR, VHD, ISO, 7Z, and RAR archives.
+  - Integrated dedicated rich viewers for Word (.docx), Excel (.xlsx), Database (.db/.sqlite/.sql), Markdown, and Code files directly within the container inspection pane.
+  - Added `project_workspace.zip` with an embedded PDF specification document to the initial sample file set for instant testing.
+  - Developer Attribution: Maintained for **Suhail Akhtar** ([suhail.top](https://suhail.top)).
+
+## [4.3.0] - 2026-10-06
+
+### Added
+- **Universal Archive & Virtual Hard Disk (VHD/ISO) Suite**:
+  - **Full Support for All Major Archive Formats**: Added client-side in-memory parsing for ZIP, TAR, TAR.GZ, TGZ, GZ, BZ2, 7Z, RAR (4.x/5.0), CAB, DEB, AR, and CPIO.
+  - **Microsoft VHD & VHDX Virtual Hard Disk Mounting**: Reads 512-byte `conectix` footer, parses Fixed & Dynamic (BAT) disk structures, MBR/GPT partition tables, and mounts internal FAT12/16/32 volumes.
+  - **ISO 9660 & Joliet Optical Disc Images**: Parses Volume Descriptors (`CD001`), root directory tables, and traverses nested directories.
+  - **Direct In-Memory Previews Without Extraction**:
+    - Click any file inside an archive or virtual disk to preview it immediately without extracting to physical disk!
+    - Full image viewer (PNG, JPG, SVG, WebP, GIF), syntax-highlighted code & markdown, tabular CSV spreadsheets, in-memory PDF reader, audio & video playback, and hex byte inspector.
+    - Added "Open in Workspace Tab" button to promote any extracted in-memory file into a first-class editor/viewer tab.
+    - 1-click "Export All as ZIP" download for archives, VHDs, and ISO disc images.
+  - **Sample Virtual Disks & Archives**: Built-in sample VHD (`system_disk_c.vhd`), TAR.GZ (`project_release.tar.gz`), and ISO image (`install_media.iso`).
+  - **Developer Attribution**: Maintained attribution for **Suhail Akhtar** ([suhail.top](https://suhail.top)).
+
+## [4.2.0] - 2026-10-03
+
+### Changed
+- **Anti-Clutter UI/UX Overhaul & Serene Workspace Layout**:
+  - **Eliminated Giant Embedded Landing Blocks**: Removed the massive 500-line formats directory from the initial landing screen, replacing it with an ultra-clean, generous drop target and an intuitive link to the formats modal.
+  - **Single-Elevation Depth & Zero-Pill Restraint**: Stripped static pill badges, redundant border boxes, and nested card containers in accordance with the Frontend Design Constitution.
+  - **Uncluttered Executive Header**: Clean 44px top bar with subtle `⌘K` Quick Search, whisper-quiet document rename breadcrumb, and streamlined actions menu.
+  - **Unified Single-Toolbar Architecture**: Eliminated duplicate zoom, print, and copy controls inside individual document viewers (`DocxViewer`, etc.) that were creating stacked double toolbars.
+  - **Calm Sidebar Rhythm**: Refined sidebar file items with subtle border accents and gentle hover transitions, removing loud saturated row fills.
+  - **Developer Attribution**: Maintained attribution for **Suhail Akhtar** ([suhail.top](https://suhail.top)) in HTML metadata, footer bar, and header info.
+
+## [4.1.0] - 2026-10-03
+
+### Changed
+- **De-Cluttered & Streamlined Minimalist Studio**:
+  - **Calm, Uncluttered Layout**: Stripped away noisy pseudo-hardware elements, fake screws, flashing blinking LEDs, and shouting all-caps text.
+  - **Restored Typography Balance**: Re-introduced clean sans-serif typography (`Inter` / `Plus Jakarta Sans`) with natural hierarchy and comfortable margins; monospace is strictly reserved for code and numbers.
+  - **Quiet Executive Header**: Single-row 48px header with subtle command search (`⌘K`), clean document title, theme toggle, and unified `Open File` button.
+  - **Focused Document & Welcome Stage**: Serene drag-and-drop zone with breathable whitespace and 4 clear sandbox creation cards.
+  - **Minimal Status Bar**: Clean footer with file metrics and developer attribution for **Suhail Akhtar** ([suhail.top](https://suhail.top)).
+
+## [4.0.0] - 2026-10-03
+
+### Changed
+- **Reimagined UI/UX: Industrial Hardware & Field Studio (Teenage Engineering & Dieter Rams Inspired)**:
+  - **Tactile Hardware Control Deck**:
+    - Replaced generic software chrome with an industrial matte chassis, chamfered bezels, hardware screws, and recessed slot displays.
+    - Added high-contrast monospace technical readouts (`FIELD-60x`, `IN-MEMORY MULTI-DECK`, `EXEC [⌘K]`).
+    - Tactile pushbutton primary actions with industrial safety orange (`#FF4F00`) and signal channels (Safety Orange, Signal Green, Solar Amber, Laser Violet, Cyber Cyan, Radar Red).
+  - **Cartridge Slot Multi-Deck (Tab Bar)**:
+    - Tabs styled as physical hardware memory cartridges with LED power indicators, active slot indexes, and tactile eject pins.
+  - **Field Action HUD (Toolbar)**:
+    - Hardware-inspired optical zoom steppers, recessed reader mode selectors, hardware memory telemetry tags, and tactical dump pushbuttons.
+  - **Cartridge Deposit Bay (Welcome Screen)**:
+    - High-visibility drop bay target with tactile crosshair screws, hardware buffer generators (`[01] MARKDOWN`, `[02] PYTHON 3.12`, `[03] SQLITE MATRIX`, `[04] TYPESCRIPT`), and 60+ codec matrix inspection.
+  - **Hardware Telemetry Chassis (Footer)**:
+    - Low-profile status telemetry with live sync LED blinkers and mandatory developer attribution for **Suhail Akhtar** ([suhail.top](https://suhail.top)).
+
+## [3.5.0] - 2026-10-03
+
+### Changed
+- **Bespoke UI/UX Elevation (Inspired by Workspace Principles, Distinctive OmniView Identity)**:
+  - **Single-Row Executive Header**: Replaced literal Google Docs cloned ribbons and menus with an elegant, focused top bar following the Top Bar Contract (Brand logo + active document breadcrumb + command trigger + theme picker + primary action).
+  - **Calm Rhythmic Spacing & Ergonomics**: Retained Google Workspace's celebrated 4px/8px rhythm, breathable padding, and crisp hairline dividers while eradicating literal knock-off elements (removed fake yellow stars, fake Google Drive search pills, and office menu clutter).
+  - **Streamlined Workspace Utility Bar**: Compact 36px contextual action bar providing reader mode switching, zoom steppers/presets (50%–200%), format telemetry, copy, and export.
+  - **Clean Modern Segmented Controls**: Swapped out hardcoded styles for accessible, zero-pill interactive segmented filter buttons in the sidebar.
+  - **Attribution & Versioning**: Maintained developer attribution for **Suhail Akhtar** ([suhail.top](https://suhail.top)) and incremented release version to **`v3.5.0`**.
+
+## [3.4.0] - 2026-10-02
+
+### Added
+- **Google Docs & Sheets Workspace UI/UX Overhaul**:
+  - **Google Workspace Typography & Spacing Rhythm**:
+    - Integrated Google Sans, Product Sans, Plus Jakarta Sans, and Roboto typography.
+    - Upgraded baseline layout to Google Workspace 4px grid spacing, compact 36px ribbon toolbar, and hairline border styling (`#DADCE0` in light, `#3C4043` in dark).
+  - **Authentic Google Docs & Sheets Header**:
+    - Interactive document title with inline renaming (click to rename, Enter/blur to save).
+    - Star document toggle with Google Docs yellow star state.
+    - Cloud save status indicator: "All changes saved locally" in-memory guarantee.
+    - Google Docs iconic pill Share button in Google Blue (`#1A73E8`) with 1-click URL sharing.
+    - User account profile badge for **Suhail Akhtar** (`https://suhail.top`).
+    - Full 8-menu Google Docs bar: `File`, `Edit`, `View`, `Insert`, `Format`, `Tools`, `Extensions`, `Help` with authentic keyboard shortcuts.
+  - **Google Docs Ribbon Action Toolbar**:
+    - Undo (`RotateCcw`), Redo (`RotateCw`), Print (`Printer`), Zoom dropdown presets (50%, 75%, 90%, 100%, 125%, 150%, 200%), Copy, Download, Hex inspector, and live disk sync status.
+  - **Google Sheets Tab Bar & Side Panel**:
+    - Google Sheets style tabs with format indicators, `+` add sheet circular button, and context menu.
+    - Google Workspace Side Panel with Google Material rounded search bar and segmented category chips.
+  - **Google Docs "Document on Desk" Elevation**:
+    - Styled document and spreadsheet views with authentic Google Docs paper page shadow (`google-doc-sheet`).
+
 ## [3.3.0] - 2026-09-30
 
 ### Added

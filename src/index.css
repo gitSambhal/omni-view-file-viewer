@@ -27,65 +27,65 @@
 
 @layer base {
   :root {
-    /* Modern Studio Color System - Light Mode */
-    --background: #F8F9FC;
+    /* Minimalist Zen Studio - Light Mode */
+    --background: #F8FAFC;
     --foreground: #0F172A;
     --card: #FFFFFF;
     --card-foreground: #0F172A;
     --popover: #FFFFFF;
     --popover-foreground: #0F172A;
-    --primary: #4F46E5;
+    --primary: #4F46E5; /* Calm Indigo */
     --primary-foreground: #FFFFFF;
-    --secondary: #EEF2F6;
-    --secondary-foreground: #1E293B;
+    --secondary: #F1F5F9;
+    --secondary-foreground: #0F172A;
     --muted: #F1F5F9;
     --muted-foreground: #64748B;
     --accent: #EEF2FF;
     --accent-foreground: #4338CA;
-    --destructive: #E11D48;
+    --destructive: #EF4444;
     --destructive-foreground: #FFFFFF;
     --border: #E2E8F0;
     --input: #E2E8F0;
     --ring: #4F46E5;
-    --radius: 0.75rem;
-    --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Plus Jakarta Sans", system-ui, sans-serif;
-    --font-mono: "SF Mono", ui-monospace, Menlo, Monaco, Consolas, "JetBrains Mono", monospace;
+    --radius: 0.5rem;
+    --font-sans: "Inter", "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-mono: "JetBrains Mono", "Roboto Mono", monospace;
   }
 
   .dark {
-    /* Modern Studio Color System - Dark Mode */
-    --background: #0B0C10;
+    /* Minimalist Zen Studio - Dark Mode */
+    --background: #090A0F;
     --foreground: #F8FAFC;
-    --card: #13151D;
+    --card: #11131B;
     --card-foreground: #F8FAFC;
-    --popover: #181A24;
+    --popover: #151822;
     --popover-foreground: #F8FAFC;
     --primary: #6366F1;
     --primary-foreground: #FFFFFF;
-    --secondary: #1B1E29;
-    --secondary-foreground: #F1F5F9;
-    --muted: #171923;
+    --secondary: #1A1D28;
+    --secondary-foreground: #F8FAFC;
+    --muted: #1A1D28;
     --muted-foreground: #94A3B8;
-    --accent: #232738;
-    --accent-foreground: #E0E7FF;
-    --destructive: #F43F5E;
-    --destructive-foreground: #FFFFFF;
-    --border: #232734;
-    --input: #232734;
+    --accent: rgba(99, 102, 241, 0.12);
+    --accent-foreground: #C7D2FE;
+    --destructive: #F87171;
+    --destructive-foreground: #450A0A;
+    --border: #1E2230;
+    --input: #1E2230;
     --ring: #6366F1;
-    --radius: 0.75rem;
-    --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Plus Jakarta Sans", system-ui, sans-serif;
-    --font-mono: "SF Mono", ui-monospace, Menlo, Monaco, Consolas, "JetBrains Mono", monospace;
+    --radius: 0.5rem;
+    --font-sans: "Inter", "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-mono: "JetBrains Mono", "Roboto Mono", monospace;
   }
 
-  /* Dynamic Accent Color Themes */
-  [data-accent="violet"] {
-    --primary: #7C3AED;
-    --ring: #7C3AED;
+  /* Dynamic Accent Color Themes - Subtle & Clean */
+  [data-accent="indigo"] {
+    --primary: #4F46E5;
+    --ring: #4F46E5;
   }
-  .dark[data-accent="violet"], [data-accent="violet"] .dark, .dark [data-accent="violet"] {
-    --primary: #8B5CF6;
-    --ring: #8B5CF6;
+  .dark[data-accent="indigo"], [data-accent="indigo"] .dark, .dark [data-accent="indigo"] {
+    --primary: #6366F1;
+    --ring: #6366F1;
   }
 
   [data-accent="emerald"] {
@@ -97,15 +97,6 @@
     --ring: #10B981;
   }
 
-  [data-accent="cyan"] {
-    --primary: #0284C7;
-    --ring: #0284C7;
-  }
-  .dark[data-accent="cyan"], [data-accent="cyan"] .dark, .dark [data-accent="cyan"] {
-    --primary: #38BDF8;
-    --ring: #38BDF8;
-  }
-
   [data-accent="amber"] {
     --primary: #D97706;
     --ring: #D97706;
@@ -113,6 +104,24 @@
   .dark[data-accent="amber"], [data-accent="amber"] .dark, .dark [data-accent="amber"] {
     --primary: #F59E0B;
     --ring: #F59E0B;
+  }
+
+  [data-accent="violet"] {
+    --primary: #7C3AED;
+    --ring: #7C3AED;
+  }
+  .dark[data-accent="violet"], [data-accent="violet"] .dark, .dark [data-accent="violet"] {
+    --primary: #8B5CF6;
+    --ring: #8B5CF6;
+  }
+
+  [data-accent="cyan"] {
+    --primary: #0891B2;
+    --ring: #0891B2;
+  }
+  .dark[data-accent="cyan"], [data-accent="cyan"] .dark, .dark [data-accent="cyan"] {
+    --primary: #06B6D4;
+    --ring: #06B6D4;
   }
 
   [data-accent="rose"] {
@@ -132,127 +141,40 @@
     background-color: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    letter-spacing: -0.011em;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    transition: background-color 0.15s cubic-bezier(0.16, 1, 0.3, 1), color 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: background-color 0.15s ease, color 0.15s ease;
   }
 
   button, input, select, textarea, optgroup {
     font-family: inherit;
   }
 
-  /* Apple-inspired sleek scrollbars */
+  /* Sleek, unobtrusive scrollbars */
   ::-webkit-scrollbar {
-    width: 7px;
-    height: 7px;
+    width: 6px;
+    height: 6px;
   }
-
   ::-webkit-scrollbar-track {
     background: transparent;
   }
-
   ::-webkit-scrollbar-thumb {
-    background: rgba(134, 134, 139, 0.35);
+    background: var(--border);
     border-radius: 9999px;
-    border: 2px solid transparent;
-    background-clip: padding-box;
   }
-
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(134, 134, 139, 0.6);
-    border: 2px solid transparent;
-    background-clip: padding-box;
+    background: var(--muted-foreground);
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
   }
 
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
-  /* Ensure syntax highlight code tokens inherit user-selected editor typography */
-  .hljs, pre.hljs, code.hljs {
-    font-family: var(--font-mono, monospace) !important;
+  .hljs {
+    background: transparent !important;
+    font-family: var(--font-mono) !important;
     font-size: inherit !important;
     line-height: inherit !important;
   }
-
-  /* Light mode syntax highlight token overrides */
-  html:not(.dark) .hljs {
-    color: #1d1d1f;
-    background: transparent;
-  }
-  html:not(.dark) .hljs-keyword,
-  html:not(.dark) .hljs-selector-tag,
-  html:not(.dark) .hljs-subst {
-    color: #af0e1b;
-    font-weight: 600;
-  }
-  html:not(.dark) .hljs-string,
-  html:not(.dark) .hljs-title,
-  html:not(.dark) .hljs-section,
-  html:not(.dark) .hljs-attribute,
-  html:not(.dark) .hljs-literal,
-  html:not(.dark) .hljs-template-tag,
-  html:not(.dark) .hljs-template-variable,
-  html:not(.dark) .hljs-type,
-  html:not(.dark) .hljs-addition {
-    color: #0050a4;
-  }
-  html:not(.dark) .hljs-comment,
-  html:not(.dark) .hljs-quote,
-  html:not(.dark) .hljs-deletion,
-  html:not(.dark) .hljs-meta {
-    color: #86868b;
-    font-style: italic;
-  }
-  html:not(.dark) .hljs-number,
-  html:not(.dark) .hljs-regexp,
-  html:not(.dark) .hljs-link {
-    color: #0071e3;
-  }
-  html:not(.dark) .hljs-variable,
-  html:not(.dark) .hljs-name,
-  html:not(.dark) .hljs-attr {
-    color: #b05a00;
-  }
-  html:not(.dark) .hljs-function,
-  html:not(.dark) .hljs-title.function_ {
-    color: #6a1a9a;
-  }
-}
-
-/* Apple-style UI Utilities */
-.apple-segmented-track {
-  background-color: var(--secondary);
-  padding: 2px;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-}
-
-.apple-segmented-item {
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--muted-foreground);
-  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-  cursor: pointer;
-  user-select: none;
-  white-space: nowrap;
-}
-
-.apple-segmented-item:hover {
-  color: var(--foreground);
-}
-
-.apple-segmented-item-active {
-  background-color: var(--card);
-  color: var(--foreground);
-  font-weight: 600;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }

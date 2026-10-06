@@ -25,77 +25,84 @@ export const MarkdownViewer: React.FC<MarkdownViewerProps> = ({ textContent = ''
   };
 
   return (
-    <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 overflow-hidden transition-colors">
+    <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 bg-[#F8F9FA] dark:bg-[#1F1F1F] text-foreground overflow-hidden font-sans">
       {/* Markdown Header Bar */}
-      <div className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 gap-2 shadow-xs">
-        <div className="flex items-center gap-2 text-xs font-semibold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-500/10 px-2.5 py-1 rounded border border-purple-200 dark:border-purple-500/20">
+      <div className="flex items-center justify-between px-3 py-1.5 bg-card border-b border-border/80 gap-2 shrink-0">
+        <div className="flex items-center gap-2 text-xs font-semibold text-[#1A73E8] dark:text-[#8AB4F8] bg-[#1A73E8]/10 px-2.5 py-0.5 rounded-full border border-[#1A73E8]/20">
           <FileText className="w-3.5 h-3.5" />
-          Markdown Document (.md)
+          <span>Google Docs Markdown</span>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex items-center bg-slate-100 dark:bg-slate-950 p-0.5 rounded border border-slate-200 dark:border-slate-700">
+          {/* Mode Switcher */}
+          <div className="flex items-center p-0.5 bg-secondary/60 rounded-full border border-border/60">
             <button
               onClick={() => setMode('preview')}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-                mode === 'preview' ? 'bg-purple-600 text-white' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer ${
+                mode === 'preview'
+                  ? 'bg-card text-primary shadow-xs font-semibold'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <Eye className="w-3.5 h-3.5" />
-              Rendered
+              <span>Document</span>
             </button>
             <button
               onClick={() => setMode('split')}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-                mode === 'split' ? 'bg-purple-600 text-white' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer ${
+                mode === 'split'
+                  ? 'bg-card text-primary shadow-xs font-semibold'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <Split className="w-3.5 h-3.5" />
-              Split Mode
+              <span>Split View</span>
             </button>
             <button
               onClick={() => setMode('raw')}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-                mode === 'raw' ? 'bg-purple-600 text-white' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer ${
+                mode === 'raw'
+                  ? 'bg-card text-primary shadow-xs font-semibold'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <Code className="w-3.5 h-3.5" />
-              Raw Markdown
+              <span>Source</span>
             </button>
           </div>
 
           <button
             onClick={handleCopy}
-            className="flex items-center gap-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 px-2.5 py-1 rounded text-xs transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 bg-secondary/80 hover:bg-secondary text-foreground px-3 py-1 rounded-full text-xs font-medium border border-border/60 transition-colors cursor-pointer"
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-            {copied ? 'Copied' : 'Copy'}
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+            <span>{copied ? 'Copied' : 'Copy'}</span>
           </button>
         </div>
       </div>
 
       {/* Main Markdown Body */}
-      <div className="flex-1 min-h-0 min-w-0 overflow-hidden bg-slate-50 dark:bg-slate-950 flex">
+      <div className="flex-1 min-h-0 min-w-0 overflow-hidden bg-[#F8F9FA] dark:bg-[#131314] flex">
         {/* Raw Editor Column */}
         {(mode === 'raw' || mode === 'split') && (
-          <div className={`${mode === 'split' ? 'w-1/2 border-r border-slate-200 dark:border-slate-800' : 'w-full'} flex flex-col h-full min-h-0 min-w-0 bg-white dark:bg-slate-900`}>
-            <div className="px-3 py-1.5 bg-slate-100 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 font-mono">
-              Raw Source Editor
+          <div className={`${mode === 'split' ? 'w-1/2 border-r border-border/80' : 'w-full'} flex flex-col h-full min-h-0 min-w-0 bg-card`}>
+            <div className="px-3 py-1 bg-secondary/40 border-b border-border/60 text-[11px] text-muted-foreground font-mono">
+              Source Editor
             </div>
             <textarea
               value={content}
               onChange={e => setContent(e.target.value)}
-              className="w-full h-full p-4 bg-transparent text-slate-800 dark:text-slate-200 font-mono text-xs focus:outline-none resize-none leading-relaxed"
+              className="w-full h-full p-4 bg-transparent text-foreground font-mono text-xs focus:outline-none resize-none leading-relaxed"
               placeholder="Type Markdown content here..."
             />
           </div>
         )}
 
-        {/* Rendered Markdown Column */}
+        {/* Rendered Markdown Column: Google Docs Page Canvas */}
         {(mode === 'preview' || mode === 'split') && (
-          <div className={`${mode === 'split' ? 'w-1/2' : 'w-full'} h-full min-h-0 min-w-0 overflow-auto p-6 md:p-10 bg-slate-50 dark:bg-slate-950 flex justify-center items-start`}>
-            <div className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-xl shadow-xl text-slate-800 dark:text-slate-100 min-w-0 my-auto sm:my-0">
-              <div className="markdown-body prose dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 break-words overflow-x-auto">
+          <div className={`${mode === 'split' ? 'w-1/2' : 'w-full'} h-full min-h-0 min-w-0 overflow-auto p-4 md:p-8 bg-[#F8F9FA] dark:bg-[#131314] flex justify-center items-start`}>
+            <div className="w-full max-w-[850px] bg-white dark:bg-[#1E1F20] border border-[#DADCE0] dark:border-[#3C4043] p-10 md:p-14 rounded-sm shadow-[0_1px_3px_1px_rgba(60,64,67,0.15)] text-foreground min-h-[900px] my-4">
+              <div className="markdown-body prose dark:prose-invert max-w-none text-foreground break-words overflow-x-auto">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {content}
                 </ReactMarkdown>

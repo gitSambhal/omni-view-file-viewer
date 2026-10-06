@@ -463,25 +463,71 @@ export const FORMAT_SEO_REGISTRY: Record<string, FormatSeoRecord> = {
     ]
   },
 
-  archive: {
-    id: 'archive',
-    extension: '.zip',
-    aliases: ['zip', 'tar', 'gz', 'tgz', 'archive', 'application/zip', 'application/x-tar', 'application/gzip'],
-    name: 'Compressed Archive (.zip / .tar / .gz)',
-    category: 'Archives (ZIP/TAR)',
-    mimeType: 'application/zip',
-    magicBytes: 'PK\\x03\\x04 (ZIP) / ustar (TAR) / 0x1F 0x8B (GZ)',
-    title: 'In-Browser ZIP & TAR Archive Explorer & Extractor | OmniView',
-    metaDescription: 'Inspect and extract ZIP, TAR, and GZ compressed archives directly in your browser. Explore directory trees, inspect file sizes, and view nested files with 1-click preview.',
-    ogTitle: 'OmniView - In-Browser ZIP & TAR Archive Explorer',
-    ogDescription: 'Unpack and preview compressed ZIP and TAR archives in client-side memory with folder tree hierarchy and 1-click nested preview.',
-    keywords: ['zip viewer online', 'open zip without software', 'tar file inspector', 'in-browser archive extractor', 'unzip files offline'],
-    capabilities: ['In-Memory Decompression', 'Interactive Folder Tree Hierarchy', 'Compressed vs Uncompressed Size Ratios', '1-Click Nested File Preview', 'Selective Single File Extraction'],
+  vhd: {
+    id: 'vhd',
+    extension: '.vhd',
+    aliases: ['vhd', 'vhdx', 'virtual hard disk', 'application/x-vhd'],
+    name: 'Virtual Hard Disk (.vhd / .vhdx)',
+    category: 'Virtual Disks (VHD)',
+    mimeType: 'application/x-vhd',
+    magicBytes: 'conectix (VHD) / vhdxfile (VHDX)',
+    title: 'In-Browser VHD Virtual Hard Disk & Partition Explorer | OmniView',
+    metaDescription: 'Inspect and preview Microsoft VHD and VHDX virtual hard disk images directly in your browser. Browse MBR/GPT partition tables, mount FAT filesystems, and preview files directly without extraction.',
+    ogTitle: 'OmniView - VHD Virtual Hard Disk Inspector',
+    ogDescription: 'Mount and preview VHD and VHDX virtual disks in-memory with MBR partition tables, FAT filesystem mounting, and direct file preview without extraction.',
+    keywords: ['vhd viewer online', 'open vhd without hyper-v', 'inspect virtual hard disk', 'vhd partition explorer', 'read vhd files browser'],
+    capabilities: ['Fixed & Dynamic Sparse VHD Support', 'MBR & GPT Partition Table Parser', 'In-VHD FAT12/16/32 Filesystem Mounter', 'Direct File Preview Without Extraction', 'Disk Geometry (CHS) & Capacity Telemetry'],
     schemaCategory: 'UtilitiesApplication',
     faqs: [
       {
-        question: 'Can I preview files inside a ZIP archive without unzipping to disk?',
-        answer: 'Yes. OmniView parses archive central directories in-memory and allows you to preview nested PDFs, images, or code files instantly.'
+        question: 'Can I view files inside a VHD without mounting it in Windows or Hyper-V?',
+        answer: 'Yes! OmniView directly parses the VHD container, reads the partition boot record, mounts the FAT volume in client-side memory, and lets you view files directly without any virtualization tools.'
+      }
+    ]
+  },
+
+  iso: {
+    id: 'iso',
+    extension: '.iso',
+    aliases: ['iso', 'img', 'optical disc image', 'application/x-iso9660-image'],
+    name: 'Optical Disc Image (.iso / .img)',
+    category: 'Optical Discs (ISO)',
+    mimeType: 'application/x-iso9660-image',
+    magicBytes: 'CD001 (ISO 9660 Primary Volume Descriptor)',
+    title: 'In-Browser ISO 9660 Disc Image Explorer | OmniView',
+    metaDescription: 'Inspect and explore ISO 9660 and Joliet optical disc images directly in your browser. Traverse directory trees and preview files directly in-memory with zero server uploads.',
+    ogTitle: 'OmniView - ISO 9660 Disc Image Explorer',
+    ogDescription: 'Mount and browse ISO disc images 100% in-browser with directory hierarchy navigation and instant file previewing.',
+    keywords: ['iso viewer online', 'open iso file without extraction', 'iso 9660 explorer', 'read iso in browser', 'inspect iso image'],
+    capabilities: ['ISO 9660 & Joliet Volume Descriptor Parser', 'Directory Hierarchy Tree Navigation', 'Direct In-Memory File Preview', 'Selective File Download', 'Volume Label & Space Telemetry'],
+    schemaCategory: 'UtilitiesApplication',
+    faqs: [
+      {
+        question: 'Does OmniView require burning or mounting the ISO image to a virtual drive?',
+        answer: 'No. OmniView parses the ISO 9660 filesystem records in client-side memory and displays the files directly in your browser.'
+      }
+    ]
+  },
+
+  archive: {
+    id: 'archive',
+    extension: '.zip',
+    aliases: ['zip', 'tar', 'gz', 'tgz', '7z', 'rar', 'bz2', 'cab', 'deb', 'cpio', 'archive', 'application/zip', 'application/x-tar', 'application/gzip', 'application/x-7z-compressed', 'application/x-rar-compressed'],
+    name: 'Universal Archive Suite (ZIP, TAR, GZ, 7Z, RAR, CAB, DEB)',
+    category: 'Archives (ZIP/TAR/7Z/RAR)',
+    mimeType: 'application/zip',
+    magicBytes: 'PK\\x03\\x04 (ZIP) / ustar (TAR) / 7z\\xBC\\xAF (7Z) / Rar! (RAR) / 0x1F 0x8B (GZ)',
+    title: 'In-Browser Universal Archive Explorer & Direct Previewer | OmniView',
+    metaDescription: 'Inspect, extract, and preview ZIP, TAR, GZ, 7Z, RAR, CAB, and DEB archives directly in your browser. View nested documents, images, code, and SQLite tables in-memory without extraction.',
+    ogTitle: 'OmniView - Universal Archive Explorer & Direct Previewer',
+    ogDescription: 'Browse multi-format archives in client-side memory with instant in-place preview of code, docs, images, and audio without manual extraction.',
+    keywords: ['zip viewer online', 'open 7z in browser', 'rar inspector without software', 'tar.gz explorer', 'preview archive files directly'],
+    capabilities: ['Multi-Format Decompression (ZIP, TAR, GZ, 7Z, RAR, CAB, DEB)', 'Direct In-Memory Preview Without Extraction', 'Interactive Folder Tree Hierarchy', 'Open Extracted Files in New Workspace Tabs', '1-Click Export All as ZIP'],
+    schemaCategory: 'UtilitiesApplication',
+    faqs: [
+      {
+        question: 'Can I preview files inside an archive without extracting the whole file to disk?',
+        answer: 'Yes! OmniView parses archive directory records in-memory and allows you to view images, documents, code, or databases directly in the browser.'
       }
     ]
   },

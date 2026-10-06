@@ -19,45 +19,45 @@ export interface AccentOption {
 export const ACCENT_OPTIONS: AccentOption[] = [
   {
     id: 'indigo',
-    label: 'Electric Indigo',
-    lightHex: '#4F46E5',
-    darkHex: '#6366F1',
-    previewClass: 'bg-indigo-500'
-  },
-  {
-    id: 'violet',
-    label: 'Electric Violet',
-    lightHex: '#7C3AED',
-    darkHex: '#8B5CF6',
-    previewClass: 'bg-violet-500'
+    label: 'Docs Blue',
+    lightHex: '#1A73E8',
+    darkHex: '#8AB4F8',
+    previewClass: 'bg-[#1A73E8]'
   },
   {
     id: 'emerald',
-    label: 'Cyber Emerald',
-    lightHex: '#059669',
-    darkHex: '#10B981',
-    previewClass: 'bg-emerald-500'
-  },
-  {
-    id: 'cyan',
-    label: 'Ocean Cyan',
-    lightHex: '#0284C7',
-    darkHex: '#38BDF8',
-    previewClass: 'bg-cyan-500'
+    label: 'Sheets Green',
+    lightHex: '#188038',
+    darkHex: '#81C995',
+    previewClass: 'bg-[#188038]'
   },
   {
     id: 'amber',
-    label: 'Sunset Amber',
-    lightHex: '#D97706',
-    darkHex: '#F59E0B',
-    previewClass: 'bg-amber-500'
+    label: 'Slides Amber',
+    lightHex: '#F29900',
+    darkHex: '#FDD663',
+    previewClass: 'bg-[#F29900]'
+  },
+  {
+    id: 'violet',
+    label: 'Forms Purple',
+    lightHex: '#7248B9',
+    darkHex: '#C58AF9',
+    previewClass: 'bg-[#7248B9]'
+  },
+  {
+    id: 'cyan',
+    label: 'Keep Teal',
+    lightHex: '#007B83',
+    darkHex: '#78D9EC',
+    previewClass: 'bg-[#007B83]'
   },
   {
     id: 'rose',
-    label: 'Neon Rose',
-    lightHex: '#E11D48',
-    darkHex: '#F43F5E',
-    previewClass: 'bg-rose-500'
+    label: 'Gmail Coral',
+    lightHex: '#D93025',
+    darkHex: '#F28B82',
+    previewClass: 'bg-[#D93025]'
   }
 ];
 

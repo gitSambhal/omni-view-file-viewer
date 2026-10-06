@@ -32,24 +32,138 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, onClose 
               <Layers className="w-5 h-5" />
             </div>
             <div>
-              <DialogTitle className="text-base font-bold">What's New in OmniView File Studio</DialogTitle>
-              <DialogDescription className="text-xs mt-0.5">
-                Release Version v3.3.0 with Comprehensive Per-Format SEO & Schema.org Structured Data
+              <DialogTitle className="text-base font-bold font-sans">What's New in OmniView</DialogTitle>
+              <DialogDescription className="text-xs mt-0.5 font-sans">
+                Release Version v4.3.1 — Native PDF & In-Archive Direct Preview Engine
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[65vh] p-5">
+        <ScrollArea className="max-h-[65vh] p-5 font-sans">
           <div className="space-y-4 text-sm leading-relaxed">
-            {/* v3.3.0 Highlights */}
+            {/* v4.3.1 Highlights */}
             <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 font-semibold text-foreground">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <span>Version 4.3.1 - Native In-Archive PDF Previewer</span>
+                </div>
+                <span className="text-[10px] font-mono font-semibold bg-primary text-primary-foreground px-1.5 py-0.5 rounded">LATEST</span>
+              </div>
+              <ul className="space-y-1.5 text-xs text-muted-foreground list-disc list-inside">
+                <li><strong>PDF In-Archive Preview Fixed:</strong> Replaced the blocked iframe with the native, sandboxed PDF.js canvas engine for zero-glitch PDF reading directly inside ZIP, TAR, VHD, and ISO files.</li>
+                <li><strong>Memory Alignment Slicing:</strong> Guaranteed byteOffset 0 alignment for WebAssembly / PDF binary decoders on in-memory extracted files.</li>
+                <li><strong>Full PDF Controls:</strong> Multi-page navigation, zoom, rotation, search, thumbnails, and security password decryption inside archives.</li>
+                <li><strong>Multi-Format In-Archive Previews:</strong> Word (.docx), Excel (.xlsx), Database (.db/.sqlite/.sql), Markdown, and Code now preview directly with full fidelity.</li>
+                <li><strong>Sample Archive:</strong> Added <code>project_workspace.zip</code> with an embedded PDF specification to test instantly.</li>
+              </ul>
+            </div>
+
+            {/* v4.3.0 Highlights */}
+            <div className="bg-secondary/40 border border-border rounded-xl p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 font-semibold text-foreground">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <span>Version 4.3.0 - Universal Archive & Virtual Disk Suite</span>
+                </div>
+                <span className="text-[11px] font-mono text-muted-foreground">v4.3.0</span>
+              </div>
+              <ul className="space-y-1.5 text-xs text-muted-foreground list-disc list-inside">
+                <li><strong>All Major Archives:</strong> In-memory decompression for ZIP, TAR, TAR.GZ, TGZ, GZ, BZ2, 7Z, RAR (4.x/5.0), CAB, DEB, AR, and CPIO.</li>
+                <li><strong>VHD & VHDX Virtual Hard Disks:</strong> Fixed & Dynamic sparse disk parsing, MBR/GPT partition tables, and in-VHD FAT filesystem mounter.</li>
+                <li><strong>ISO-9660 Disc Images:</strong> Optical disc volume descriptor and directory tree traversal without burning or extraction.</li>
+                <li><strong>Direct In-Memory Previews:</strong> View nested documents, images, code, tables, and media immediately inside the container without extracting to disk.</li>
+                <li><strong>Open in Workspace Tab:</strong> Promote any extracted file directly into an active OmniView tab.</li>
+              </ul>
+            </div>
+
+            {/* v4.2.0 Highlights */}
+            <div className="bg-secondary/40 border border-border rounded-xl p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 font-semibold text-foreground">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <span>Version 4.2.0 - Anti-Clutter UI/UX Overhaul</span>
+                </div>
+                <span className="text-[11px] font-mono text-muted-foreground">v4.2.0</span>
+              </div>
+              <ul className="space-y-1.5 text-xs text-muted-foreground list-disc list-inside">
+                <li><strong>Serene Landing Experience:</strong> Removed the massive 500-line embedded formats list from the drop zone in favor of a clean, focused, welcoming drop target.</li>
+                <li><strong>Single-Toolbar Architecture:</strong> Removed duplicate zoom, print, and copy controls inside individual document viewers.</li>
+                <li><strong>Zero-Pill Restraint:</strong> Converted static pill tags into clean, unboxed typography with typographic separators.</li>
+              </ul>
+            </div>
+
+            {/* v4.1.0 Highlights */}
+            <div className="bg-secondary/40 border border-border rounded-xl p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 font-semibold text-foreground">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <span>Version 4.1.0 - Streamlined Minimalist Studio</span>
+                </div>
+                <span className="text-[11px] font-mono text-muted-foreground">v4.1.0</span>
+              </div>
+              <ul className="space-y-1.5 text-xs text-muted-foreground list-disc list-inside">
+                <li><strong>De-Cluttered Interface:</strong> Removed noisy pseudo-hardware brackets, fake screws, flashing indicators, and shouting uppercase labels.</li>
+                <li><strong>Balanced Typography:</strong> Natural, legible sans-serif hierarchy across all controls with monospace reserved strictly for code.</li>
+              </ul>
+            </div>
+
+            {/* v4.0.0 Highlights */}
+            <div className="bg-secondary/40 border border-border rounded-xl p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 font-semibold text-foreground">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <span>Version 4.0.0 - Multi-Deck Core Updates</span>
+                </div>
+                <span className="text-[11px] font-mono text-muted-foreground">v4.0.0</span>
+              </div>
+              <ul className="space-y-1.5 text-xs text-muted-foreground list-disc list-inside">
+                <li>High-performance offline multi-format workspace core.</li>
+                <li>Interactive sandbox buffers and expanded 60+ codecs matrix.</li>
+              </ul>
+            </div>
+
+            {/* v3.5.0 Highlights */}
+            <div className="bg-secondary/40 border border-border rounded-xl p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 font-semibold text-foreground">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <span>Version 3.5.0 - Bespoke Workspace Architecture & Design Harmony</span>
+                </div>
+                <span className="text-[11px] font-mono text-muted-foreground">v3.5.0</span>
+              </div>
+              <ul className="space-y-1.5 text-xs text-muted-foreground list-disc list-inside">
+                <li><strong>Distinctive Single-Row Header:</strong> Clean 3-zone Top Bar Contract with custom OmniView branding, inline editable active document breadcrumbs, theme selector, and primary actions.</li>
+                <li><strong>Rhythmic Spacing & Ergonomics:</strong> Retained calm 4px/8px rhythm, breathable padding, and hairline dividers without cloning literal office menus or search pills.</li>
+                <li><strong>Streamlined Workspace Action Bar:</strong> Integrated 36px utility bar with reader mode switching, zoom controls, format metrics, and export tools.</li>
+                <li><strong>Accessible Segmented Filter Bars:</strong> Swapped out static chips for interactive, zero-pill segmented controls.</li>
+              </ul>
+            </div>
+
+            {/* v3.4.0 Highlights */}
+            <div className="bg-secondary/40 border border-border rounded-xl p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 font-semibold text-foreground">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <span>Version 3.4.0 - Workspace Typography & Theming</span>
+                </div>
+                <span className="text-[11px] font-mono text-muted-foreground">v3.4.0</span>
+              </div>
+              <ul className="space-y-1.5 text-xs text-muted-foreground list-disc list-inside">
+                <li><strong>Typography System:</strong> Integrated Google Sans, Product Sans, and Roboto font pairings with tabular figures.</li>
+                <li><strong>Dynamic Accent Theming:</strong> Customizable palette across Electric Indigo, Emerald, Amber, Violet, Cyan, and Rose.</li>
+              </ul>
+            </div>
+
+            {/* v3.3.0 Highlights */}
+            <div className="bg-secondary/40 border border-border rounded-xl p-4 space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 font-semibold text-foreground">
                   <Sparkles className="w-4 h-4 text-primary" />
                   <span>Version 3.3.0 - Per-Format SEO & Schema.org Structured Data</span>
                 </div>
-                <span className="text-[11px] font-mono font-semibold text-primary">Latest</span>
+                <span className="text-[11px] font-mono text-muted-foreground">v3.3.0</span>
               </div>
               <ul className="space-y-1.5 text-xs text-muted-foreground list-disc list-inside">
                 <li><strong>Dynamic Head SEO & OpenGraph Synchronizer:</strong> Automatic page title, description, and social graph synchronization based on the active tab or format deep link (<code>?format=...</code>).</li>

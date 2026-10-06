@@ -1,11 +1,23 @@
 /**
  * @license Apache-2.0
  * Developer: Suhail Akhtar (https://suhail.top)
+ * OmniView File Studio - Google Sheets Inspired Spreadsheet Viewer (Material Design 3)
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
 import * as XLSX from 'xlsx';
-import { Table, Search, Download, Copy, BarChart2, Check, ArrowUpDown } from 'lucide-react';
+import {
+  Table,
+  Search,
+  Download,
+  Copy,
+  BarChart2,
+  Check,
+  ArrowUpDown,
+  Plus,
+  Filter,
+  FileSpreadsheet
+} from 'lucide-react';
 
 interface ExcelViewerProps {
   arrayBuffer?: ArrayBuffer;
@@ -24,6 +36,7 @@ export const ExcelViewer: React.FC<ExcelViewerProps> = ({ arrayBuffer, textConte
   const [copied, setCopied] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedCell, setSelectedCell] = useState<{ r: number; c: number }>({ r: 0, c: 0 });
 
   useEffect(() => {
     try {
@@ -60,6 +73,7 @@ export const ExcelViewer: React.FC<ExcelViewerProps> = ({ arrayBuffer, textConte
       const json: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
       setTableData(json);
       setSortCol(null);
+      setSelectedCell({ r: 0, c: 0 });
     }
   }, [workbook, activeSheet]);
 
@@ -96,32 +110,41 @@ export const ExcelViewer: React.FC<ExcelViewerProps> = ({ arrayBuffer, textConte
     return r;
   }, [tableData, searchTerm, sortCol, sortAsc]);
 
-  // Statistics calculation for numeric columns
+  // Statistics for numeric columns
   const stats = useMemo(() => {
-    if (rows.length === 0 || headers.length === 0) return null;
-    const colStats: { colIndex: number; header: string; sum: number; avg: number; count: number }[] = [];
+    if (rows.length === 0 || headers.length === 0) return [];
 
-    headers.forEach((h, colIdx) => {
+    const result: { header: string; sum: number; avg: number; colIndex: number }[] = [];
+
+    headers.forEach((h, colIndex) => {
+      let numericCount = 0;
       let sum = 0;
-      let count = 0;
-      rows.forEach(r => {
-        const val = Number(r[colIdx]);
-        if (!isNaN(val) && r[colIdx] !== '' && r[colIdx] !== null) {
+
+      rows.forEach(row => {
+        const val = Number(row[colIndex]);
+        if (!isNaN(val) && row[colIndex] !== '' && row[colIndex] !== null) {
           sum += val;
-          count++;
+          numericCount++;
         }
       });
-      if (count > 0) {
-        colStats.push({ colIndex: colIdx, header: String(h), sum, avg: sum / count, count });
+
+      if (numericCount > 0 && numericCount >= rows.length * 0.4) {
+        result.push({
+          header: String(h || `Col ${colIndex + 1}`),
+          sum,
+          avg: sum / numericCount,
+          colIndex
+        });
       }
     });
 
-    return colStats;
-  }, [headers, rows]);
+    return result;
+  }, [rows, headers]);
 
   const handleCopyTable = () => {
-    const text = tableData.map(r => r.join('\t')).join('\n');
-    navigator.clipboard.writeText(text);
+    if (tableData.length === 0) return;
+    const tsv = tableData.map(row => row.join('\t')).join('\n');
+    navigator.clipboard.writeText(tsv).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -139,149 +162,236 @@ export const ExcelViewer: React.FC<ExcelViewerProps> = ({ arrayBuffer, textConte
     URL.revokeObjectURL(url);
   };
 
+  // Convert column index to Excel column name (0 -> A, 1 -> B, 26 -> AA)
+  const getColLetter = (colIndex: number) => {
+    let temp = colIndex;
+    let letter = '';
+    while (temp >= 0) {
+      letter = String.fromCharCode((temp % 26) + 65) + letter;
+      temp = Math.floor(temp / 26) - 1;
+    }
+    return letter;
+  };
+
+  const activeCellCoord = `${getColLetter(selectedCell.c)}${selectedCell.r + 1}`;
+  const activeCellValue =
+    selectedCell.r === 0
+      ? headers[selectedCell.c] ?? ''
+      : rows[selectedCell.r - 1]?.[selectedCell.c] ?? '';
+
   return (
-    <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 overflow-hidden transition-colors">
-      {/* Top Toolbar */}
-      <div className="flex flex-wrap items-center justify-between p-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 gap-2 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded border border-emerald-500/20">
-            <Table className="w-3.5 h-3.5" />
-            Excel Data Grid Viewer
-          </div>
-          <span className="text-xs text-slate-500 dark:text-slate-400">
-            Total Rows: <strong className="text-slate-800 dark:text-slate-200">{rows.length.toLocaleString()}</strong>
+    <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 bg-background text-foreground select-none overflow-hidden transition-colors font-sans">
+      {/* Spreadsheet Action Sub-bar */}
+      <div className="flex flex-wrap items-center justify-between px-3 py-1.5 bg-card border-b border-border/80 gap-2 shrink-0">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span className="font-medium text-foreground flex items-center gap-1">
+            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span>Sheet</span>
           </span>
+          <span aria-hidden="true" className="text-border">·</span>
+          <span>Rows: <strong className="text-foreground tabular-nums font-mono font-normal">{rows.length.toLocaleString()}</strong></span>
+          <span aria-hidden="true" className="text-border">·</span>
+          <span>Cols: <strong className="text-foreground tabular-nums font-mono font-normal">{headers.length}</strong></span>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex items-center bg-slate-100 dark:bg-slate-950 px-2 py-1 rounded border border-slate-300 dark:border-slate-700 text-xs">
-            <Search className="w-3.5 h-3.5 text-slate-400 mr-1.5" />
+          {/* Search Table Input */}
+          <div className="flex items-center bg-secondary/80 px-2.5 py-1 rounded-md text-xs text-foreground border border-border/60">
+            <Search className="w-3 h-3 text-muted-foreground mr-1.5 shrink-0" />
             <input
               type="text"
-              placeholder="Search table..."
+              placeholder="Search sheet..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="bg-transparent text-slate-800 dark:text-slate-200 focus:outline-none w-32 md:w-44 text-xs"
+              className="bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none w-28 sm:w-36 text-xs"
             />
           </div>
 
           <button
             onClick={handleCopyTable}
-            className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-2.5 py-1 rounded text-xs border border-slate-300 dark:border-slate-700 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 bg-secondary/80 hover:bg-secondary text-foreground px-2.5 py-1 rounded-md text-xs font-medium border border-border/60 transition-colors cursor-pointer"
           >
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-            {copied ? 'Copied' : 'Copy Data'}
+            <span>{copied ? 'Copied' : 'Copy'}</span>
           </button>
 
           <button
             onClick={handleExportCsv}
-            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1 rounded text-xs font-medium transition-colors cursor-pointer shadow-sm"
+            className="flex items-center gap-1.5 bg-primary hover:opacity-90 text-primary-foreground px-3 py-1 rounded-md text-xs font-medium transition-opacity cursor-pointer shadow-xs"
           >
             <Download className="w-3.5 h-3.5" />
-            Export CSV
+            <span>Export CSV</span>
           </button>
         </div>
       </div>
 
-      {/* Sheet Tabs Header */}
-      {sheetNames.length > 1 && (
-        <div className="flex items-center gap-1 px-3 py-1.5 bg-slate-200/60 dark:bg-slate-950 border-b border-slate-300 dark:border-slate-800 overflow-x-auto">
-          <span className="text-xs text-slate-500 font-medium mr-2">Worksheets:</span>
-          {sheetNames.map(sheet => (
-            <button
-              key={sheet}
-              onClick={() => setActiveSheet(sheet)}
-              className={`px-3 py-1 rounded text-xs font-medium transition-colors whitespace-nowrap ${
-                activeSheet === sheet
-                  ? 'bg-emerald-600 text-white shadow-sm font-bold'
-                  : 'bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700'
-              }`}
-            >
-              {sheet}
-            </button>
-          ))}
+      {/* Google Sheets Signature Formula Bar */}
+      <div className="flex items-center px-3 py-1 bg-card border-b border-border/80 text-xs text-foreground gap-2 shrink-0">
+        {/* Cell Coordinate Box (e.g. A1) */}
+        <div className="w-14 px-2 py-0.5 rounded bg-secondary/60 text-center font-mono font-semibold text-foreground text-xs border border-border/60 shrink-0">
+          {activeCellCoord}
         </div>
-      )}
 
-      {/* Numerical Stats Bar */}
+        {/* fx Glyph */}
+        <div className="font-serif italic font-bold text-muted-foreground text-xs select-none shrink-0 px-1">
+          fx
+        </div>
+
+        <div className="h-4 w-px bg-border/80 shrink-0" />
+
+        {/* Formula / Cell Value Display Input */}
+        <div className="flex-1 px-2 py-0.5 rounded bg-background border border-border/60 text-xs font-mono text-foreground truncate min-h-[24px] flex items-center">
+          {String(activeCellValue)}
+        </div>
+      </div>
+
+      {/* Numerical Stats Summary Bar (If numeric columns present) */}
       {stats && stats.length > 0 && (
-        <div className="flex items-center gap-4 px-4 py-2 bg-emerald-50 dark:bg-emerald-950/30 border-b border-emerald-200 dark:border-emerald-900/40 text-xs text-slate-700 dark:text-slate-300 overflow-x-auto">
-          <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
+        <div className="flex items-center gap-3 px-3 py-1.5 bg-[#188038]/5 dark:bg-[#188038]/10 border-b border-[#188038]/20 text-xs text-foreground overflow-x-auto shrink-0 no-scrollbar">
+          <div className="flex items-center gap-1 text-[#188038] dark:text-[#81C995] font-semibold text-xs shrink-0">
             <BarChart2 className="w-3.5 h-3.5" />
-            Column Metrics:
+            <span>Metrics:</span>
           </div>
           {stats.slice(0, 4).map(st => (
-            <div key={st.colIndex} className="bg-white dark:bg-slate-800/80 px-2.5 py-1 rounded border border-slate-200 dark:border-slate-700/60 flex items-center gap-2 whitespace-nowrap shadow-sm">
-              <span className="font-semibold text-emerald-600 dark:text-emerald-300">{st.header}:</span>
-              <span>Sum: <strong className="text-slate-900 dark:text-white">{st.sum.toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong></span>
-              <span className="text-slate-400">|</span>
-              <span>Avg: <strong className="text-slate-700 dark:text-slate-200">{st.avg.toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong></span>
+            <div
+              key={st.colIndex}
+              className="bg-card px-2.5 py-0.5 rounded-full border border-border/80 flex items-center gap-2 whitespace-nowrap shadow-2xs text-[11px]"
+            >
+              <span className="font-semibold text-[#188038] dark:text-[#81C995]">{st.header}:</span>
+              <span>Sum: <strong className="font-mono tabular-nums">{st.sum.toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong></span>
+              <span className="text-border">|</span>
+              <span>Avg: <strong className="font-mono tabular-nums">{st.avg.toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong></span>
             </div>
           ))}
         </div>
       )}
 
-      {/* Table Content */}
-      <div className="flex-1 min-h-0 min-w-0 overflow-auto bg-slate-100 dark:bg-slate-950 p-2">
+      {/* Google Sheets Grid Canvas */}
+      <div className="flex-1 min-h-0 min-w-0 overflow-auto bg-card relative">
         {loading ? (
-          <div className="flex items-center justify-center h-full text-slate-500 dark:text-slate-400">
-            <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mr-2"></div>
-            Rendering spreadsheet grid...
+          <div className="flex items-center justify-center h-full text-muted-foreground text-xs gap-2">
+            <div className="w-5 h-5 border-2 border-[#188038] border-t-transparent rounded-full animate-spin" />
+            <span>Rendering Google Sheets grid...</span>
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-6 space-y-2">
-            <div className="text-red-500 font-semibold text-sm">Unable to parse spreadsheet</div>
-            <div className="text-xs text-slate-500 max-w-md">{error}</div>
+            <div className="text-destructive font-semibold text-sm">Unable to parse spreadsheet</div>
+            <div className="text-xs text-muted-foreground max-w-md">{error}</div>
           </div>
         ) : headers.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-slate-500 text-sm">
+          <div className="flex items-center justify-center h-full text-muted-foreground text-xs">
             Empty or unreadable spreadsheet worksheet.
           </div>
         ) : (
-          <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded bg-white dark:bg-slate-900 shadow-sm">
-            <table className="w-full text-left text-xs border-collapse font-mono">
-              <thead>
-                <tr className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700">
-                  <th className="p-2 border-r border-slate-200 dark:border-slate-700 w-12 text-center text-slate-400 font-normal">#</th>
-                  {headers.map((h, i) => (
-                    <th
-                      key={i}
-                      onClick={() => {
-                        if (sortCol === i) {
-                          setSortAsc(!sortAsc);
-                        } else {
-                          setSortCol(i);
-                          setSortAsc(true);
-                        }
-                      }}
-                      className="p-2.5 border-r border-slate-200 dark:border-slate-700 font-semibold text-slate-800 dark:text-slate-200 cursor-pointer hover:bg-slate-200/60 dark:hover:bg-slate-700/70 transition-colors whitespace-nowrap"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span>{String(h || `Col ${i + 1}`)}</span>
-                        <ArrowUpDown className={`w-3 h-3 ${sortCol === i ? 'text-emerald-500 dark:text-emerald-400 font-bold' : 'text-slate-400'}`} />
-                      </div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60 bg-white dark:bg-slate-900/60">
-                {rows.map((row, rIdx) => (
-                  <tr key={rIdx} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                    <td className="p-2 border-r border-slate-200 dark:border-slate-800 text-center text-slate-400 select-none bg-slate-50/50 dark:bg-slate-950/40">
-                      {rIdx + 1}
-                    </td>
-                    {headers.map((_, cIdx) => (
-                      <td key={cIdx} className="p-2.5 border-r border-slate-200 dark:border-slate-800/80 text-slate-800 dark:text-slate-300 whitespace-nowrap truncate max-w-xs">
+          <table className="w-full text-left text-xs border-collapse font-sans border-r border-b border-[#DADCE0] dark:border-[#3C4043]">
+            {/* Google Sheets Column Letters (A, B, C, D...) */}
+            <thead className="sticky top-0 z-20 bg-[#F8F9FA] dark:bg-[#28292A]">
+              <tr className="border-b border-[#DADCE0] dark:border-[#3C4043] text-muted-foreground text-[11px]">
+                {/* Top-left corner box */}
+                <th className="p-1.5 w-12 text-center border-r border-[#DADCE0] dark:border-[#3C4043] font-normal select-none bg-[#F1F3F4] dark:bg-[#202124]">
+                  ⌗
+                </th>
+                {headers.map((_, i) => (
+                  <th
+                    key={i}
+                    className="p-1 text-center font-mono font-semibold text-muted-foreground border-r border-[#DADCE0] dark:border-[#3C4043] select-none min-w-[120px]"
+                  >
+                    {getColLetter(i)}
+                  </th>
+                ))}
+              </tr>
+
+              {/* Real Header Row with Sorting */}
+              <tr className="border-b border-[#DADCE0] dark:border-[#3C4043] bg-card text-foreground font-semibold">
+                <th className="p-2 w-12 text-center border-r border-[#DADCE0] dark:border-[#3C4043] font-mono text-muted-foreground select-none bg-[#F8F9FA] dark:bg-[#28292A]">
+                  1
+                </th>
+                {headers.map((h, i) => (
+                  <th
+                    key={i}
+                    onClick={() => {
+                      if (sortCol === i) {
+                        setSortAsc(!sortAsc);
+                      } else {
+                        setSortCol(i);
+                        setSortAsc(true);
+                      }
+                      setSelectedCell({ r: 0, c: i });
+                    }}
+                    className={`p-2 border-r border-[#DADCE0] dark:border-[#3C4043] cursor-pointer hover:bg-muted/70 transition-colors whitespace-nowrap min-w-[120px] ${
+                      selectedCell.r === 0 && selectedCell.c === i
+                        ? 'ring-2 ring-[#188038] ring-inset bg-[#188038]/5'
+                        : ''
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-1.5">
+                      <span className="truncate">{String(h || `Col ${i + 1}`)}</span>
+                      <ArrowUpDown
+                        className={`w-3 h-3 shrink-0 ${
+                          sortCol === i ? 'text-[#188038] font-bold' : 'text-muted-foreground/50'
+                        }`}
+                      />
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            {/* Row Data */}
+            <tbody className="divide-y divide-[#DADCE0] dark:divide-[#3C4043] bg-card">
+              {rows.map((row, rIdx) => (
+                <tr key={rIdx} className="hover:bg-muted/40 transition-colors">
+                  {/* Row index number (Google Sheets row gutter) */}
+                  <td className="p-1.5 w-12 border-r border-[#DADCE0] dark:border-[#3C4043] text-center text-muted-foreground select-none bg-[#F8F9FA] dark:bg-[#28292A] font-mono text-[11px] tabular-nums">
+                    {rIdx + 2}
+                  </td>
+                  {headers.map((_, cIdx) => {
+                    const isSelected = selectedCell.r === rIdx + 1 && selectedCell.c === cIdx;
+                    return (
+                      <td
+                        key={cIdx}
+                        onClick={() => setSelectedCell({ r: rIdx + 1, c: cIdx })}
+                        className={`p-2 border-r border-[#DADCE0] dark:border-[#3C4043] text-foreground whitespace-nowrap truncate max-w-xs cursor-cell transition-all font-mono text-xs tabular-nums ${
+                          isSelected
+                            ? 'ring-2 ring-[#188038] ring-inset bg-[#188038]/10'
+                            : ''
+                        }`}
+                      >
                         {String(row[cIdx] ?? '')}
                       </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
+
+      {/* Google Sheets Bottom Sheet Tabs Bar */}
+      {sheetNames.length > 0 && (
+        <div className="flex items-center justify-between px-3 py-1 bg-[#F1F3F4] dark:bg-[#1E1F20] border-t border-border/80 text-xs shrink-0 select-none overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-1">
+            {sheetNames.map(sheet => (
+              <button
+                key={sheet}
+                onClick={() => setActiveSheet(sheet)}
+                className={`px-3.5 py-1 text-xs font-sans font-medium transition-all whitespace-nowrap rounded-t cursor-pointer ${
+                  activeSheet === sheet
+                    ? 'bg-card text-[#188038] dark:text-[#81C995] font-bold border-b-2 border-b-[#188038] shadow-2xs'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-[#E8EAED] dark:hover:bg-[#282A2C]'
+                }`}
+              >
+                {sheet}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-sans">
+            <span>{sheetNames.length} sheet{sheetNames.length > 1 ? 's' : ''}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

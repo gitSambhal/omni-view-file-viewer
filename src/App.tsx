@@ -31,6 +31,7 @@ import { NpmTesterModal } from './components/NpmTesterModal';
 import { ToastContainer } from './components/Toast';
 import { HexViewer } from './components/HexViewer';
 import { ReaderSwitcher } from './components/ReaderSwitcher';
+import { WorkspaceToolbar } from './components/WorkspaceToolbar';
 
 import { PdfViewer } from './components/viewers/PdfViewer';
 import { DocxViewer } from './components/viewers/DocxViewer';
@@ -61,6 +62,7 @@ export default function App() {
 
   const [tabs, setTabs] = useState<TabFile[]>([]);
   const [activeTabId, setActiveTabId] = useState<string | null>(null);
+  const [zoomLevel, setZoomLevel] = useState<number>(100);
 
   const handleLoadSampleFiles = useCallback(() => {
     const sampleTabs = getSampleTabFiles();
@@ -127,6 +129,58 @@ export default function App() {
     setTabs(prev => [...prev, newTab]);
     setActiveTabId(newTab.id);
   }, []);
+
+  // Open an extracted file from an archive or virtual hard disk (VHD/ISO/TAR) directly into a new workspace tab
+  const handleOpenExtractedFileInNewTab = useCallback((extracted: {
+    name: string;
+    arrayBuffer?: ArrayBuffer;
+    textContent?: string;
+    category?: FileCategory;
+  }) => {
+    const ext = getFileExtension(extracted.name);
+    const category = extracted.category || detectFileCategory(extracted.name);
+    const tabId = `file-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    const size = extracted.arrayBuffer
+      ? extracted.arrayBuffer.byteLength
+      : extracted.textContent
+      ? new TextEncoder().encode(extracted.textContent).length
+      : 0;
+
+    let objectUrl: string | undefined = undefined;
+    if (['image', 'audio', 'video', 'pdf'].includes(category) && extracted.arrayBuffer) {
+      const mime =
+        category === 'pdf'
+          ? 'application/pdf'
+          : category === 'image'
+          ? ext === 'svg'
+            ? 'image/svg+xml'
+            : 'image/png'
+          : 'application/octet-stream';
+      objectUrl = URL.createObjectURL(new Blob([extracted.arrayBuffer], { type: mime }));
+    }
+
+    const newTab: TabFile = {
+      id: tabId,
+      name: extracted.name,
+      size,
+      type: 'application/octet-stream',
+      lastModified: Date.now(),
+      extension: ext,
+      category,
+      arrayBuffer: extracted.arrayBuffer,
+      textContent: extracted.textContent,
+      objectUrl,
+      liveSyncActive: false,
+      lastSyncedAt: Date.now(),
+      syncStatus: 'synced',
+      viewMode: 'preview',
+      zoomLevel: 100
+    };
+
+    setTabs(prev => [...prev, newTab]);
+    setActiveTabId(tabId);
+    addToast('success', 'File Opened in Tab', `Opened "${extracted.name}" as an active workspace tab.`);
+  }, [addToast]);
 
   // Global Keyboard Shortcuts (Cmd/Ctrl + K for Command Palette, Cmd/Ctrl + B for Sidebar, Cmd/Ctrl + O for Open File, Cmd/Ctrl + W for Close Tab)
   useEffect(() => {
@@ -758,6 +812,18 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
     addToast('info', 'All Tabs Closed', 'Workspace cleared.');
   };
 
+  const handleRenameCurrentTab = (newName: string) => {
+    if (!activeTabId) return;
+    setTabs(prev =>
+      prev.map(t =>
+        t.id === activeTabId
+          ? { ...t, name: newName }
+          : t
+      )
+    );
+    addToast('info', 'Document Renamed', `Renamed document to "${newName}".`);
+  };
+
   const handleDuplicateTab = (id: string) => {
     const tabToDup = tabs.find(t => t.id === id);
     if (!tabToDup) return;
@@ -1066,6 +1132,10 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
         onNewScratchpad={handleNewScratchpad}
         liveSyncCount={liveSyncCount}
         isSyncing={isSyncing}
+        activeFileName={activeTab?.name}
+        activeFileCategory={activeTab?.category}
+        onDownloadCurrentFile={() => activeTab && handleDownloadTabFile(activeTab.id)}
+        onRenameCurrentFile={handleRenameCurrentTab}
       />
 
       {/* Workspace Body: Sidebar + Center Content */}
@@ -1122,56 +1192,38 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
                 onOpenNpmTester={() => setIsNpmTesterOpen(true)}
                 onNewScratchpad={handleNewScratchpad}
               />
-            ) : activeTab.viewMode === 'hex' ? (
-          <div className="w-full flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden relative">
-            {/* Top Reader Subheader Bar - Solid Apple Chrome Toolbar */}
-            <div className="h-9 px-3 bg-card border-b border-border text-xs text-muted-foreground select-none shrink-0 relative z-30 flex items-center justify-between">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="font-medium text-foreground truncate max-w-xs">{activeTab.name}</span>
-                <span className="text-[11px] font-mono tabular-nums text-muted-foreground">({(activeTab.size / 1024).toFixed(1)} KB)</span>
-              </div>
-              <ReaderSwitcher
-                activeTab={activeTab}
-                onSelectReader={(reader) => handleSetTabReader(activeTab.id, reader)}
-              />
-            </div>
-            <HexViewer
-              arrayBuffer={activeTab.arrayBuffer}
-              textContent={activeTab.textContent}
-              filename={activeTab.name}
-            />
-          </div>
-        ) : (
-          /* Render category specific viewer with dynamic Reader Switcher */
-          <div className="w-full flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden relative">
-            {/* Top Reader Subheader Bar - Solid Apple Chrome Toolbar */}
-            <div className="h-9 px-3 bg-card border-b border-border text-xs text-muted-foreground select-none shrink-0 relative z-30 flex items-center justify-between">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="font-medium text-foreground truncate max-w-xs">{activeTab.name}</span>
-                <span className="text-[11px] font-mono tabular-nums text-muted-foreground">
-                  {activeTab.size > 1024 * 1024
-                    ? `${(activeTab.size / (1024 * 1024)).toFixed(2)} MB`
-                    : `${(activeTab.size / 1024).toFixed(1)} KB`}
-                </span>
-                {activeTab.liveSyncActive && (
-                  <>
-                    <span className="text-border">·</span>
-                    <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-mono">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      <span>Live Sync</span>
-                    </span>
-                  </>
-                )}
-              </div>
-              <ReaderSwitcher
-                activeTab={activeTab}
-                onSelectReader={(reader) => handleSetTabReader(activeTab.id, reader)}
-              />
-            </div>
+            ) : (
+              <div className="w-full flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden relative">
+                {/* Google Docs & Sheets Action Toolbar */}
+                <WorkspaceToolbar
+                  activeTab={activeTab}
+                  onSelectReader={(reader) => handleSetTabReader(activeTab.id, reader)}
+                  onToggleHexView={() => handleToggleHexViewTab(activeTab.id)}
+                  onDownloadFile={() => handleDownloadTabFile(activeTab.id)}
+                  onCopyContent={() => {
+                    if (activeTab.textContent) {
+                      navigator.clipboard.writeText(activeTab.textContent).catch(() => {});
+                      addToast('success', 'Content Copied', `Copied text from "${activeTab.name}".`);
+                    }
+                  }}
+                  onPrint={() => window.print()}
+                  zoomLevel={zoomLevel}
+                  onZoomIn={() => setZoomLevel(prev => Math.min(200, prev + 10))}
+                  onZoomOut={() => setZoomLevel(prev => Math.max(50, prev - 10))}
+                  onResetZoom={() => setZoomLevel(100)}
+                  onSetZoom={setZoomLevel}
+                />
 
-            {/* Dynamic Viewer Render */}
-            {(() => {
-              const currentCategory = activeTab.activeReader || activeTab.category;
+                {/* Viewer Render Stage */}
+                {activeTab.viewMode === 'hex' ? (
+                  <HexViewer
+                    arrayBuffer={activeTab.arrayBuffer}
+                    textContent={activeTab.textContent}
+                    filename={activeTab.name}
+                  />
+                ) : (
+                  (() => {
+                    const currentCategory = activeTab.activeReader || activeTab.category;
 
               if (currentCategory === 'pdf') {
                 return (
@@ -1284,6 +1336,7 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
                   <ZipViewer
                     arrayBuffer={activeTab.arrayBuffer}
                     filename={activeTab.name}
+                    onOpenFileInNewTab={handleOpenExtractedFileInNewTab}
                   />
                 );
               }
@@ -1384,7 +1437,7 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
                   filename={activeTab.name}
                 />
               );
-            })()}
+            })())}
           </div>
         )}
       </main>

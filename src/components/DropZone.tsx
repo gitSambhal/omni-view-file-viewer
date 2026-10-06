@@ -1,7 +1,7 @@
 /**
  * @license Apache-2.0
  * Developer: Suhail Akhtar (https://suhail.top)
- * OmniView File Viewer - Landing Page & Universal File Drop Target (shadcn/ui)
+ * OmniView File Viewer - Clean, Uncluttered Universal Drop Target
  */
 
 import React, { useState, useRef } from 'react';
@@ -16,15 +16,10 @@ import {
   Database,
   FileText,
   ShieldCheck,
-  ArrowRight,
   Layers,
-  Zap,
-  CheckCircle2
+  ArrowRight
 } from 'lucide-react';
 import { Button } from './ui/button';
-import { Badge } from './ui/badge';
-import { Card } from './ui/card';
-import { SupportedFormatsDashboard } from './SupportedFormatsDashboard';
 
 interface DropZoneProps {
   onFilesSelected: (files: FileList | File[]) => void;
@@ -45,8 +40,6 @@ export const DropZone: React.FC<DropZoneProps> = ({
   onOpenSupportedFormats,
   onOpenUrlModal,
   onOpenPasteModal,
-  onOpenRunnersGuide,
-  onOpenNpmTester,
   onNewScratchpad
 }) => {
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -79,250 +72,178 @@ export const DropZone: React.FC<DropZoneProps> = ({
     }
   };
 
-  const handleOpenFileWithExtension = (ext: string) => {
-    if (fileInputRef.current) {
-      const cleanExt = ext.startsWith('.') ? ext : `.${ext}`;
-      fileInputRef.current.accept = cleanExt;
-      fileInputRef.current.click();
-      setTimeout(() => {
-        if (fileInputRef.current) {
-          fileInputRef.current.accept = '';
-        }
-      }, 1000);
-    } else {
-      onOpenFilePicker();
-    }
-  };
-
   return (
     <div
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`flex-1 flex flex-col items-center justify-start p-4 sm:p-6 md:p-10 transition-colors duration-200 overflow-y-auto ${
+      className={`flex-1 flex flex-col items-center justify-center p-6 md:p-12 transition-colors duration-200 overflow-y-auto ${
         isDragging
-          ? 'bg-primary/5 border-2 border-dashed border-primary'
+          ? 'bg-primary/5'
           : 'bg-background'
       }`}
     >
-      <div className="w-full max-w-4xl lg:max-w-5xl flex flex-col items-center text-center space-y-7 py-6 sm:py-8">
-        {/* Hidden Multi-file input */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          onChange={handleFileInputChange}
-          className="hidden"
-          aria-label="Upload files"
-        />
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        onChange={handleFileInputChange}
+        className="hidden"
+        aria-label="Upload files"
+      />
 
-        {/* Hero Branding & Privacy Guarantee */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground font-medium">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-            <span>100% Client-Side</span>
-            <span aria-hidden="true" className="text-border">·</span>
-            <span>In-Memory Parsing</span>
-            <span aria-hidden="true" className="text-border">·</span>
-            <span>Zero Server Uploads</span>
-          </div>
-
-          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground font-sans">
-            OmniView File Viewer
-          </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground max-w-lg mx-auto leading-relaxed">
-            Inspect, edit, preview, and run 60+ formats directly in your browser with multi-tab workspace, live file sync, and syntax-aware readers.
-          </p>
-        </div>
-
-        {/* Primary Upload Drop Zone */}
-        <Card
-          className={`w-full p-8 sm:p-10 flex flex-col items-center justify-center transition-all duration-200 border-2 rounded-2xl ${
+      <div className="w-full max-w-xl flex flex-col items-center text-center space-y-6">
+        {/* Drop Card */}
+        <div
+          onClick={() => {
+            if (fileInputRef.current) {
+              fileInputRef.current.click();
+            } else {
+              onOpenFilePicker();
+            }
+          }}
+          className={`w-full p-10 sm:p-14 flex flex-col items-center justify-center rounded-2xl cursor-pointer transition-all duration-200 border-2 select-none ${
             isDragging
-              ? 'border-primary border-dashed bg-primary/10 shadow-lg scale-[1.01]'
-              : 'border-dashed border-border hover:border-primary/60 bg-card shadow-[0_2px_12px_rgba(0,0,0,0.04)]'
+              ? 'border-primary bg-primary/10 scale-[1.01]'
+              : 'border-dashed border-border hover:border-primary/50 hover:bg-muted/40 bg-card shadow-xs'
           }`}
         >
-          <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center mb-4 shadow-2xs transition-transform group-hover:scale-105">
-            <Upload className="w-7 h-7" />
+          <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-4 transition-transform group-hover:scale-105">
+            <Upload className="w-6 h-6" />
           </div>
 
-          <h2 className="text-base sm:text-lg font-semibold text-foreground tracking-tight">
-            Drag & drop files here to get started
+          <h2 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
+            Drop your files here
           </h2>
-          <p className="text-xs text-muted-foreground mt-1 max-w-md leading-relaxed">
-            Support for PDF, DOCX, XLSX, PPTX, Code, SQLite, Markdown, Audio, Video, Archives & more.
+
+          <p className="text-xs sm:text-sm text-muted-foreground mt-2 max-w-sm leading-relaxed">
+            Preview PDFs, Office documents, code, SQLite databases, media, and archives instantly.
           </p>
 
-          {/* Primary Action Buttons */}
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
+          {/* Primary Buttons */}
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5" onClick={e => e.stopPropagation()}>
             <Button
-              size="default"
+              size="sm"
               onClick={() => {
-                if (fileInputRef.current) {
-                  fileInputRef.current.click();
-                } else {
-                  onOpenFilePicker();
-                }
+                if (fileInputRef.current) fileInputRef.current.click();
+                else onOpenFilePicker();
               }}
-              className="gap-2 h-9 px-4.5 text-xs font-semibold cursor-pointer shadow-[0_1px_3px_rgba(0,0,0,0.12)]"
+              className="gap-2 px-4 h-8 text-xs font-medium cursor-pointer shadow-xs"
             >
-              <FolderOpen className="w-4 h-4" />
-              <span>Browse Local Files</span>
-              <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[9px] font-mono text-primary-foreground/90 bg-black/20 rounded ml-1">
+              <FolderOpen className="w-3.5 h-3.5" />
+              <span>Browse Files</span>
+              <kbd className="hidden sm:inline-flex items-center px-1 text-[9px] font-mono text-primary-foreground/90 bg-black/20 rounded">
                 ⌘O
               </kbd>
             </Button>
 
             <Button
               variant="outline"
-              size="default"
+              size="sm"
               onClick={onLoadSamples}
-              className="gap-2 h-9 px-4 text-xs font-medium cursor-pointer hover:border-primary/40 hover:text-primary transition-colors"
+              className="gap-1.5 px-3.5 h-8 text-xs font-medium cursor-pointer border-border hover:text-primary transition-colors"
             >
-              <Sparkles className="w-4 h-4 text-primary" />
-              <span>Open Sample Files</span>
-              <span className="text-[10px] text-muted-foreground font-mono">10+ Demos</span>
+              <Sparkles className="w-3.5 h-3.5 text-primary" />
+              <span>Sample Files</span>
             </Button>
 
             {onOpenPasteModal && (
               <Button
                 variant="outline"
-                size="default"
+                size="sm"
                 onClick={onOpenPasteModal}
-                className="gap-2 h-9 px-3.5 text-xs font-medium cursor-pointer hover:border-emerald-500/40 hover:text-emerald-600 transition-colors"
-                title="Create file from clipboard text (⌘V)"
+                className="gap-1.5 px-3 h-8 text-xs font-medium cursor-pointer border-border hover:text-emerald-600 transition-colors"
+                title="Paste text from clipboard"
               >
-                <ClipboardPaste className="w-4 h-4 text-emerald-500" />
-                <span>Paste Text</span>
+                <ClipboardPaste className="w-3.5 h-3.5 text-emerald-500" />
+                <span className="hidden sm:inline">Paste</span>
               </Button>
             )}
 
             {onOpenUrlModal && (
               <Button
                 variant="outline"
-                size="default"
+                size="sm"
                 onClick={onOpenUrlModal}
-                className="gap-2 h-9 px-3.5 text-xs font-medium cursor-pointer hover:border-cyan-500/40 hover:text-cyan-600 transition-colors"
-                title="Fetch file from remote URL"
+                className="gap-1.5 px-3 h-8 text-xs font-medium cursor-pointer border-border hover:text-cyan-600 transition-colors"
+                title="Fetch file from URL"
               >
-                <Link2 className="w-4 h-4 text-cyan-500" />
-                <span>From URL</span>
+                <Link2 className="w-3.5 h-3.5 text-cyan-500" />
+                <span className="hidden sm:inline">URL</span>
               </Button>
             )}
           </div>
-        </Card>
+        </div>
 
-        {/* Quick Instant Scratchpads & Sandboxes */}
+        {/* Quick Scratchpads - Clean, Quiet Row */}
         {onNewScratchpad && (
-          <div className="w-full space-y-2.5 text-left">
-            <div className="flex items-center justify-between px-0.5">
-              <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                <Zap className="w-3.5 h-3.5 text-amber-500" />
-                <span>Or start with an in-browser sandbox</span>
-              </span>
+          <div className="w-full space-y-2">
+            <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
+              <span className="font-medium text-foreground">New Blank Workspace</span>
               {onOpenSupportedFormats && (
                 <button
                   onClick={onOpenSupportedFormats}
                   className="text-xs text-primary hover:underline font-medium cursor-pointer flex items-center gap-1"
                 >
-                  <Layers className="w-3.5 h-3.5" />
-                  <span>View 60+ Supported Formats</span>
+                  <Layers className="w-3 h-3" />
+                  <span>All 60+ Formats</span>
                   <ArrowRight className="w-3 h-3" />
                 </button>
               )}
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              <Card
-                onClick={() => onNewScratchpad('ts')}
-                className="p-3.5 cursor-pointer rounded-xl border border-border/80 bg-card hover:border-primary/40 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] active:scale-[0.98] transition-all group"
-              >
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="p-1 rounded-md bg-blue-500/10 shrink-0">
-                    <Code2 className="w-3.5 h-3.5 text-blue-500" />
-                  </div>
-                  <span className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
-                    TypeScript
-                  </span>
-                </div>
-                <p className="text-[11px] text-muted-foreground">Live AST & NPM runner</p>
-              </Card>
-
-              <Card
-                onClick={() => onNewScratchpad('python')}
-                className="p-3.5 cursor-pointer rounded-xl border border-border/80 bg-card hover:border-primary/40 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] active:scale-[0.98] transition-all group"
-              >
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="p-1 rounded-md bg-amber-500/10 shrink-0">
-                    <Terminal className="w-3.5 h-3.5 text-amber-500" />
-                  </div>
-                  <span className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
-                    Python 3.12
-                  </span>
-                </div>
-                <p className="text-[11px] text-muted-foreground">In-browser Pyodide Wasm</p>
-              </Card>
-
-              <Card
-                onClick={() => onNewScratchpad('sql')}
-                className="p-3.5 cursor-pointer rounded-xl border border-border/80 bg-card hover:border-primary/40 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] active:scale-[0.98] transition-all group"
-              >
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="p-1 rounded-md bg-emerald-500/10 shrink-0">
-                    <Database className="w-3.5 h-3.5 text-emerald-500" />
-                  </div>
-                  <span className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
-                    SQLite / SQL
-                  </span>
-                </div>
-                <p className="text-[11px] text-muted-foreground">Interactive query console</p>
-              </Card>
-
-              <Card
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <button
                 onClick={() => onNewScratchpad('markdown')}
-                className="p-3.5 cursor-pointer rounded-xl border border-border/80 bg-card hover:border-primary/40 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] active:scale-[0.98] transition-all group"
+                className="flex items-center gap-2 p-2.5 rounded-lg border border-border/80 bg-card hover:bg-muted/50 hover:border-primary/50 text-left transition-colors cursor-pointer group"
               >
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="p-1 rounded-md bg-purple-500/10 shrink-0">
-                    <FileText className="w-3.5 h-3.5 text-purple-500" />
-                  </div>
-                  <span className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
-                    Markdown
-                  </span>
+                <FileText className="w-4 h-4 text-blue-500 shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-xs font-medium text-foreground truncate group-hover:text-primary">Markdown</div>
+                  <div className="text-[10px] text-muted-foreground truncate">Notes & docs</div>
                 </div>
-                <p className="text-[11px] text-muted-foreground">Live GFM document editor</p>
-              </Card>
+              </button>
+
+              <button
+                onClick={() => onNewScratchpad('python')}
+                className="flex items-center gap-2 p-2.5 rounded-lg border border-border/80 bg-card hover:bg-muted/50 hover:border-emerald-500/50 text-left transition-colors cursor-pointer group"
+              >
+                <Terminal className="w-4 h-4 text-emerald-500 shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-xs font-medium text-foreground truncate group-hover:text-emerald-500">Python 3.12</div>
+                  <div className="text-[10px] text-muted-foreground truncate">Wasm sandbox</div>
+                </div>
+              </button>
+
+              <button
+                onClick={() => onNewScratchpad('sql')}
+                className="flex items-center gap-2 p-2.5 rounded-lg border border-border/80 bg-card hover:bg-muted/50 hover:border-purple-500/50 text-left transition-colors cursor-pointer group"
+              >
+                <Database className="w-4 h-4 text-purple-500 shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-xs font-medium text-foreground truncate group-hover:text-purple-500">SQLite</div>
+                  <div className="text-[10px] text-muted-foreground truncate">Query tables</div>
+                </div>
+              </button>
+
+              <button
+                onClick={() => onNewScratchpad('ts')}
+                className="flex items-center gap-2 p-2.5 rounded-lg border border-border/80 bg-card hover:bg-muted/50 hover:border-cyan-500/50 text-left transition-colors cursor-pointer group"
+              >
+                <Code2 className="w-4 h-4 text-cyan-500 shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-xs font-medium text-foreground truncate group-hover:text-cyan-500">TypeScript</div>
+                  <div className="text-[10px] text-muted-foreground truncate">AST runner</div>
+                </div>
+              </button>
             </div>
           </div>
         )}
 
-        {/* Comprehensive Supported Formats & Native Readers Showcase */}
-        <SupportedFormatsDashboard
-          onOpenFileWithExtension={handleOpenFileWithExtension}
-          onOpenSupportedFormatsModal={onOpenSupportedFormats}
-          onNewScratchpad={onNewScratchpad}
-          onLoadSamples={onLoadSamples}
-        />
-
-        {/* Feature Guarantees Row */}
-        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 pt-2 text-[11px] text-muted-foreground">
-          <div className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-            <span>Multi-Tab Workspace</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-            <span>Disk Live Sync</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-            <span>Hex Byte Inspector</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-            <span>100% Offline Ready</span>
-          </div>
+        {/* Quiet Privacy & Local Guarantee */}
+        <div className="inline-flex items-center gap-2 text-[11px] text-muted-foreground pt-1">
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+          <span>100% In-Memory & Client-Side · No files are ever sent to a server</span>
         </div>
       </div>
     </div>

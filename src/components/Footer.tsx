@@ -1,14 +1,13 @@
 /**
  * @license Apache-2.0
  * Developer: Suhail Akhtar (https://suhail.top)
- * OmniView File Viewer - Footer & System Status Bar (shadcn/ui)
+ * OmniView File Studio - Clean Footer & Status Bar
  */
 
 import React from 'react';
 import { TabFile } from '../types/file';
 import { formatFileSize } from '../services/fileDetector';
-import { RefreshCw, FileText, ShieldCheck, Binary } from 'lucide-react';
-import { Badge } from './ui/badge';
+import { RefreshCw, FileText, Binary, ShieldCheck } from 'lucide-react';
 import { Button } from './ui/button';
 
 interface FooterProps {
@@ -25,12 +24,12 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenLiveSyncDashboard
 }) => {
   return (
-    <footer className="flex flex-wrap items-center justify-between px-3 py-1 bg-card border-t border-border text-xs text-muted-foreground select-none gap-2 transition-colors z-20 shrink-0">
-      {/* Active Tab File Details */}
+    <footer className="flex flex-wrap items-center justify-between px-3 py-1 bg-card border-t border-border text-xs text-muted-foreground select-none gap-2 transition-colors z-20 shrink-0 font-sans">
+      {/* Active Tab Details */}
       <div className="flex items-center gap-2 min-w-0">
         {activeTab ? (
           <>
-            <div className="flex items-center gap-1.5 text-foreground font-sans font-medium text-[11px] truncate">
+            <div className="flex items-center gap-1.5 text-foreground font-medium text-xs truncate">
               <FileText className="w-3.5 h-3.5 text-primary shrink-0" />
               <span className="truncate max-w-[180px]">{activeTab.name}</span>
             </div>
@@ -43,7 +42,7 @@ export const Footer: React.FC<FooterProps> = ({
 
             <span className="text-border">·</span>
 
-            <span className="text-[10px] font-mono uppercase text-muted-foreground">
+            <span className="text-[10px] font-mono uppercase bg-secondary px-1.5 py-0.5 rounded text-muted-foreground">
               {activeTab.extension || activeTab.category}
             </span>
 
@@ -52,10 +51,10 @@ export const Footer: React.FC<FooterProps> = ({
                 <span className="text-border">·</span>
                 <button
                   onClick={onToggleViewMode}
-                  className={`flex items-center gap-1 px-2 py-0.5 rounded-md transition-all cursor-pointer text-[10px] font-mono ${
+                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded transition-all cursor-pointer text-[10px] font-mono ${
                     activeTab.viewMode === 'hex'
                       ? 'bg-primary text-primary-foreground font-semibold shadow-2xs'
-                      : 'hover:bg-secondary text-muted-foreground hover:text-foreground'
+                      : 'hover:bg-muted text-muted-foreground hover:text-foreground'
                   }`}
                   title={activeTab.viewMode === 'hex' ? 'Return to standard preview' : 'Inspect binary hex bytes'}
                 >
@@ -70,26 +69,23 @@ export const Footer: React.FC<FooterProps> = ({
                 <span className="text-border">·</span>
                 <button
                   onClick={onOpenLiveSyncDashboard}
-                  className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 font-medium border border-emerald-500/20 transition-colors cursor-pointer text-[11px]"
-                  title="Click to view Live Sync telemetry"
+                  className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium transition-colors cursor-pointer text-[10px] font-mono"
+                  title="Live Disk Sync"
                 >
-                  <RefreshCw className={`w-3 h-3 ${activeTab.syncStatus === 'syncing' ? 'animate-spin text-emerald-500' : 'text-emerald-500'}`} />
-                  <span>{activeTab.syncStatus === 'syncing' ? 'Syncing...' : 'Live Sync'}</span>
-                  <span className="text-[10px] opacity-75 font-mono tabular-nums">
-                    ({activeTab.lastSyncedAt ? new Date(activeTab.lastSyncedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'Now'})
-                  </span>
+                  <RefreshCw className={`w-3 h-3 ${activeTab.syncStatus === 'syncing' ? 'animate-spin' : ''}`} />
+                  <span>Synced</span>
                 </button>
               </>
             )}
           </>
         ) : (
-          <span className="text-muted-foreground text-[11px]">Ready for files</span>
+          <span className="text-muted-foreground text-xs">Ready</span>
         )}
       </div>
 
-      {/* Center / Right Attribution & Version */}
-      <div className="flex items-center gap-3 shrink-0">
-        <div className="flex items-center gap-1 text-[11px] font-sans text-muted-foreground">
+      {/* Developer Attribution & Version */}
+      <div className="flex items-center gap-2.5 shrink-0 font-sans">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
           <span>
             Created by{' '}
@@ -108,10 +104,10 @@ export const Footer: React.FC<FooterProps> = ({
           variant="outline"
           size="sm"
           onClick={onOpenChangelog}
-          className="h-5.5 px-2 text-[10px] font-mono text-muted-foreground hover:text-foreground rounded-md border-border"
-          title="View Changelog & Release Notes"
+          className="h-5 px-1.5 text-[10px] font-mono text-muted-foreground hover:text-foreground rounded border-border cursor-pointer shadow-2xs"
+          title="Release Notes & Changelog"
         >
-          v3.3.0
+          v4.3.1
         </Button>
       </div>
     </footer>

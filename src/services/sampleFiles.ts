@@ -6,6 +6,7 @@
 import { TabFile } from '../types/file';
 import { getSampleStandardPdfBuffer, getSampleEncryptedPdfBuffer } from './samplePdfData';
 import { generateSampleDbfBuffer, generateSampleMdbBuffer, generateSampleSqliteBuffer } from './sampleDbData';
+import { generateSampleVhdBuffer, generateSampleTarGzBuffer, generateSampleIsoBuffer, generateSampleZipBufferSync } from './sampleArchiveData';
 
 export const SAMPLE_MARKDOWN = `# 🚀 OmniView File Studio Overview
 
@@ -759,8 +760,76 @@ export function getSampleTabFiles(): TabFile[] {
     zoomLevel: 100
   };
 
+  const vhdBuf = generateSampleVhdBuffer();
+  const sampleVhd: TabFile = {
+    id: 'sample-vhd',
+    name: 'system_disk_c.vhd',
+    size: vhdBuf.byteLength,
+    type: 'application/x-vhd',
+    lastModified: now - 15000,
+    extension: 'vhd',
+    category: 'archive',
+    arrayBuffer: vhdBuf,
+    liveSyncActive: false,
+    syncStatus: 'synced',
+    viewMode: 'preview',
+    zoomLevel: 100
+  };
+
+  const tarBuf = generateSampleTarGzBuffer();
+  const sampleTar: TabFile = {
+    id: 'sample-tar',
+    name: 'project_release.tar.gz',
+    size: tarBuf.byteLength,
+    type: 'application/gzip',
+    lastModified: now - 10000,
+    extension: 'tar.gz',
+    category: 'archive',
+    arrayBuffer: tarBuf,
+    liveSyncActive: false,
+    syncStatus: 'synced',
+    viewMode: 'preview',
+    zoomLevel: 100
+  };
+
+  const isoBuf = generateSampleIsoBuffer();
+  const sampleIso: TabFile = {
+    id: 'sample-iso',
+    name: 'install_media.iso',
+    size: isoBuf.byteLength,
+    type: 'application/x-iso9660-image',
+    lastModified: now - 5000,
+    extension: 'iso',
+    category: 'archive',
+    arrayBuffer: isoBuf,
+    liveSyncActive: false,
+    syncStatus: 'synced',
+    viewMode: 'preview',
+    zoomLevel: 100
+  };
+
+  const zipBuf = generateSampleZipBufferSync();
+  const sampleZip: TabFile = {
+    id: 'sample-zip',
+    name: 'project_workspace.zip',
+    size: zipBuf.byteLength,
+    type: 'application/zip',
+    lastModified: now - 2000,
+    extension: 'zip',
+    category: 'archive',
+    arrayBuffer: zipBuf,
+    liveSyncActive: false,
+    syncStatus: 'synced',
+    viewMode: 'preview',
+    zoomLevel: 100
+  };
+
   return [
     sampleMd,
+    sampleZip,
+    sampleVhd,
+    sampleTar,
+    sampleIso,
     samplePdf,
     sampleDbf,
     sampleMdb,

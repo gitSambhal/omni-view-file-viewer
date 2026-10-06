@@ -177,11 +177,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       className="w-64 sm:w-72 bg-card border-r border-border flex flex-col shrink-0 h-full select-none z-10 transition-colors text-card-foreground"
     >
       {/* Sidebar Header */}
-      <div className="h-11 px-3 border-b border-border flex items-center justify-between gap-2">
+      <div className="h-11 px-3 border-b border-border flex items-center justify-between gap-2 font-sans">
         <div className="flex items-center gap-2 min-w-0">
           <Layers className="w-3.5 h-3.5 text-primary shrink-0" />
-          <h2 className="text-xs font-semibold tracking-wide text-foreground truncate">
-            Workspace
+          <h2 className="text-xs font-semibold tracking-tight text-foreground truncate">
+            Files
           </h2>
           <span className="text-[11px] font-mono text-muted-foreground tabular-nums">
             ({tabs.length})
@@ -201,7 +201,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <Plus className="w-3.5 h-3.5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuContent align="end" className="w-52 font-sans text-xs">
               <DropdownMenuItem onClick={onOpenFilePicker}>
                 <FolderOpen className="w-3.5 h-3.5 text-blue-500 mr-2" />
                 <span>Open Local File</span>
@@ -223,7 +223,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
-              <DropdownMenuLabel>New Scratchpad</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-xs font-semibold">New Scratchpad</DropdownMenuLabel>
               <DropdownMenuItem onClick={() => onNewScratchpad('ts')}>
                 <Code2 className="w-3.5 h-3.5 text-blue-500 mr-2" />
                 <span>TypeScript & NPM</span>
@@ -256,15 +256,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Search & Category Filter */}
-      <div className="p-2 space-y-2 border-b border-border">
+      <div className="p-2 space-y-2 border-b border-border font-sans">
         <div className="relative">
           <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <Input
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Filter files..."
-            className="h-7.5 pl-8 pr-7 text-xs bg-secondary/60 border-border/80 rounded-lg placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary"
+            placeholder="Search workspace..."
+            className="h-8 pl-8 pr-7 text-xs bg-secondary/50 border border-border/70 rounded-md placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary"
           />
           {searchQuery && (
             <button
@@ -276,14 +276,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
         </div>
 
-        {/* Apple Segmented Control for Category Filtering */}
-        <div className="apple-segmented-track w-full flex justify-between p-0.5">
+        {/* Clean Segmented Filter Bar */}
+        <div className="flex items-center gap-1 p-0.5 bg-muted/60 rounded-md">
           {(['all', 'documents', 'code', 'data', 'media'] as CategoryFilter[]).map(cat => (
             <button
               key={cat}
               onClick={() => setCategoryFilter(cat)}
-              className={`apple-segmented-item flex-1 text-center py-1 text-[11px] capitalize ${
-                categoryFilter === cat ? 'apple-segmented-item-active' : ''
+              className={`flex-1 text-center py-1 text-[11px] font-medium rounded transition-all capitalize cursor-pointer ${
+                categoryFilter === cat
+                  ? 'bg-card text-foreground shadow-2xs font-semibold'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               {cat === 'documents' ? 'docs' : cat}
@@ -293,17 +295,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Files List */}
-      <ScrollArea className="flex-1 p-2">
+      <ScrollArea className="flex-1 p-2 font-sans">
         <button
           onClick={() => onSelectTab('welcome')}
-          className={`w-full flex items-center gap-2 px-2.5 py-1.5 mb-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+          className={`w-full flex items-center gap-2 px-2.5 py-1.5 mb-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
             activeTabId === 'welcome' || activeTabId === null
-              ? 'bg-primary text-primary-foreground shadow-[0_1px_2px_rgba(0,0,0,0.12)]'
-              : 'bg-card border border-border text-foreground hover:bg-secondary/70'
+              ? 'bg-secondary text-foreground font-semibold'
+              : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground'
           }`}
         >
-          <Upload className="w-3.5 h-3.5 shrink-0" />
-          <span>Upload & Overview</span>
+          <Upload className="w-3.5 h-3.5 shrink-0 text-primary" />
+          <span>Overview / Drop Zone</span>
         </button>
 
         {filteredTabs.length === 0 ? (
@@ -342,24 +344,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <div
                   key={tab.id}
                   onClick={() => onSelectTab(tab.id)}
-                  className={`group flex items-center justify-between px-2.5 py-1.5 rounded-lg cursor-pointer transition-all ${
+                  className={`group flex items-center justify-between px-2.5 py-1.5 rounded-md cursor-pointer transition-colors ${
                     isActive
-                      ? 'bg-primary text-primary-foreground font-medium shadow-[0_1px_2px_rgba(0,0,0,0.12)]'
-                      : 'hover:bg-secondary/80 text-foreground border border-transparent'
+                      ? 'bg-secondary text-foreground font-medium border-l-2 border-primary pl-2'
+                      : 'hover:bg-secondary/50 text-foreground border-l-2 border-transparent pl-2'
                   }`}
                 >
                   <div className="flex items-center gap-2 min-w-0 pr-1">
-                    <span className={isActive ? 'brightness-125' : ''}>
+                    <span>
                       {getCategoryIcon(tab.category)}
                     </span>
                     <div className="min-w-0">
-                      <p className={`text-xs truncate leading-tight ${isActive ? 'text-primary-foreground font-semibold' : 'text-foreground'}`}>
+                      <p className={`text-xs truncate leading-tight ${isActive ? 'text-foreground font-semibold' : 'text-foreground'}`}>
                         {tab.name}
                       </p>
-                      <div className={`flex items-center gap-1.5 text-[10px] mt-0.5 ${isActive ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
+                      <div className="flex items-center gap-1.5 text-[10px] mt-0.5 text-muted-foreground">
                         <span className="font-mono tabular-nums">{formatFileSize(tab.size)}</span>
                         {tab.liveSyncActive && (
-                          <span className={`flex items-center gap-0.5 font-semibold ${isActive ? 'text-white' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                          <span className="flex items-center gap-0.5 font-medium text-emerald-600 dark:text-emerald-400">
                             <RefreshCw className="w-2.5 h-2.5 animate-spin" />
                             <span>Sync</span>
                           </span>
