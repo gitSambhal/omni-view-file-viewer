@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.3.9] - 2026-10-06
+
+### Fixed
+- **Pixel-Perfect PowerPoint (.pptx, .ppt, .odp) Slide Engine**:
+  - **Exact Presentation Slide Order**: Resolved slide sequences directly from `ppt/presentation.xml` (`<p:sldIdLst>`) via `ppt/_rels/presentation.xml.rels`, ensuring custom ordered, moved, or deleted slides match Microsoft PowerPoint.
+  - **True Proportional Typography Engine**: Font sizes calculated proportionally based on slide container query width (`calc(points * (100cqw / slideWidthPoints))`), eliminating text overflow, unwanted wraps, and clipping.
+  - **Full-Bleed Canvas Edge-to-Edge Coordinate Accuracy**: Removed outer padding shifts from slide stage container, aligning all full-width headers, banners, cards, and shapes at exact percentage coordinates.
+  - **Enhanced Geometric Shapes**: Added SVG and CSS clip-path support for triangles, diamonds, right/left arrows, callouts, roundRects, and connectors with outer drop shadows.
+  - **Multi-Level Placeholder Cascading**: Child slide shapes without explicit `<a:xfrm>` inherit position, insets, and styling from `slideLayout` and `slideMaster` placeholders.
+  - **Developer Attribution**: Maintained for **Suhail Akhtar** ([suhail.top](https://suhail.top)).
+
+## [4.3.8] - 2026-10-06
+
+### Fixed
+- **True-to-Original PowerPoint (.pptx, .ppt, .odp) Visual Rendering Engine**:
+  - **Slide Master & Layout Shape Inheritance**: Full support for `ppt/slideMasters/` and `ppt/slideLayouts/` static background shapes, brand logos, cards, and placeholder formatting inheritance so PPTX slides accurately reflect their original template design.
+  - **Original Background & Color Pipeline**: Slide canvas now defaults to the slide master's authentic theme background (clean white or theme background) instead of artificial dark container overrides, eliminating unreadable text contrast.
+  - **Dynamic Container Query Typography Scaling**: Font sizes now scale smoothly and proportionally with slide container width (`calc(fontSizePt * 0.12cqw + 8px)`), ensuring crisp wrapping and zero overflow across fullscreen, zoomed, or responsive mobile views.
+  - **Multi-Stop Linear & Radial Gradient Support**: Parses `a:gradFill` with angle calculations and `a:gsLst` color stops for slide wallpapers and shape cards.
+  - **Enhanced Table Formatting**: Implemented fixed column width ratios (`a:gridCol`), multi-row headers, cell backgrounds, borders, and vertical alignments.
+  - **Synchronous Sample PPTX**: Generated a real in-memory `.pptx` presentation with 3 structured slides (Hero card, 3-column architecture, and metrics table) using `fflate` for immediate testing.
+  - **Developer Attribution**: Maintained for **Suhail Akhtar** ([suhail.top](https://suhail.top)).
+
+## [4.3.7] - 2026-10-06
+
+### Fixed
+- **Pixel-Accurate Original Canvas PowerPoint (.pptx & .ppt) Rendering**:
+  - Implemented exact coordinate geometry engine (`a:xfrm` offsets `x`, `y` and dimensions `cx`, `cy` in EMUs converted to normalized canvas percentages).
+  - Positioned shapes, text boxes, tables (`p:graphicFrame`), and embedded picture images (`p:pic`) at their authentic slide locations.
+  - Added full visual styling reproduction:
+    - Solid shape background fills (`a:solidFill` sRGB & theme scheme colors), borders (`a:ln`), and border radius for rounded geometries.
+    - Text run formatting: exact font weights (bold), font styles (italic), underlines, strikethroughs, font sizes, font colors, and font families.
+    - Paragraph alignments (`center`, `right`, `left`, `justify`) and vertical shape alignments (`top`, `center`, `bottom`).
+    - Embedded picture decoding with object-fit scaling.
+    - Slide master/layout background colors, gradients, and wallpaper images.
+  - Added **"Original Layout" vs "Flow"** switch in the toolbar allowing users to switch between the exact original visual canvas and the structured text reader flow.
+  - Developer Attribution: Maintained for **Suhail Akhtar** ([suhail.top](https://suhail.top)).
+
 ## [4.3.6] - 2026-10-06
 
 ### Fixed

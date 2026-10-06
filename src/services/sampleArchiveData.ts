@@ -590,6 +590,391 @@ West,Q1,510000,480000,+6.2%
 }
 
 /**
+ * Generates a valid, complete Microsoft PowerPoint (.pptx) presentation
+ * with PresentationML XML, Theme color scheme, Master layout, and 3 rich slides
+ */
+export function generateSamplePptxBufferSync(): ArrayBuffer {
+  const files: Record<string, Uint8Array> = {
+    '[Content_Types].xml': fflate.strToU8(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>
+  <Override PartName="/ppt/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>
+  <Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"/>
+  <Override PartName="/ppt/slideLayouts/slideLayout1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"/>
+  <Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+  <Override PartName="/ppt/slides/slide2.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+  <Override PartName="/ppt/slides/slide3.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+  <Override PartName="/ppt/notesSlides/notesSlide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.notesSlide+xml"/>
+</Types>`),
+
+    '_rels/.rels': fflate.strToU8(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="ppt/presentation.xml"/>
+</Relationships>`),
+
+    'ppt/_rels/presentation.xml.rels': fflate.strToU8(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster" Target="slideMasters/slideMaster1.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="theme/theme1.xml"/>
+  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/>
+  <Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide2.xml"/>
+  <Relationship Id="rId5" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide3.xml"/>
+</Relationships>`),
+
+    'ppt/presentation.xml': fflate.strToU8(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:presentation xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:sldMasterIdLst>
+    <p:sldMasterId id="2147483648" r:id="rId1"/>
+  </p:sldMasterIdLst>
+  <p:sldIdLst>
+    <p:sldId id="256" r:id="rId3"/>
+    <p:sldId id="257" r:id="rId4"/>
+    <p:sldId id="258" r:id="rId5"/>
+  </p:sldIdLst>
+  <p:sldSz cx="9144000" cy="5143500" type="screen16x9"/>
+</p:presentation>`),
+
+    'ppt/theme/theme1.xml': fflate.strToU8(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="OmniView Theme">
+  <a:themeElements>
+    <a:clrScheme name="OmniView Colors">
+      <a:dk1><a:sysClr val="windowText" lastClr="0F172A"/></a:dk1>
+      <a:lt1><a:sysClr val="window" lastClr="FFFFFF"/></a:lt1>
+      <a:dk2><a:srgbClr val="1E293B"/></a:dk2>
+      <a:lt2><a:srgbClr val="F8FAFC"/></a:lt2>
+      <a:accent1><a:srgbClr val="2563EB"/></a:accent1>
+      <a:accent2><a:srgbClr val="059669"/></a:accent2>
+      <a:accent3><a:srgbClr val="D97706"/></a:accent3>
+      <a:accent4><a:srgbClr val="DC2626"/></a:accent4>
+      <a:accent5><a:srgbClr val="7C3AED"/></a:accent5>
+      <a:accent6><a:srgbClr val="0891B2"/></a:accent6>
+      <a:hlink><a:srgbClr val="2563EB"/></a:hlink>
+      <a:folHlink><a:srgbClr val="7C3AED"/></a:folHlink>
+    </a:clrScheme>
+    <a:fontScheme name="OmniView Typography">
+      <a:majorFont><a:latin typeface="Inter, Segoe UI, system-ui"/></a:majorFont>
+      <a:minorFont><a:latin typeface="Inter, Segoe UI, system-ui"/></a:minorFont>
+    </a:fontScheme>
+  </a:themeElements>
+</a:theme>`),
+
+    'ppt/slideMasters/slideMaster1.xml': fflate.strToU8(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sldMaster xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld>
+    <p:bg>
+      <p:bgPr>
+        <a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill>
+      </p:bgPr>
+    </p:bg>
+    <p:spTree>
+      <p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>
+      <p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>
+    </p:spTree>
+  </p:cSld>
+  <p:sldLayoutIdLst>
+    <p:sldLayoutId id="2147483649" r:id="rId1"/>
+  </p:sldLayoutIdLst>
+</p:sldMaster>`),
+
+    'ppt/slideMasters/_rels/slideMaster1.xml.rels': fflate.strToU8(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout1.xml"/>
+</Relationships>`),
+
+    'ppt/slideLayouts/slideLayout1.xml': fflate.strToU8(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sldLayout xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" type="title">
+  <p:cSld>
+    <p:spTree>
+      <p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>
+      <p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>
+    </p:spTree>
+  </p:cSld>
+</p:sldLayout>`),
+
+    'ppt/slideLayouts/_rels/slideLayout1.xml.rels': fflate.strToU8(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster" Target="../slideMasters/slideMaster1.xml"/>
+</Relationships>`),
+
+    // Slide 1: Title & Hero Card
+    'ppt/slides/slide1.xml': fflate.strToU8(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld>
+    <p:bg>
+      <p:bgPr>
+        <a:solidFill><a:srgbClr val="F8FAFC"/></a:solidFill>
+      </p:bgPr>
+    </p:bg>
+    <p:spTree>
+      <p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>
+      <p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>
+
+      <!-- Decorative Title Card Container -->
+      <p:sp>
+        <p:nvSpPr><p:cNvPr id="2" name="Title Box"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
+        <p:spPr>
+          <a:xfrm><a:off x="731520" y="1028700"/><a:ext cx="7680960" cy="3086100"/></a:xfrm>
+          <a:prstGeom prst="roundRect"/>
+          <a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill>
+          <a:ln w="12700"><a:solidFill><a:srgbClr val="E2E8F0"/></a:solidFill></a:ln>
+          <a:effectLst>
+            <a:outerShdw blurRad="100000" dist="40000" dir="5400000"><a:srgbClr val="0F172A"/></a:outerShdw>
+          </a:effectLst>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr anchor="ctr"/>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:r>
+              <a:rPr sz="3600" b="1"><a:solidFill><a:srgbClr val="0F172A"/></a:solidFill></a:rPr>
+              <a:t>OmniView Universal Presentation Engine</a:t>
+            </a:r>
+          </a:p>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:r>
+              <a:rPr sz="1800" i="1"><a:solidFill><a:srgbClr val="2563EB"/></a:solidFill></a:rPr>
+              <a:t>Next-Generation In-Browser Slide Studio</a:t>
+            </a:r>
+          </a:p>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:r>
+              <a:rPr sz="1400"><a:solidFill><a:srgbClr val="64748B"/></a:solidFill></a:rPr>
+              <a:t>Developed by Suhail Akhtar (https://suhail.top)</a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+    </p:spTree>
+  </p:cSld>
+</p:sld>`),
+
+    'ppt/slides/_rels/slide1.xml.rels': fflate.strToU8(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout1.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesSlide" Target="../notesSlides/notesSlide1.xml"/>
+</Relationships>`),
+
+    'ppt/notesSlides/notesSlide1.xml': fflate.strToU8(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:notes xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld>
+    <p:spTree>
+      <p:sp><p:txBody><a:p><a:t>Welcome to the opening slide of OmniView. Explain zero-latency client-side processing to attendees.</a:t></a:p></p:txBody></p:sp>
+    </p:spTree>
+  </p:cSld>
+</p:notes>`),
+
+    // Slide 2: Core Features & Architecture (3 Columns)
+    'ppt/slides/slide2.xml': fflate.strToU8(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld>
+    <p:bg><p:bgPr><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill></p:bgPr></p:bg>
+    <p:spTree>
+      <p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>
+      <p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>
+
+      <!-- Slide Title -->
+      <p:sp>
+        <p:nvSpPr><p:cNvPr id="2" name="Title"/><p:cNvSpPr/><p:nvPr><p:ph type="title"/></p:nvPr></p:nvSpPr>
+        <p:spPr>
+          <a:xfrm><a:off x="731520" y="411480"/><a:ext cx="7680960" cy="720000"/></a:xfrm>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr/>
+          <a:p>
+            <a:r>
+              <a:rPr sz="2800" b="1"><a:solidFill><a:srgbClr val="0F172A"/></a:solidFill></a:rPr>
+              <a:t>Architecture & Universal Format Support</a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+
+      <!-- Column Card 1 -->
+      <p:sp>
+        <p:nvSpPr><p:cNvPr id="3" name="Card 1"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
+        <p:spPr>
+          <a:xfrm><a:off x="731520" y="1337310"/><a:ext cx="2377440" cy="3291840"/></a:xfrm>
+          <a:prstGeom prst="roundRect"/>
+          <a:solidFill><a:srgbClr val="F1F5F9"/></a:solidFill>
+          <a:ln w="12700"><a:solidFill><a:srgbClr val="CBD5E1"/></a:solidFill></a:ln>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr anchor="t"/>
+          <a:p>
+            <a:r><a:rPr sz="1800" b="1"><a:solidFill><a:srgbClr val="2563EB"/></a:solidFill></a:rPr><a:t>1. Universal Parser</a:t></a:r>
+          </a:p>
+          <a:p>
+            <a:r><a:rPr sz="1300"><a:solidFill><a:srgbClr val="334155"/></a:solidFill></a:rPr><a:t>• PPTX / PPSX / POTX XML</a:t></a:r>
+          </a:p>
+          <a:p>
+            <a:r><a:rPr sz="1300"><a:solidFill><a:srgbClr val="334155"/></a:solidFill></a:rPr><a:t>• Legacy PPT 97-2003 OLE2</a:t></a:r>
+          </a:p>
+          <a:p>
+            <a:r><a:rPr sz="1300"><a:solidFill><a:srgbClr val="334155"/></a:solidFill></a:rPr><a:t>• OpenDocument ODP</a:t></a:r>
+          </a:p>
+          <a:p>
+            <a:r><a:rPr sz="1300"><a:solidFill><a:srgbClr val="334155"/></a:solidFill></a:rPr><a:t>• Keynote Archives</a:t></a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+
+      <!-- Column Card 2 -->
+      <p:sp>
+        <p:nvSpPr><p:cNvPr id="4" name="Card 2"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
+        <p:spPr>
+          <a:xfrm><a:off x="3383280" y="1337310"/><a:ext cx="2377440" cy="3291840"/></a:xfrm>
+          <a:prstGeom prst="roundRect"/>
+          <a:solidFill><a:srgbClr val="F1F5F9"/></a:solidFill>
+          <a:ln w="12700"><a:solidFill><a:srgbClr val="CBD5E1"/></a:solidFill></a:ln>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr anchor="t"/>
+          <a:p>
+            <a:r><a:rPr sz="1800" b="1"><a:solidFill><a:srgbClr val="059669"/></a:solidFill></a:rPr><a:t>2. Interactive Studio</a:t></a:r>
+          </a:p>
+          <a:p>
+            <a:r><a:rPr sz="1300"><a:solidFill><a:srgbClr val="334155"/></a:solidFill></a:rPr><a:t>• Slide Navigator Sidebar</a:t></a:r>
+          </a:p>
+          <a:p>
+            <a:r><a:rPr sz="1300"><a:solidFill><a:srgbClr val="334155"/></a:solidFill></a:rPr><a:t>• Grid Sorter View</a:t></a:r>
+          </a:p>
+          <a:p>
+            <a:r><a:rPr sz="1300"><a:solidFill><a:srgbClr val="334155"/></a:solidFill></a:rPr><a:t>• Fullscreen Presenter (F)</a:t></a:r>
+          </a:p>
+          <a:p>
+            <a:r><a:rPr sz="1300"><a:solidFill><a:srgbClr val="334155"/></a:solidFill></a:rPr><a:t>• Speaker Notes Drawer (N)</a:t></a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+
+      <!-- Column Card 3 -->
+      <p:sp>
+        <p:nvSpPr><p:cNvPr id="5" name="Card 3"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
+        <p:spPr>
+          <a:xfrm><a:off x="6035040" y="1337310"/><a:ext cx="2377440" cy="3291840"/></a:xfrm>
+          <a:prstGeom prst="roundRect"/>
+          <a:solidFill><a:srgbClr val="F1F5F9"/></a:solidFill>
+          <a:ln w="12700"><a:solidFill><a:srgbClr val="CBD5E1"/></a:solidFill></a:ln>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr anchor="t"/>
+          <a:p>
+            <a:r><a:rPr sz="1800" b="1"><a:solidFill><a:srgbClr val="D97706"/></a:solidFill></a:rPr><a:t>3. Privacy & Speed</a:t></a:r>
+          </a:p>
+          <a:p>
+            <a:r><a:rPr sz="1300"><a:solidFill><a:srgbClr val="334155"/></a:solidFill></a:rPr><a:t>• 100% In-Memory Parsing</a:t></a:r>
+          </a:p>
+          <a:p>
+            <a:r><a:rPr sz="1300"><a:solidFill><a:srgbClr val="334155"/></a:solidFill></a:rPr><a:t>• Zero Cloud Uploads</a:t></a:r>
+          </a:p>
+          <a:p>
+            <a:r><a:rPr sz="1300"><a:solidFill><a:srgbClr val="334155"/></a:solidFill></a:rPr><a:t>• One-click Markdown Export</a:t></a:r>
+          </a:p>
+          <a:p>
+            <a:r><a:rPr sz="1300"><a:solidFill><a:srgbClr val="334155"/></a:solidFill></a:rPr><a:t>• Full Offline PWA Ready</a:t></a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+    </p:spTree>
+  </p:cSld>
+</p:sld>`),
+
+    'ppt/slides/_rels/slide2.xml.rels': fflate.strToU8(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout1.xml"/>
+</Relationships>`),
+
+    // Slide 3: Financial Metrics Table
+    'ppt/slides/slide3.xml': fflate.strToU8(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld>
+    <p:bg><p:bgPr><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill></p:bgPr></p:bg>
+    <p:spTree>
+      <p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>
+      <p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>
+
+      <!-- Slide Title -->
+      <p:sp>
+        <p:nvSpPr><p:cNvPr id="2" name="Title"/><p:cNvSpPr/><p:nvPr><p:ph type="title"/></p:nvPr></p:nvSpPr>
+        <p:spPr>
+          <a:xfrm><a:off x="731520" y="411480"/><a:ext cx="7680960" cy="720000"/></a:xfrm>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr/>
+          <a:p>
+            <a:r>
+              <a:rPr sz="2800" b="1"><a:solidFill><a:srgbClr val="0F172A"/></a:solidFill></a:rPr>
+              <a:t>Quarterly Strategy Metrics & Growth</a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+
+      <!-- Table Graphic Frame -->
+      <p:graphicFrame>
+        <p:nvGraphicFramePr><p:cNvPr id="3" name="Table 1"/><p:cNvGraphicFramePr/><p:nvPr/></p:nvGraphicFramePr>
+        <p:xfrm><a:off x="731520" y="1337310"/><a:ext cx="7680960" cy="3086100"/></a:xfrm>
+        <a:graphic>
+          <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/table">
+            <a:tbl>
+              <a:tblPr/>
+              <a:tblGrid>
+                <a:gridCol w="1920240"/>
+                <a:gridCol w="1920240"/>
+                <a:gridCol w="1920240"/>
+                <a:gridCol w="1920240"/>
+              </a:tblGrid>
+              <!-- Row 1: Header -->
+              <a:tr h="600000">
+                <a:tc><a:txBody><a:bodyPr/><a:p><a:r><a:rPr sz="1500" b="1"/><a:t>Metric</a:t></a:r></a:p></a:txBody><a:tcPr><a:solidFill><a:srgbClr val="2563EB"/></a:solidFill></a:tcPr></a:tc>
+                <a:tc><a:txBody><a:bodyPr/><a:p><a:r><a:rPr sz="1500" b="1"/><a:t>Q1 Target</a:t></a:r></a:p></a:txBody><a:tcPr><a:solidFill><a:srgbClr val="2563EB"/></a:solidFill></a:tcPr></a:tc>
+                <a:tc><a:txBody><a:bodyPr/><a:p><a:r><a:rPr sz="1500" b="1"/><a:t>Q1 Actual</a:t></a:r></a:p></a:txBody><a:tcPr><a:solidFill><a:srgbClr val="2563EB"/></a:solidFill></a:tcPr></a:tc>
+                <a:tc><a:txBody><a:bodyPr/><a:p><a:r><a:rPr sz="1500" b="1"/><a:t>Growth YoY</a:t></a:r></a:p></a:txBody><a:tcPr><a:solidFill><a:srgbClr val="2563EB"/></a:solidFill></a:tcPr></a:tc>
+              </a:tr>
+              <!-- Row 2 -->
+              <a:tr h="500000">
+                <a:tc><a:txBody><a:bodyPr/><a:p><a:r><a:rPr sz="1300"/><a:t>Active Users</a:t></a:r></a:p></a:txBody></a:tc>
+                <a:tc><a:txBody><a:bodyPr/><a:p><a:r><a:rPr sz="1300"/><a:t>250,000</a:t></a:r></a:p></a:txBody></a:tc>
+                <a:tc><a:txBody><a:bodyPr/><a:p><a:r><a:rPr sz="1300"/><a:t>312,400</a:t></a:r></a:p></a:txBody></a:tc>
+                <a:tc><a:txBody><a:bodyPr/><a:p><a:r><a:rPr sz="1300" b="1"/><a:t>+24.9%</a:t></a:r></a:p></a:txBody></a:tc>
+              </a:tr>
+              <!-- Row 3 -->
+              <a:tr h="500000">
+                <a:tc><a:txBody><a:bodyPr/><a:p><a:r><a:rPr sz="1300"/><a:t>Files Processed</a:t></a:r></a:p></a:txBody></a:tc>
+                <a:tc><a:txBody><a:bodyPr/><a:p><a:r><a:rPr sz="1300"/><a:t>1,000,000</a:t></a:r></a:p></a:txBody></a:tc>
+                <a:tc><a:txBody><a:bodyPr/><a:p><a:r><a:rPr sz="1300"/><a:t>1,450,200</a:t></a:r></a:p></a:txBody></a:tc>
+                <a:tc><a:txBody><a:bodyPr/><a:p><a:r><a:rPr sz="1300" b="1"/><a:t>+45.0%</a:t></a:r></a:p></a:txBody></a:tc>
+              </a:tr>
+              <!-- Row 4 -->
+              <a:tr h="500000">
+                <a:tc><a:txBody><a:bodyPr/><a:p><a:r><a:rPr sz="1300"/><a:t>Privacy Score</a:t></a:r></a:p></a:txBody></a:tc>
+                <a:tc><a:txBody><a:bodyPr/><a:p><a:r><a:rPr sz="1300"/><a:t>100%</a:t></a:r></a:p></a:txBody></a:tc>
+                <a:tc><a:txBody><a:bodyPr/><a:p><a:r><a:rPr sz="1300"/><a:t>100%</a:t></a:r></a:p></a:txBody></a:tc>
+                <a:tc><a:txBody><a:bodyPr/><a:p><a:r><a:rPr sz="1300" b="1"/><a:t>Zero Leaks</a:t></a:r></a:p></a:txBody></a:tc>
+              </a:tr>
+            </a:tbl>
+          </a:graphicData>
+        </a:graphic>
+      </p:graphicFrame>
+    </p:spTree>
+  </p:cSld>
+</p:sld>`),
+
+    'ppt/slides/_rels/slide3.xml.rels': fflate.strToU8(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout1.xml"/>
+</Relationships>`)
+  };
+
+  const zipped = fflate.zipSync(files);
+  return zipped.buffer.slice(zipped.byteOffset, zipped.byteOffset + zipped.byteLength) as ArrayBuffer;
+}
+
+/**
  * Generates a sample multi-format ZIP archive with documents, code, images, and data
  */
 export async function generateSampleZipBuffer(): Promise<ArrayBuffer> {

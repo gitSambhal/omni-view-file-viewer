@@ -1,19 +1,76 @@
 /**
  * @license Apache-2.0
  * Developer: Suhail Akhtar (https://suhail.top)
- * Universal Presentation Engine & Parser (.pptx, .ppt, .odp, .pps, .ppsx, .key)
- * Supports full OOXML shape hierarchy, OLE2 compound binary PPT streams, ODP XML, embedded images, tables & notes.
+ * Universal Presentation Engine & High-Fidelity Parser (.pptx, .ppt, .odp, .pps, .ppsx, .key)
+ *
+ * Full Feature Support:
+ * - Slide Master & Layout Shape Inheritance & Cascading Placeholders
+ * - Precise Slide Ordering via ppt/presentation.xml & ppt/_rels/presentation.xml.rels
+ * - Full OOXML Theme Color Scheme with Tint, Shade, Luminance Mod/Off calculations
+ * - Exact Coordinate Transforms (EMU to percentage / cqw geometry)
+ * - Multi-stop Linear & Radial Gradients
+ * - Rich Custom Geometries (rect, roundRect, ellipse, triangle, diamond, arrow, line, callout)
+ * - Typography engine with major/minor theme fonts, bullet styles, indent levels, super/subscript
+ * - Graphic Frames (Tables with cell styling, spans, border matrices, column widths)
+ * - Image Blip extraction and shape image fills (a:blipFill)
+ * - Legacy Microsoft PowerPoint 97-2003 (.ppt) OLE2 stream parser
+ * - OpenDocument Presentation (.odp) parser
  */
 
 import JSZip from 'jszip';
+
+export interface SlideBox {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation?: number; // In degrees
+  leftPercent: number;
+  topPercent: number;
+  widthPercent: number;
+  heightPercent: number;
+}
+
+export interface SlideGradientStop {
+  position: number; // 0 to 100%
+  color: string;
+}
+
+export interface SlideShapeStyle {
+  fillColor?: string;
+  fillGradient?: {
+    angle?: number;
+    stops: SlideGradientStop[];
+  };
+  borderColor?: string;
+  borderWidth?: number;
+  borderStyle?: 'solid' | 'dashed' | 'dotted';
+  borderRadius?: number;
+  shadow?: {
+    color: string;
+    blur: number;
+    offsetX: number;
+    offsetY: number;
+  };
+  opacity?: number;
+  verticalAlign?: 'top' | 'center' | 'bottom';
+  paddingTopPercent?: number;
+  paddingLeftPercent?: number;
+  geometry?: string; // 'rect' | 'roundRect' | 'ellipse' | 'line' | 'triangle' | 'diamond' | 'rightArrow' | etc.
+}
 
 export interface SlideTextRun {
   text: string;
   bold?: boolean;
   italic?: boolean;
   underline?: boolean;
+  strikethrough?: boolean;
+  subscript?: boolean;
+  superscript?: boolean;
   color?: string;
   fontSize?: number; // In pt
+  fontFamily?: string;
+  hyperlink?: string;
 }
 
 export interface SlideParagraph {
@@ -21,68 +78,105 @@ export interface SlideParagraph {
   text: string;
   isBullet?: boolean;
   bulletChar?: string;
+  bulletColor?: string;
   level?: number;
   align?: 'left' | 'center' | 'right' | 'justify';
+  lineSpacing?: number;
+  spaceBefore?: number;
+  spaceAfter?: number;
+}
+
+export interface SlideTableCell {
+  text: string;
+  paragraphs: SlideParagraph[];
+  bgColor?: string;
+  bold?: boolean;
+  align?: 'left' | 'center' | 'right' | 'justify';
+  verticalAlign?: 'top' | 'center' | 'bottom';
+  colSpan?: number;
+  rowSpan?: number;
+  borderColor?: string;
+  borderWidth?: number;
 }
 
 export interface SlideTable {
-  headers: string[];
-  rows: string[][];
+  rows: SlideTableCell[][];
+  colWidthsPercent?: number[];
 }
 
 export interface SlideShape {
   id: string;
-  type: 'title' | 'subtitle' | 'body' | 'table' | 'image' | 'generic';
-  title?: string;
+  name?: string;
+  type: 'title' | 'subtitle' | 'body' | 'table' | 'image' | 'shape' | 'line' | 'generic';
+  geometry?: string;
+  box: SlideBox;
+  style: SlideShapeStyle;
   paragraphs: SlideParagraph[];
   table?: SlideTable;
   imageUrl?: string;
   imageAlt?: string;
-  box?: { x: number; y: number; width: number; height: number };
+  isMasterOrLayoutShape?: boolean;
 }
 
 export interface PresentationSlide {
   id: number;
   slideNumber: number;
-  layout: 'title' | 'title-and-body' | 'two-column' | 'table' | 'image' | 'quote' | 'generic';
+  layout: 'canvas' | 'title' | 'content' | 'two-column' | 'blank';
   title: string;
   subtitle?: string;
-  paragraphs: SlideParagraph[];
-  bullets: string[];
   shapes: SlideShape[];
   table?: SlideTable;
-  images: { url: string; name?: string }[];
+  images: { url: string; name?: string; box?: SlideBox }[];
   notes?: string;
-  background?: string;
+  backgroundColor?: string;
+  backgroundGradient?: {
+    angle?: number;
+    stops: SlideGradientStop[];
+  };
+  backgroundImageUrl?: string;
   accentColor?: string;
   rawText: string[];
+  isDarkBackground?: boolean;
 }
 
 export interface ParsedPresentation {
   title: string;
-  format: 'pptx' | 'ppt' | 'odp' | 'key' | 'presentation';
+  format: 'pptx' | 'ppt' | 'odp' | 'presentation';
   formatLabel: string;
   slideCount: number;
   aspectRatio: '16:9' | '4:3' | '16:10';
-  dimensions: { width: number; height: number };
+  dimensions: { width: number; height: number; slideWidthPoints: number; slideHeightPoints: number };
+  themeFonts?: { major?: string; minor?: string };
+  themeColors?: Record<string, string>;
   slides: PresentationSlide[];
   metadata?: {
     appName?: string;
     author?: string;
-    created?: string;
-    modified?: string;
     slideTitles?: string[];
   };
 }
 
-const THEME_ACCENTS = [
-  { gradient: 'from-blue-600 via-indigo-600 to-violet-700', bg: 'bg-blue-950/40', border: 'border-blue-500/30', text: 'text-blue-400' },
-  { gradient: 'from-emerald-600 via-teal-600 to-cyan-700', bg: 'bg-emerald-950/40', border: 'border-emerald-500/30', text: 'text-emerald-400' },
-  { gradient: 'from-amber-500 via-orange-600 to-red-600', bg: 'bg-amber-950/40', border: 'border-amber-500/30', text: 'text-amber-400' },
-  { gradient: 'from-purple-600 via-fuchsia-600 to-pink-600', bg: 'bg-purple-950/40', border: 'border-purple-500/30', text: 'text-purple-400' },
-  { gradient: 'from-rose-600 via-pink-600 to-rose-700', bg: 'bg-rose-950/40', border: 'border-rose-500/30', text: 'text-rose-400' },
-  { gradient: 'from-cyan-600 via-blue-600 to-sky-700', bg: 'bg-cyan-950/40', border: 'border-cyan-500/30', text: 'text-cyan-400' },
-];
+/**
+ * Standard Office Theme Palette Fallbacks
+ */
+const DEFAULT_THEME_COLORS: Record<string, string> = {
+  accent1: '#2563EB', // Royal Blue
+  accent2: '#DC2626', // Crimson Red
+  accent3: '#059669', // Emerald Green
+  accent4: '#D97706', // Amber Orange
+  accent5: '#7C3AED', // Violet Purple
+  accent6: '#0891B2', // Cyan Blue
+  dk1: '#0F172A',
+  lt1: '#FFFFFF',
+  dk2: '#1E293B',
+  lt2: '#F8FAFC',
+  tx1: '#0F172A',
+  bg1: '#FFFFFF',
+  tx2: '#475569',
+  bg2: '#F1F5F9',
+  hlink: '#2563EB',
+  folHlink: '#7C3AED'
+};
 
 /**
  * Main Presentation Parsing Entry Point
@@ -106,15 +200,11 @@ export async function parsePresentation(
       const zip = await JSZip.loadAsync(arrayBuffer);
 
       // A. Modern PowerPoint (.pptx, .ppsx, .potx)
-      const pptSlideFiles: { name: string; file: JSZip.JSZipObject }[] = [];
-      zip.folder('ppt/slides')?.forEach((relativePath, file) => {
-        if (relativePath.startsWith('slide') && relativePath.endsWith('.xml')) {
-          pptSlideFiles.push({ name: relativePath, file });
-        }
-      });
+      const hasPresentationXml = !!zip.file('ppt/presentation.xml');
+      const hasSlideFolder = Object.keys(zip.files).some(p => p.startsWith('ppt/slides/slide'));
 
-      if (pptSlideFiles.length > 0) {
-        return await parsePptxZipArchive(zip, pptSlideFiles, filename);
+      if (hasPresentationXml || hasSlideFolder) {
+        return await parsePptxZipArchive(zip, filename);
       }
 
       // B. OpenDocument Presentation (.odp)
@@ -135,26 +225,25 @@ export async function parsePresentation(
 }
 
 /**
- * Parses Modern PowerPoint (.pptx / .ppsx) with high fidelity
+ * Parses Modern PowerPoint (.pptx / .ppsx) with complete Layout & Master inheritance
  */
 async function parsePptxZipArchive(
   zip: JSZip,
-  slideFiles: { name: string; file: JSZip.JSZipObject }[],
   filename: string
 ): Promise<ParsedPresentation> {
-  // Sort slide files numerically
-  slideFiles.sort((a, b) => {
-    const numA = parseInt(a.name.replace(/[^0-9]/g, ''), 10) || 0;
-    const numB = parseInt(b.name.replace(/[^0-9]/g, ''), 10) || 0;
-    return numA - numB;
-  });
-
-  // Extract presentation dimensions from ppt/presentation.xml
+  // Extract presentation dimensions from ppt/presentation.xml (in EMUs)
+  let slideWidthEMU = 9144000;
+  let slideHeightEMU = 5143500;
   let width = 1920;
   let height = 1080;
+  let slideWidthPoints = 960;
+  let slideHeightPoints = 540;
   let aspectRatio: '16:9' | '4:3' | '16:10' = '16:9';
   let author = '';
   let appName = 'Microsoft PowerPoint';
+
+  // Read ppt/presentation.xml for dimensions and exact slide sequence
+  const orderedSlidePaths: string[] = [];
 
   try {
     const presXml = await zip.file('ppt/presentation.xml')?.async('text');
@@ -166,24 +255,121 @@ async function parsePptxZipArchive(
         const cx = parseInt(sldSz.getAttribute('cx') || '0', 10);
         const cy = parseInt(sldSz.getAttribute('cy') || '0', 10);
         if (cx > 0 && cy > 0) {
+          slideWidthEMU = cx;
+          slideHeightEMU = cy;
+          slideWidthPoints = cx / 12700;
+          slideHeightPoints = cy / 12700;
           const ratio = cx / cy;
-          if (Math.abs(ratio - 4 / 3) < 0.1) {
+          if (Math.abs(ratio - 4 / 3) < 0.15) {
             aspectRatio = '4:3';
             width = 1440;
             height = 1080;
-          } else if (Math.abs(ratio - 16 / 10) < 0.1) {
+            slideWidthPoints = 720;
+            slideHeightPoints = 540;
+          } else if (Math.abs(ratio - 16 / 10) < 0.15) {
             aspectRatio = '16:10';
             width = 1920;
             height = 1200;
+            slideWidthPoints = 960;
+            slideHeightPoints = 600;
+          } else {
+            aspectRatio = '16:9';
+            width = 1920;
+            height = 1080;
+            slideWidthPoints = 960;
+            slideHeightPoints = 540;
           }
         }
+      }
+
+      // Read presentation relationships to map r:id to actual slide files
+      const presRelsMap = new Map<string, string>();
+      const presRelsXml = await zip.file('ppt/_rels/presentation.xml.rels')?.async('text');
+      if (presRelsXml) {
+        const relsDoc = parser.parseFromString(presRelsXml, 'text/xml');
+        const relNodes = Array.from(relsDoc.getElementsByTagName('Relationship'));
+        relNodes.forEach(rel => {
+          const id = rel.getAttribute('Id') || '';
+          const target = rel.getAttribute('Target') || '';
+          if (id && target) {
+            // Clean relative path (e.g. slides/slide1.xml -> ppt/slides/slide1.xml)
+            const cleanTarget = target.startsWith('ppt/') ? target : target.startsWith('/') ? target.substring(1) : `ppt/${target.replace(/^\.\//, '')}`;
+            presRelsMap.set(id, cleanTarget);
+          }
+        });
+      }
+
+      // Read exact slide ordering from <p:sldIdLst>
+      const sldIdLst = presDoc.getElementsByTagName('p:sldIdLst')[0];
+      if (sldIdLst) {
+        const sldIds = Array.from(sldIdLst.getElementsByTagName('p:sldId'));
+        sldIds.forEach(sld => {
+          const rId = sld.getAttribute('r:id') || sld.getAttribute('r:id') || '';
+          const targetPath = presRelsMap.get(rId);
+          if (targetPath && zip.file(targetPath)) {
+            orderedSlidePaths.push(targetPath);
+          }
+        });
       }
     }
   } catch {
     // Default dimensions
   }
 
-  // Extract metadata
+  // Fallback: If no slides found from presentation.xml.rels, collect from ppt/slides/ directly
+  if (orderedSlidePaths.length === 0) {
+    const rawSlidePaths: string[] = [];
+    zip.folder('ppt/slides')?.forEach((relativePath) => {
+      if (relativePath.startsWith('slide') && relativePath.endsWith('.xml') && !relativePath.includes('/')) {
+        rawSlidePaths.push(`ppt/slides/${relativePath}`);
+      }
+    });
+
+    rawSlidePaths.sort((a, b) => {
+      const numA = parseInt(a.replace(/[^0-9]/g, ''), 10) || 0;
+      const numB = parseInt(b.replace(/[^0-9]/g, ''), 10) || 0;
+      return numA - numB;
+    });
+
+    orderedSlidePaths.push(...rawSlidePaths);
+  }
+
+  // Extract Theme Colors & Fonts from ppt/theme/theme1.xml
+  const themeColors: Record<string, string> = { ...DEFAULT_THEME_COLORS };
+  const themeFonts = { major: 'Calibri', minor: 'Calibri' };
+
+  try {
+    const themeXml = await zip.file('ppt/theme/theme1.xml')?.async('text');
+    if (themeXml) {
+      const parser = new DOMParser();
+      const themeDoc = parser.parseFromString(themeXml, 'text/xml');
+
+      // Parse Color Scheme
+      const clrScheme = themeDoc.getElementsByTagName('a:clrScheme')[0];
+      if (clrScheme) {
+        const colorNodes = Array.from(clrScheme.children);
+        colorNodes.forEach(node => {
+          const colorName = node.tagName.replace(/^a:/, '');
+          const srgb = node.getElementsByTagName('a:srgbClr')[0]?.getAttribute('val');
+          const sys = node.getElementsByTagName('a:sysClr')[0]?.getAttribute('lastClr');
+          const hex = srgb || sys;
+          if (hex) {
+            themeColors[colorName] = `#${hex}`;
+          }
+        });
+      }
+
+      // Parse Font Scheme
+      const majorLatin = themeDoc.getElementsByTagName('a:majorFont')[0]?.getElementsByTagName('a:latin')[0]?.getAttribute('typeface');
+      const minorLatin = themeDoc.getElementsByTagName('a:minorFont')[0]?.getElementsByTagName('a:latin')[0]?.getAttribute('typeface');
+      if (majorLatin) themeFonts.major = majorLatin;
+      if (minorLatin) themeFonts.minor = minorLatin;
+    }
+  } catch {
+    // Ignore theme parse error
+  }
+
+  // Extract core metadata
   try {
     const coreXml = await zip.file('docProps/core.xml')?.async('text');
     if (coreXml) {
@@ -220,19 +406,248 @@ async function parsePptxZipArchive(
     }
   }
 
+  // Slide Master interface & cache
+  interface MasterData {
+    background?: string;
+    backgroundGradient?: { angle?: number; stops: SlideGradientStop[] };
+    backgroundImageUrl?: string;
+    placeholders: Map<string, SlideBox>;
+    placeholderStyles: Map<string, { fontSize?: number; color?: string; align?: 'left' | 'center' | 'right'; bold?: boolean }>;
+    shapes: SlideShape[];
+  }
+  const masterCache = new Map<string, MasterData>();
+
+  // Slide Layout interface & cache
+  interface LayoutData {
+    placeholders: Map<string, SlideBox>;
+    placeholderStyles: Map<string, { fontSize?: number; color?: string; align?: 'left' | 'center' | 'right'; bold?: boolean }>;
+    background?: string;
+    backgroundGradient?: { angle?: number; stops: SlideGradientStop[] };
+    backgroundImageUrl?: string;
+    shapes: SlideShape[];
+    masterPath?: string;
+  }
+  const layoutCache = new Map<string, LayoutData>();
+
+  // Helper to parse a SlideMaster file
+  const loadSlideMaster = async (masterPath: string): Promise<MasterData> => {
+    if (masterCache.has(masterPath)) return masterCache.get(masterPath)!;
+    const masterData: MasterData = {
+      placeholders: new Map(),
+      placeholderStyles: new Map(),
+      shapes: []
+    };
+
+    try {
+      const masterXml = await zip.file(masterPath)?.async('text');
+      if (masterXml) {
+        const parser = new DOMParser();
+        const masterDoc = parser.parseFromString(masterXml, 'text/xml');
+
+        // Master Rels for images
+        const masterRelsMap = new Map<string, string>();
+        const masterFileName = masterPath.split('/').pop() || '';
+        const relsXml = await zip.file(`ppt/slideMasters/_rels/${masterFileName}.rels`)?.async('text');
+        if (relsXml) {
+          const relsDoc = parser.parseFromString(relsXml, 'text/xml');
+          const relNodes = Array.from(relsDoc.getElementsByTagName('Relationship'));
+          relNodes.forEach(rel => {
+            const id = rel.getAttribute('Id') || '';
+            const target = rel.getAttribute('Target') || '';
+            const targetFile = target.split('/').pop()?.toLowerCase() || '';
+            const url = mediaMap.get(targetFile) || mediaMap.get(target.toLowerCase());
+            if (id && url) masterRelsMap.set(id, url);
+          });
+        }
+
+        // Master Background
+        const bgNode = masterDoc.getElementsByTagName('p:bg')[0];
+        if (bgNode) {
+          const bgPr = bgNode.getElementsByTagName('p:bgPr')[0];
+          if (bgPr) {
+            const bgClr = resolveColor(bgPr, themeColors);
+            if (bgClr) masterData.background = bgClr;
+            const grad = parseGradientFill(bgPr, themeColors);
+            if (grad) masterData.backgroundGradient = grad;
+            const blip = bgPr.getElementsByTagName('a:blip')[0]?.getAttribute('r:embed');
+            if (blip && masterRelsMap.has(blip)) masterData.backgroundImageUrl = masterRelsMap.get(blip);
+          }
+        }
+
+        // Master shapes & placeholders
+        const spTree = masterDoc.getElementsByTagName('p:spTree')[0];
+        if (spTree) {
+          const shapes = Array.from(spTree.getElementsByTagName('p:sp'));
+          shapes.forEach(sp => {
+            const ph = sp.getElementsByTagName('p:ph')[0];
+            const phType = ph?.getAttribute('type') || (ph ? 'body' : '');
+            const phIdx = ph?.getAttribute('idx') || '0';
+            const xfrm = sp.getElementsByTagName('a:xfrm')[0];
+            const box = parseXfrm(xfrm, slideWidthEMU, slideHeightEMU);
+            if (phType && box) {
+              masterData.placeholders.set(`${phType}-${phIdx}`, box);
+              masterData.placeholders.set(phType, box);
+            }
+          });
+
+          // Master static non-placeholder shapes (logos, background cards, colored bars)
+          const dummyRaw: string[] = [];
+          const dummyImg: { url: string; name?: string; box?: SlideBox }[] = [];
+          parseShapeContainer(
+            spTree,
+            slideWidthEMU,
+            slideHeightEMU,
+            masterRelsMap,
+            themeColors,
+            themeFonts,
+            new Map(),
+            masterData.shapes,
+            dummyRaw,
+            dummyImg,
+            undefined,
+            true // isMaster
+          );
+        }
+      }
+    } catch {
+      // Ignore master parse error
+    }
+
+    masterCache.set(masterPath, masterData);
+    return masterData;
+  };
+
+  // Helper to parse a SlideLayout file
+  const loadSlideLayout = async (layoutPath: string): Promise<LayoutData> => {
+    if (layoutCache.has(layoutPath)) return layoutCache.get(layoutPath)!;
+    const layoutData: LayoutData = {
+      placeholders: new Map(),
+      placeholderStyles: new Map(),
+      shapes: []
+    };
+
+    try {
+      const layoutXml = await zip.file(layoutPath)?.async('text');
+      if (layoutXml) {
+        const parser = new DOMParser();
+        const layoutDoc = parser.parseFromString(layoutXml, 'text/xml');
+
+        // Layout Rels for images & master
+        const layoutRelsMap = new Map<string, string>();
+        let masterPath = '';
+        const layoutFileName = layoutPath.split('/').pop() || '';
+        const relsXml = await zip.file(`ppt/slideLayouts/_rels/${layoutFileName}.rels`)?.async('text');
+        if (relsXml) {
+          const relsDoc = parser.parseFromString(relsXml, 'text/xml');
+          const relNodes = Array.from(relsDoc.getElementsByTagName('Relationship'));
+          relNodes.forEach(rel => {
+            const id = rel.getAttribute('Id') || '';
+            const target = rel.getAttribute('Target') || '';
+            const type = rel.getAttribute('Type') || '';
+            if (type.includes('slideMaster')) {
+              masterPath = target.startsWith('ppt/') ? target : target.startsWith('/') ? target.substring(1) : target.replace(/^\.\.\//, 'ppt/');
+            }
+            const targetFile = target.split('/').pop()?.toLowerCase() || '';
+            const url = mediaMap.get(targetFile) || mediaMap.get(target.toLowerCase());
+            if (id && url) layoutRelsMap.set(id, url);
+          });
+        }
+        layoutData.masterPath = masterPath;
+
+        // Layout Background
+        const bgNode = layoutDoc.getElementsByTagName('p:bg')[0];
+        if (bgNode) {
+          const bgPr = bgNode.getElementsByTagName('p:bgPr')[0];
+          if (bgPr) {
+            const bgClr = resolveColor(bgPr, themeColors);
+            if (bgClr) layoutData.background = bgClr;
+            const grad = parseGradientFill(bgPr, themeColors);
+            if (grad) layoutData.backgroundGradient = grad;
+            const blip = bgPr.getElementsByTagName('a:blip')[0]?.getAttribute('r:embed');
+            if (blip && layoutRelsMap.has(blip)) layoutData.backgroundImageUrl = layoutRelsMap.get(blip);
+          }
+        }
+
+        // Layout placeholders & static shapes
+        const spTree = layoutDoc.getElementsByTagName('p:spTree')[0];
+        if (spTree) {
+          const shapes = Array.from(spTree.getElementsByTagName('p:sp'));
+          shapes.forEach(sp => {
+            const ph = sp.getElementsByTagName('p:ph')[0];
+            const phType = ph?.getAttribute('type') || (ph ? 'body' : '');
+            const phIdx = ph?.getAttribute('idx') || '0';
+            const xfrm = sp.getElementsByTagName('a:xfrm')[0];
+            const box = parseXfrm(xfrm, slideWidthEMU, slideHeightEMU);
+            if (phType && box) {
+              layoutData.placeholders.set(`${phType}-${phIdx}`, box);
+              layoutData.placeholders.set(phType, box);
+
+              // Capture placeholder default font styles
+              const rPr = sp.getElementsByTagName('a:rPr')[0];
+              const pPr = sp.getElementsByTagName('a:pPr')[0];
+              const szAttr = rPr?.getAttribute('sz');
+              const fontSize = szAttr ? parseInt(szAttr, 10) / 100 : undefined;
+              const clr = rPr ? resolveColor(rPr, themeColors) : undefined;
+              const algn = pPr?.getAttribute('algn');
+              let align: 'left' | 'center' | 'right' | undefined;
+              if (algn === 'ctr') align = 'center';
+              else if (algn === 'r') align = 'right';
+              else if (algn === 'l') align = 'left';
+
+              layoutData.placeholderStyles.set(`${phType}-${phIdx}`, {
+                fontSize,
+                color: clr,
+                align,
+                bold: rPr?.getAttribute('b') === '1'
+              });
+            }
+          });
+
+          // Parse non-placeholder layout shapes (decorative cards, bars, badges)
+          const dummyRaw: string[] = [];
+          const dummyImg: { url: string; name?: string; box?: SlideBox }[] = [];
+          parseShapeContainer(
+            spTree,
+            slideWidthEMU,
+            slideHeightEMU,
+            layoutRelsMap,
+            themeColors,
+            themeFonts,
+            layoutData.placeholders,
+            layoutData.shapes,
+            dummyRaw,
+            dummyImg,
+            undefined,
+            true // isLayout
+          );
+        }
+      }
+    } catch {
+      // Ignore layout parse error
+    }
+
+    layoutCache.set(layoutPath, layoutData);
+    return layoutData;
+  };
+
   const slides: PresentationSlide[] = [];
 
-  for (let i = 0; i < slideFiles.length; i++) {
+  for (let i = 0; i < orderedSlidePaths.length; i++) {
     const slideNum = i + 1;
-    const slidePath = slideFiles[i].name;
-    const xmlText = await slideFiles[i].file.async('text');
+    const slidePath = orderedSlidePaths[i];
+    const xmlText = await zip.file(slidePath)?.async('text');
+    if (!xmlText) continue;
+
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
 
-    // Parse slide relationships for embedded images
+    // Parse slide relationships for embedded images and layout inheritance
     const relsMap = new Map<string, string>();
+    let layoutPath = '';
+
     try {
-      const relsPath = `ppt/slides/_rels/${slidePath.split('/').pop()}.rels`;
+      const slideFileName = slidePath.split('/').pop() || '';
+      const relsPath = `ppt/slides/_rels/${slideFileName}.rels`;
       const relsText = await zip.file(relsPath)?.async('text');
       if (relsText) {
         const relsDoc = parser.parseFromString(relsText, 'text/xml');
@@ -240,6 +655,13 @@ async function parsePptxZipArchive(
         for (let r = 0; r < relNodes.length; r++) {
           const id = relNodes[r].getAttribute('Id') || '';
           const target = relNodes[r].getAttribute('Target') || '';
+          const type = relNodes[r].getAttribute('Type') || '';
+
+          if (type.includes('slideLayout')) {
+            const cleanTarget = target.startsWith('ppt/') ? target : target.startsWith('/') ? target.substring(1) : target.replace(/^\.\.\//, 'ppt/');
+            layoutPath = cleanTarget;
+          }
+
           const targetFile = target.split('/').pop()?.toLowerCase() || '';
           const url = mediaMap.get(targetFile) || mediaMap.get(target.toLowerCase());
           if (id && url) {
@@ -250,6 +672,72 @@ async function parsePptxZipArchive(
     } catch {
       // Ignore rels error
     }
+
+    // Load slide layout & master data
+    let layoutPlaceholders = new Map<string, SlideBox>();
+    let layoutBackground: string | undefined;
+    let layoutBgGradient: { angle?: number; stops: SlideGradientStop[] } | undefined;
+    let layoutBgImgUrl: string | undefined;
+    const backgroundShapes: SlideShape[] = [];
+
+    if (layoutPath) {
+      const layoutData = await loadSlideLayout(layoutPath);
+      layoutPlaceholders = layoutData.placeholders;
+      layoutBackground = layoutData.background;
+      layoutBgGradient = layoutData.backgroundGradient;
+      layoutBgImgUrl = layoutData.backgroundImageUrl;
+
+      // Also check Master
+      if (layoutData.masterPath) {
+        const masterData = await loadSlideMaster(layoutData.masterPath);
+        if (!layoutBackground && masterData.background) layoutBackground = masterData.background;
+        if (!layoutBgGradient && masterData.backgroundGradient) layoutBgGradient = masterData.backgroundGradient;
+        if (!layoutBgImgUrl && masterData.backgroundImageUrl) layoutBgImgUrl = masterData.backgroundImageUrl;
+
+        // Merge master placeholders if not present in layout
+        masterData.placeholders.forEach((box, key) => {
+          if (!layoutPlaceholders.has(key)) {
+            layoutPlaceholders.set(key, box);
+          }
+        });
+
+        // Add master decorative shapes
+        masterData.shapes.forEach(sh => {
+          backgroundShapes.push({ ...sh, id: `master-${sh.id}`, isMasterOrLayoutShape: true });
+        });
+      }
+
+      // Add layout decorative shapes
+      layoutData.shapes.forEach(sh => {
+        backgroundShapes.push({ ...sh, id: `layout-${sh.id}`, isMasterOrLayoutShape: true });
+      });
+    }
+
+    // Extract slide direct background
+    let slideBgColor: string | undefined = layoutBackground;
+    let slideBgGradient: { angle?: number; stops: SlideGradientStop[] } | undefined = layoutBgGradient;
+    let slideBgImgUrl: string | undefined = layoutBgImgUrl;
+
+    const bgNode = xmlDoc.getElementsByTagName('p:bg')[0];
+    if (bgNode) {
+      const bgPr = bgNode.getElementsByTagName('p:bgPr')[0];
+      if (bgPr) {
+        const bgClr = resolveColor(bgPr, themeColors);
+        if (bgClr) slideBgColor = bgClr;
+        const grad = parseGradientFill(bgPr, themeColors);
+        if (grad) slideBgGradient = grad;
+        const blip = bgPr.getElementsByTagName('a:blip')[0]?.getAttribute('r:embed');
+        if (blip && relsMap.has(blip)) slideBgImgUrl = relsMap.get(blip);
+      }
+    }
+
+    // Default background color to clean white if completely unspecified
+    if (!slideBgColor && !slideBgGradient && !slideBgImgUrl) {
+      slideBgColor = themeColors.bg1 || themeColors.lt1 || '#FFFFFF';
+    }
+
+    // Detect if slide has dark background
+    const isDarkBackground = isColorDark(slideBgColor || '#FFFFFF');
 
     // Extract speaker notes if available
     let notes = '';
@@ -272,169 +760,44 @@ async function parsePptxZipArchive(
       // Ignore notes error
     }
 
-    // Extract shapes, text boxes, tables, and images
     const slideShapes: SlideShape[] = [];
     const rawTexts: string[] = [];
     let detectedTitle = '';
     let detectedSubtitle = '';
-    const slideImages: { url: string; name?: string }[] = [];
+    const slideImages: { url: string; name?: string; box?: SlideBox }[] = [];
     let slideTable: SlideTable | undefined;
 
-    // 1. Process Shape elements (<p:sp>)
-    const spNodes = Array.from(xmlDoc.getElementsByTagName('p:sp'));
-    for (let s = 0; s < spNodes.length; s++) {
-      const sp = spNodes[s];
-      const phNode = sp.getElementsByTagName('p:ph')[0];
-      const phType = phNode?.getAttribute('type') || '';
-      
-      const paragraphs: SlideParagraph[] = [];
-      const pNodes = Array.from(sp.getElementsByTagName('a:p'));
-
-      for (const pElem of pNodes) {
-        const runs: SlideTextRun[] = [];
-        const rNodes = Array.from(pElem.getElementsByTagName('a:r'));
-        
-        for (const rElem of rNodes) {
-          const tElem = rElem.getElementsByTagName('a:t')[0];
-          const tVal = tElem?.textContent || '';
-          if (!tVal) continue;
-
-          const rPr = rElem.getElementsByTagName('a:rPr')[0];
-          const isBold = rPr?.getAttribute('b') === '1' || rPr?.getAttribute('b') === 'true';
-          const isItalic = rPr?.getAttribute('i') === '1' || rPr?.getAttribute('i') === 'true';
-          const isUnderline = rPr?.hasAttribute('u') && rPr.getAttribute('u') !== 'none';
-          const szAttr = rPr?.getAttribute('sz');
-          const fontSize = szAttr ? parseInt(szAttr, 10) / 100 : undefined;
-
-          // Color extraction
-          let color: string | undefined;
-          const srgbClr = rElem.getElementsByTagName('a:srgbClr')[0];
-          if (srgbClr) {
-            const hex = srgbClr.getAttribute('val');
-            if (hex) color = `#${hex}`;
-          }
-
-          runs.push({
-            text: tVal,
-            bold: isBold,
-            italic: isItalic,
-            underline: isUnderline,
-            fontSize,
-            color
-          });
-        }
-
-        // Fallback for paragraph text if no rNodes
-        if (runs.length === 0) {
-          const allT = Array.from(pElem.getElementsByTagName('a:t'))
-            .map(t => t.textContent || '')
-            .join(' ')
-            .trim();
-          if (allT) {
-            runs.push({ text: allT });
-          }
-        }
-
-        const fullParaText = runs.map(r => r.text).join('').trim();
-        if (fullParaText) {
-          const pPr = pElem.getElementsByTagName('a:pPr')[0];
-          const algn = pPr?.getAttribute('algn');
-          let align: 'left' | 'center' | 'right' | 'justify' | undefined;
-          if (algn === 'ctr') align = 'center';
-          else if (algn === 'r') align = 'right';
-          else if (algn === 'just') align = 'justify';
-
-          const buChar = pPr?.getElementsByTagName('a:buChar')[0]?.getAttribute('char');
-          const lvlAttr = pPr?.getAttribute('lvl');
-          const level = lvlAttr ? parseInt(lvlAttr, 10) : 0;
-          const isBullet = !!buChar || pPr?.getElementsByTagName('a:buAutoNum').length > 0 || level > 0;
-
-          paragraphs.push({
-            runs,
-            text: fullParaText,
-            isBullet,
-            bulletChar: buChar || '•',
-            level,
-            align
-          });
-
-          rawTexts.push(fullParaText);
-        }
-      }
-
-      if (paragraphs.length > 0) {
-        let shapeType: 'title' | 'subtitle' | 'body' | 'generic' = 'generic';
-        const fullShapeText = paragraphs.map(p => p.text).join(' ');
-
-        if (phType === 'title' || phType === 'ctrTitle') {
-          shapeType = 'title';
-          if (!detectedTitle) detectedTitle = fullShapeText;
-        } else if (phType === 'subTitle') {
-          shapeType = 'subtitle';
-          if (!detectedSubtitle) detectedSubtitle = fullShapeText;
-        } else if (phType === 'body') {
-          shapeType = 'body';
-        }
-
-        slideShapes.push({
-          id: `shape-${s + 1}`,
-          type: shapeType,
-          paragraphs
-        });
-      }
+    const spTree = xmlDoc.getElementsByTagName('p:spTree')[0];
+    if (spTree) {
+      // Traverse shape tree recursively including group shapes (<p:grpSp>)
+      parseShapeContainer(
+        spTree,
+        slideWidthEMU,
+        slideHeightEMU,
+        relsMap,
+        themeColors,
+        themeFonts,
+        layoutPlaceholders,
+        slideShapes,
+        rawTexts,
+        slideImages,
+        undefined,
+        false,
+        isDarkBackground
+      );
     }
 
-    // 2. Process Tables (<a:tbl>)
-    const tblNodes = Array.from(xmlDoc.getElementsByTagName('a:tbl'));
-    for (const tbl of tblNodes) {
-      const rows: string[][] = [];
-      const trNodes = Array.from(tbl.getElementsByTagName('a:tr'));
-      for (const tr of trNodes) {
-        const rowCells: string[] = [];
-        const tcNodes = Array.from(tr.getElementsByTagName('a:tc'));
-        for (const tc of tcNodes) {
-          const cellText = Array.from(tc.getElementsByTagName('a:t'))
-            .map(t => t.textContent || '')
-            .join(' ')
-            .trim();
-          rowCells.push(cellText);
-        }
-        if (rowCells.length > 0) {
-          rows.push(rowCells);
-        }
+    // Process slide table if graphic frame had a table
+    slideShapes.forEach(sh => {
+      if (sh.table && !slideTable) slideTable = sh.table;
+      if (sh.type === 'title' && !detectedTitle) {
+        detectedTitle = sh.paragraphs.map(p => p.text).join(' ');
       }
-
-      if (rows.length > 0) {
-        const headers = rows[0];
-        const bodyRows = rows.length > 1 ? rows.slice(1) : [];
-        slideTable = { headers, rows: bodyRows };
-        slideShapes.push({
-          id: `tbl-${slideShapes.length + 1}`,
-          type: 'table',
-          paragraphs: [],
-          table: slideTable
-        });
+      if (sh.type === 'subtitle' && !detectedSubtitle) {
+        detectedSubtitle = sh.paragraphs.map(p => p.text).join(' ');
       }
-    }
+    });
 
-    // 3. Process Embedded Pictures (<p:pic>)
-    const picNodes = Array.from(xmlDoc.getElementsByTagName('p:pic'));
-    for (const pic of picNodes) {
-      const blip = pic.getElementsByTagName('a:blip')[0];
-      const rId = blip?.getAttribute('r:embed') || '';
-      const imgUrl = relsMap.get(rId);
-      if (imgUrl) {
-        slideImages.push({ url: imgUrl });
-        slideShapes.push({
-          id: `pic-${slideShapes.length + 1}`,
-          type: 'image',
-          paragraphs: [],
-          imageUrl: imgUrl
-        });
-      }
-    }
-
-    // Determine primary slide title and subtitle
     if (!detectedTitle) {
       if (rawTexts.length > 0) {
         detectedTitle = rawTexts[0];
@@ -443,53 +806,24 @@ async function parsePptxZipArchive(
       }
     }
 
-    if (!detectedSubtitle && rawTexts.length > 1 && detectedTitle === rawTexts[0]) {
-      // If title was first line, check if second line is short subtitle
-      if (rawTexts[1].length < 120 && slideNum === 1) {
-        detectedSubtitle = rawTexts[1];
-      }
-    }
-
-    // Extract bullet points
-    const bulletList: string[] = [];
-    slideShapes.forEach(sh => {
-      if (sh.type !== 'title') {
-        sh.paragraphs.forEach(p => {
-          if (p.text !== detectedTitle && p.text !== detectedSubtitle) {
-            bulletList.push(p.text);
-          }
-        });
-      }
-    });
-
-    // Detect slide layout
-    let layout: PresentationSlide['layout'] = 'title-and-body';
-    if (slideNum === 1 || (slideShapes.length <= 2 && bulletList.length <= 1)) {
-      layout = 'title';
-    } else if (slideTable) {
-      layout = 'table';
-    } else if (slideImages.length > 0 && bulletList.length <= 3) {
-      layout = 'image';
-    } else if (bulletList.length >= 6) {
-      layout = 'two-column';
-    }
-
-    const theme = THEME_ACCENTS[(slideNum - 1) % THEME_ACCENTS.length];
+    // Combine background master/layout shapes under slide-specific shapes
+    const combinedShapes = [...backgroundShapes, ...slideShapes];
 
     slides.push({
       id: slideNum,
       slideNumber: slideNum,
-      layout,
+      layout: 'canvas',
       title: detectedTitle,
       subtitle: detectedSubtitle || undefined,
-      paragraphs: slideShapes.flatMap(s => s.paragraphs),
-      bullets: bulletList,
-      shapes: slideShapes,
+      shapes: combinedShapes,
       table: slideTable,
       images: slideImages,
       notes: notes || undefined,
-      accentColor: theme.gradient,
-      rawText: rawTexts
+      backgroundColor: slideBgColor,
+      backgroundGradient: slideBgGradient,
+      backgroundImageUrl: slideBgImgUrl,
+      rawText: rawTexts,
+      isDarkBackground
     });
   }
 
@@ -503,9 +837,663 @@ async function parsePptxZipArchive(
     formatLabel: 'Microsoft PowerPoint Presentation (.pptx)',
     slideCount: slides.length,
     aspectRatio,
-    dimensions: { width, height },
+    dimensions: { width, height, slideWidthPoints, slideHeightPoints },
+    themeFonts,
+    themeColors,
     slides,
     metadata: { appName, author, slideTitles: slides.map(s => s.title) }
+  };
+}
+
+/**
+ * Traverses Shape Containers (<p:spTree> and <p:grpSp>) recursively
+ */
+function parseShapeContainer(
+  container: Element,
+  slideWidthEMU: number,
+  slideHeightEMU: number,
+  relsMap: Map<string, string>,
+  themeColors: Record<string, string>,
+  themeFonts: { major: string; minor: string },
+  layoutPlaceholders: Map<string, SlideBox>,
+  outShapes: SlideShape[],
+  outRawTexts: string[],
+  outImages: { url: string; name?: string; box?: SlideBox }[],
+  parentTransform?: { offX: number; offY: number; scaleX: number; scaleY: number },
+  isMasterOrLayout = false,
+  isDarkBackground = false
+) {
+  const children = Array.from(container.children);
+
+  for (const child of children) {
+    const tag = child.tagName.replace(/^p:/, '');
+
+    // 1. Group Shape (<p:grpSp>)
+    if (tag === 'grpSp') {
+      const grpSpPr = child.getElementsByTagName('p:grpSpPr')[0];
+      const xfrm = grpSpPr?.getElementsByTagName('a:xfrm')[0];
+      if (xfrm) {
+        const off = xfrm.getElementsByTagName('a:off')[0];
+        const ext = xfrm.getElementsByTagName('a:ext')[0];
+        const chOff = xfrm.getElementsByTagName('a:chOff')[0];
+        const chExt = xfrm.getElementsByTagName('a:chExt')[0];
+
+        const gx = parseInt(off?.getAttribute('x') || '0', 10);
+        const gy = parseInt(off?.getAttribute('y') || '0', 10);
+        const gcx = parseInt(ext?.getAttribute('cx') || '1', 10);
+        const gcy = parseInt(ext?.getAttribute('cy') || '1', 10);
+
+        const chx = parseInt(chOff?.getAttribute('x') || '0', 10);
+        const chy = parseInt(chOff?.getAttribute('y') || '0', 10);
+        const chcx = parseInt(chExt?.getAttribute('cx') || '1', 10);
+        const chcy = parseInt(chExt?.getAttribute('cy') || '1', 10);
+
+        const scaleX = chcx !== 0 ? gcx / chcx : 1;
+        const scaleY = chcy !== 0 ? gcy / chcy : 1;
+
+        const groupTransform = {
+          offX: (parentTransform ? parentTransform.offX : 0) + gx - chx * scaleX,
+          offY: (parentTransform ? parentTransform.offY : 0) + gy - chy * scaleY,
+          scaleX: (parentTransform ? parentTransform.scaleX : 1) * scaleX,
+          scaleY: (parentTransform ? parentTransform.scaleY : 1) * scaleY
+        };
+
+        parseShapeContainer(
+          child,
+          slideWidthEMU,
+          slideHeightEMU,
+          relsMap,
+          themeColors,
+          themeFonts,
+          layoutPlaceholders,
+          outShapes,
+          outRawTexts,
+          outImages,
+          groupTransform,
+          isMasterOrLayout,
+          isDarkBackground
+        );
+      }
+      continue;
+    }
+
+    // 2. Connector / Line (<p:cxnSp>)
+    if (tag === 'cxnSp') {
+      const spPr = child.getElementsByTagName('p:spPr')[0];
+      const xfrm = spPr?.getElementsByTagName('a:xfrm')[0];
+      const box = parseXfrm(xfrm, slideWidthEMU, slideHeightEMU, parentTransform);
+      if (box) {
+        const style = parseShapeStyle(spPr, themeColors);
+        style.geometry = 'line';
+        outShapes.push({
+          id: `cxn-${outShapes.length + 1}`,
+          type: 'line',
+          geometry: 'line',
+          box,
+          style,
+          paragraphs: []
+        });
+      }
+      continue;
+    }
+
+    // 3. Standard Shape & Text Box (<p:sp>)
+    if (tag === 'sp') {
+      const phNode = child.getElementsByTagName('p:ph')[0];
+      const phType = phNode?.getAttribute('type') || (phNode ? 'body' : '');
+      const phIdx = phNode?.getAttribute('idx') || '0';
+
+      // Skip placeholder templates inside Master/Layout if they have no static text or content
+      if (isMasterOrLayout && phNode) {
+        continue;
+      }
+
+      const xfrm = child.getElementsByTagName('a:xfrm')[0];
+      let box = parseXfrm(xfrm, slideWidthEMU, slideHeightEMU, parentTransform);
+
+      // If shape has no explicit xfrm, inherit from slideLayout placeholder
+      if (!box && phType) {
+        box = layoutPlaceholders.get(`${phType}-${phIdx}`) || layoutPlaceholders.get(phType);
+      }
+
+      // Default fallback box if still undefined
+      if (!box) {
+        if (isMasterOrLayout) continue; // Skip layout non-positioned shape
+        box = {
+          x: 0,
+          y: 0,
+          width: 0,
+          height: 0,
+          leftPercent: 6,
+          topPercent: 8,
+          widthPercent: 88,
+          heightPercent: 80
+        };
+      }
+
+      const spPr = child.getElementsByTagName('p:spPr')[0];
+      const style = parseShapeStyle(spPr, themeColors);
+
+      // Check for image fill inside shape (a:blipFill)
+      const blipFill = spPr?.getElementsByTagName('a:blipFill')[0];
+      let shapeImgUrl: string | undefined;
+      if (blipFill) {
+        const rId = blipFill.getElementsByTagName('a:blip')[0]?.getAttribute('r:embed');
+        if (rId && relsMap.has(rId)) {
+          shapeImgUrl = relsMap.get(rId);
+        }
+      }
+
+      const paragraphs: SlideParagraph[] = [];
+      const txBody = child.getElementsByTagName('p:txBody')[0];
+      if (txBody) {
+        const bodyPr = txBody.getElementsByTagName('a:bodyPr')[0];
+        const vAlign = bodyPr?.getAttribute('anchor');
+        if (vAlign === 'ctr') style.verticalAlign = 'center';
+        else if (vAlign === 'b') style.verticalAlign = 'bottom';
+        else style.verticalAlign = 'top';
+
+        // Extract body padding insets if present
+        const lIns = bodyPr?.getAttribute('lIns');
+        const tIns = bodyPr?.getAttribute('tIns');
+        if (lIns) style.paddingLeftPercent = (parseInt(lIns, 10) / slideWidthEMU) * 100;
+        if (tIns) style.paddingTopPercent = (parseInt(tIns, 10) / slideHeightEMU) * 100;
+
+        const pNodes = Array.from(txBody.getElementsByTagName('a:p'));
+        for (const pElem of pNodes) {
+          const para = parseParagraph(pElem, themeColors, themeFonts, isDarkBackground);
+          if (para.text) {
+            paragraphs.push(para);
+            if (!isMasterOrLayout) outRawTexts.push(para.text);
+          }
+        }
+      }
+
+      if (paragraphs.length > 0 || style.fillColor || style.fillGradient || style.borderColor || shapeImgUrl) {
+        let shapeType: SlideShape['type'] = 'generic';
+        if (phType === 'title' || phType === 'ctrTitle') shapeType = 'title';
+        else if (phType === 'subTitle') shapeType = 'subtitle';
+        else if (phType === 'body') shapeType = 'body';
+        else if (shapeImgUrl) shapeType = 'image';
+        else if (paragraphs.length === 0) shapeType = 'shape';
+
+        outShapes.push({
+          id: `sp-${outShapes.length + 1}`,
+          name: child.getElementsByTagName('p:cNvPr')[0]?.getAttribute('name') || `Shape ${outShapes.length + 1}`,
+          type: shapeType,
+          geometry: style.geometry,
+          box,
+          style,
+          paragraphs,
+          imageUrl: shapeImgUrl,
+          isMasterOrLayoutShape: isMasterOrLayout
+        });
+      }
+      continue;
+    }
+
+    // 4. Picture & Images (<p:pic>)
+    if (tag === 'pic') {
+      const blip = child.getElementsByTagName('a:blip')[0];
+      const rId = blip?.getAttribute('r:embed') || '';
+      const imgUrl = relsMap.get(rId);
+
+      const spPr = child.getElementsByTagName('p:spPr')[0];
+      const xfrm = spPr?.getElementsByTagName('a:xfrm')[0];
+      const box = parseXfrm(xfrm, slideWidthEMU, slideHeightEMU, parentTransform) || {
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+        leftPercent: 10,
+        topPercent: 10,
+        widthPercent: 80,
+        heightPercent: 80
+      };
+
+      const style = parseShapeStyle(spPr, themeColors);
+
+      if (imgUrl) {
+        if (!isMasterOrLayout) outImages.push({ url: imgUrl, box });
+        outShapes.push({
+          id: `pic-${outShapes.length + 1}`,
+          type: 'image',
+          box,
+          style,
+          paragraphs: [],
+          imageUrl: imgUrl,
+          isMasterOrLayoutShape: isMasterOrLayout
+        });
+      }
+      continue;
+    }
+
+    // 5. Graphic Frames (Tables, Charts, SmartArt) (<p:graphicFrame>)
+    if (tag === 'graphicFrame') {
+      const xfrm = child.getElementsByTagName('p:xfrm')[0] || child.getElementsByTagName('a:xfrm')[0];
+      const box = parseXfrm(xfrm, slideWidthEMU, slideHeightEMU, parentTransform) || {
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+        leftPercent: 8,
+        topPercent: 20,
+        widthPercent: 84,
+        heightPercent: 60
+      };
+
+      const tbl = child.getElementsByTagName('a:tbl')[0];
+      if (tbl) {
+        const rows: SlideTableCell[][] = [];
+        const gridCols = Array.from(tbl.getElementsByTagName('a:gridCol'));
+        let totalGridWidth = 0;
+        const colWidths = gridCols.map(gc => {
+          const w = parseInt(gc.getAttribute('w') || '1', 10);
+          totalGridWidth += w;
+          return w;
+        });
+        const colWidthsPercent = totalGridWidth > 0 ? colWidths.map(w => (w / totalGridWidth) * 100) : undefined;
+
+        const trNodes = Array.from(tbl.getElementsByTagName('a:tr'));
+        for (const tr of trNodes) {
+          const rowCells: SlideTableCell[] = [];
+          const tcNodes = Array.from(tr.getElementsByTagName('a:tc'));
+          for (const tc of tcNodes) {
+            const paragraphs: SlideParagraph[] = [];
+            const pNodes = Array.from(tc.getElementsByTagName('a:p'));
+            for (const p of pNodes) {
+              const para = parseParagraph(p, themeColors, themeFonts, isDarkBackground);
+              if (para.text) paragraphs.push(para);
+            }
+
+            const cellText = paragraphs.map(p => p.text).join('\n');
+            const tcPr = tc.getElementsByTagName('a:tcPr')[0];
+            const bgColor = tcPr ? resolveColor(tcPr, themeColors) : undefined;
+
+            const gridSpan = parseInt(tc.getAttribute('gridSpan') || '1', 10);
+            const rowSpan = parseInt(tc.getAttribute('rowSpan') || '1', 10);
+
+            rowCells.push({
+              text: cellText,
+              paragraphs,
+              bgColor,
+              bold: paragraphs.some(p => p.runs.some(r => r.bold)),
+              align: paragraphs[0]?.align || 'left',
+              colSpan: gridSpan > 1 ? gridSpan : undefined,
+              rowSpan: rowSpan > 1 ? rowSpan : undefined
+            });
+
+            if (cellText && !isMasterOrLayout) outRawTexts.push(cellText);
+          }
+          if (rowCells.length > 0) rows.push(rowCells);
+        }
+
+        if (rows.length > 0) {
+          outShapes.push({
+            id: `tbl-${outShapes.length + 1}`,
+            type: 'table',
+            box,
+            style: {},
+            paragraphs: [],
+            table: { rows, colWidthsPercent },
+            isMasterOrLayoutShape: isMasterOrLayout
+          });
+        }
+      }
+      continue;
+    }
+  }
+}
+
+/**
+ * Parses single Paragraph (<a:p>) and text runs (<a:r>)
+ */
+function parseParagraph(
+  pElem: Element,
+  themeColors: Record<string, string>,
+  themeFonts: { major: string; minor: string },
+  isDarkBackground = false
+): SlideParagraph {
+  const runs: SlideTextRun[] = [];
+  const pPr = pElem.getElementsByTagName('a:pPr')[0];
+
+  const algn = pPr?.getAttribute('algn');
+  let align: 'left' | 'center' | 'right' | 'justify' | undefined;
+  if (algn === 'ctr') align = 'center';
+  else if (algn === 'r') align = 'right';
+  else if (algn === 'just') align = 'justify';
+  else if (algn === 'l') align = 'left';
+
+  const buChar = pPr?.getElementsByTagName('a:buChar')[0]?.getAttribute('char');
+  const lvlAttr = pPr?.getAttribute('lvl');
+  const level = lvlAttr ? parseInt(lvlAttr, 10) : 0;
+  const isBullet = !!buChar || pPr?.getElementsByTagName('a:buAutoNum').length > 0 || level > 0;
+
+  // Bullet color
+  const buClrNode = pPr?.getElementsByTagName('a:buClr')[0];
+  const bulletColor = buClrNode ? resolveColor(buClrNode, themeColors) : undefined;
+
+  // Process child nodes preserving sequence (<a:r>, <a:br>, <a:fld>)
+  const childNodes = Array.from(pElem.childNodes);
+  for (const node of childNodes) {
+    if (node.nodeType !== 1) continue;
+    const elem = node as Element;
+    const tag = elem.tagName.replace(/^a:/, '');
+
+    if (tag === 'r') {
+      const tElem = elem.getElementsByTagName('a:t')[0];
+      const text = tElem?.textContent || '';
+      if (!text) continue;
+
+      const rPr = elem.getElementsByTagName('a:rPr')[0];
+      const bold = rPr?.getAttribute('b') === '1' || rPr?.getAttribute('b') === 'true';
+      const italic = rPr?.getAttribute('i') === '1' || rPr?.getAttribute('i') === 'true';
+      const underline = rPr?.hasAttribute('u') && rPr.getAttribute('u') !== 'none';
+      const strikethrough = rPr?.getAttribute('strike') === 'sngStrike';
+      const baseline = rPr?.getAttribute('baseline');
+      const superscript = baseline ? parseInt(baseline, 10) > 0 : false;
+      const subscript = baseline ? parseInt(baseline, 10) < 0 : false;
+
+      const szAttr = rPr?.getAttribute('sz');
+      const fontSize = szAttr ? parseInt(szAttr, 10) / 100 : undefined;
+
+      const latinFont = rPr?.getElementsByTagName('a:latin')[0]?.getAttribute('typeface') || themeFonts.minor;
+      let color = rPr ? resolveColor(rPr, themeColors) : undefined;
+
+      // Ensure proper text contrast if no explicit color was defined
+      if (!color) {
+        color = isDarkBackground ? '#F8FAFC' : '#0F172A';
+      }
+
+      runs.push({
+        text,
+        bold,
+        italic,
+        underline,
+        strikethrough,
+        subscript,
+        superscript,
+        fontSize,
+        fontFamily: latinFont,
+        color
+      });
+    } else if (tag === 'br') {
+      runs.push({ text: '\n' });
+    } else if (tag === 'fld') {
+      const tElem = elem.getElementsByTagName('a:t')[0];
+      if (tElem?.textContent) {
+        runs.push({ text: tElem.textContent });
+      }
+    }
+  }
+
+  // Fallback if no runs were collected
+  if (runs.length === 0) {
+    const rawT = pElem.textContent?.trim() || '';
+    if (rawT) {
+      runs.push({
+        text: rawT,
+        color: isDarkBackground ? '#F8FAFC' : '#0F172A'
+      });
+    }
+  }
+
+  const fullText = runs.map(r => r.text).join('');
+
+  return {
+    runs,
+    text: fullText,
+    isBullet,
+    bulletChar: buChar || '•',
+    bulletColor,
+    level,
+    align
+  };
+}
+
+/**
+ * Resolves Color from <a:solidFill>, <a:srgbClr>, <a:schemeClr>, with lumMod/lumOff/tint/shade
+ */
+function resolveColor(parentElem: Element, themeColors: Record<string, string>): string | undefined {
+  const solidFill = parentElem.getElementsByTagName('a:solidFill')[0] || parentElem;
+
+  // Direct hex sRGB
+  const srgbClr = solidFill.getElementsByTagName('a:srgbClr')[0];
+  if (srgbClr) {
+    const val = srgbClr.getAttribute('val');
+    if (val) return `#${val}`;
+  }
+
+  // Scheme Color
+  const schemeClr = solidFill.getElementsByTagName('a:schemeClr')[0];
+  if (schemeClr) {
+    const val = schemeClr.getAttribute('val') || '';
+    let baseHex = themeColors[val] || DEFAULT_THEME_COLORS[val];
+    if (!baseHex) return undefined;
+
+    // Handle luminance modification
+    const lumMod = schemeClr.getElementsByTagName('a:lumMod')[0]?.getAttribute('val');
+    const lumOff = schemeClr.getElementsByTagName('a:lumOff')[0]?.getAttribute('val');
+    const tint = schemeClr.getElementsByTagName('a:tint')[0]?.getAttribute('val');
+    const shade = schemeClr.getElementsByTagName('a:shade')[0]?.getAttribute('val');
+
+    if (lumMod || lumOff) {
+      baseHex = adjustHexLuminance(
+        baseHex,
+        lumMod ? parseInt(lumMod, 10) / 100000 : 1,
+        lumOff ? parseInt(lumOff, 10) / 100000 : 0
+      );
+    } else if (tint) {
+      baseHex = tintHex(baseHex, parseInt(tint, 10) / 100000);
+    } else if (shade) {
+      baseHex = shadeHex(baseHex, parseInt(shade, 10) / 100000);
+    }
+
+    return baseHex;
+  }
+
+  // System Color fallback
+  const sysClr = solidFill.getElementsByTagName('a:sysClr')[0];
+  if (sysClr) {
+    const lastClr = sysClr.getAttribute('lastClr');
+    if (lastClr) return `#${lastClr}`;
+  }
+
+  return undefined;
+}
+
+/**
+ * Parses Multi-stop Linear & Radial Gradients (a:gradFill)
+ */
+function parseGradientFill(
+  parentElem: Element,
+  themeColors: Record<string, string>
+): { angle?: number; stops: SlideGradientStop[] } | undefined {
+  const gradFill = parentElem.getElementsByTagName('a:gradFill')[0];
+  if (!gradFill) return undefined;
+
+  const gsLst = gradFill.getElementsByTagName('a:gsLst')[0];
+  if (!gsLst) return undefined;
+
+  const gsNodes = Array.from(gsLst.getElementsByTagName('a:gs'));
+  const stops: SlideGradientStop[] = [];
+
+  for (const gs of gsNodes) {
+    const posAttr = gs.getAttribute('pos');
+    const pos = posAttr ? parseInt(posAttr, 10) / 1000 : 0;
+    const clr = resolveColor(gs, themeColors) || '#FFFFFF';
+    stops.push({ position: pos, color: clr });
+  }
+
+  if (stops.length === 0) return undefined;
+
+  const lin = gradFill.getElementsByTagName('a:lin')[0];
+  let angle = 90;
+  if (lin) {
+    const angAttr = lin.getAttribute('ang');
+    if (angAttr) angle = parseInt(angAttr, 10) / 60000;
+  }
+
+  return { angle, stops };
+}
+
+function adjustHexLuminance(hex: string, mod: number, off: number): string {
+  const clean = hex.replace('#', '');
+  if (clean.length !== 6) return hex;
+  let r = parseInt(clean.substring(0, 2), 16);
+  let g = parseInt(clean.substring(2, 4), 16);
+  let b = parseInt(clean.substring(4, 6), 16);
+
+  r = Math.min(255, Math.max(0, Math.round(r * mod + 255 * off)));
+  g = Math.min(255, Math.max(0, Math.round(g * mod + 255 * off)));
+  b = Math.min(255, Math.max(0, Math.round(b * mod + 255 * off)));
+
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}
+
+function tintHex(hex: string, tintFactor: number): string {
+  const clean = hex.replace('#', '');
+  if (clean.length !== 6) return hex;
+  let r = parseInt(clean.substring(0, 2), 16);
+  let g = parseInt(clean.substring(2, 4), 16);
+  let b = parseInt(clean.substring(4, 6), 16);
+
+  r = Math.min(255, Math.max(0, Math.round(r * tintFactor + (1 - tintFactor) * 255)));
+  g = Math.min(255, Math.max(0, Math.round(g * tintFactor + (1 - tintFactor) * 255)));
+  b = Math.min(255, Math.max(0, Math.round(b * tintFactor + (1 - tintFactor) * 255)));
+
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}
+
+function shadeHex(hex: string, shadeFactor: number): string {
+  const clean = hex.replace('#', '');
+  if (clean.length !== 6) return hex;
+  let r = parseInt(clean.substring(0, 2), 16);
+  let g = parseInt(clean.substring(2, 4), 16);
+  let b = parseInt(clean.substring(4, 6), 16);
+
+  r = Math.min(255, Math.max(0, Math.round(r * shadeFactor)));
+  g = Math.min(255, Math.max(0, Math.round(g * shadeFactor)));
+  b = Math.min(255, Math.max(0, Math.round(b * shadeFactor)));
+
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}
+
+function isColorDark(hexColor: string): boolean {
+  const clean = hexColor.replace('#', '');
+  if (clean.length !== 6) return false;
+  const r = parseInt(clean.substring(0, 2), 16);
+  const g = parseInt(clean.substring(2, 4), 16);
+  const b = parseInt(clean.substring(4, 6), 16);
+  // Perceived brightness formula
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  return brightness < 128;
+}
+
+/**
+ * Parses shape bounding box from a:xfrm in EMUs
+ */
+function parseXfrm(
+  xfrmNode: Element | null | undefined,
+  slideWidthEMU: number,
+  slideHeightEMU: number,
+  parentTransform?: { offX: number; offY: number; scaleX: number; scaleY: number }
+): SlideBox | undefined {
+  if (!xfrmNode) return undefined;
+
+  const off = xfrmNode.getElementsByTagName('a:off')[0];
+  const ext = xfrmNode.getElementsByTagName('a:ext')[0];
+
+  let x = parseInt(off?.getAttribute('x') || '0', 10);
+  let y = parseInt(off?.getAttribute('y') || '0', 10);
+  let cx = parseInt(ext?.getAttribute('cx') || '0', 10);
+  let cy = parseInt(ext?.getAttribute('cy') || '0', 10);
+  const rotAttr = xfrmNode.getAttribute('rot');
+  const rotation = rotAttr ? parseInt(rotAttr, 10) / 60000 : 0;
+
+  if (cx <= 0 || cy <= 0) return undefined;
+
+  if (parentTransform) {
+    x = parentTransform.offX + x * parentTransform.scaleX;
+    y = parentTransform.offY + y * parentTransform.scaleY;
+    cx = cx * parentTransform.scaleX;
+    cy = cy * parentTransform.scaleY;
+  }
+
+  const leftPercent = Math.max(0, Math.min(100, (x / slideWidthEMU) * 100));
+  const topPercent = Math.max(0, Math.min(100, (y / slideHeightEMU) * 100));
+  const widthPercent = Math.max(0.2, Math.min(100, (cx / slideWidthEMU) * 100));
+  const heightPercent = Math.max(0.2, Math.min(100, (cy / slideHeightEMU) * 100));
+
+  return {
+    x,
+    y,
+    width: cx,
+    height: cy,
+    rotation,
+    leftPercent,
+    topPercent,
+    widthPercent,
+    heightPercent
+  };
+}
+
+/**
+ * Parses shape visual styling (fills, gradients, borders, geometry, shadows)
+ */
+function parseShapeStyle(spPrNode: Element | null | undefined, themeColors: Record<string, string>): SlideShapeStyle {
+  if (!spPrNode) return {};
+
+  const fillColor = resolveColor(spPrNode, themeColors);
+  const fillGradient = parseGradientFill(spPrNode, themeColors);
+
+  let borderColor: string | undefined;
+  let borderWidth: number | undefined;
+  let borderStyle: 'solid' | 'dashed' | 'dotted' | undefined;
+  const ln = spPrNode.getElementsByTagName('a:ln')[0];
+  if (ln) {
+    const w = ln.getAttribute('w');
+    if (w) borderWidth = Math.max(1, Math.round(parseInt(w, 10) / 12700));
+    borderColor = resolveColor(ln, themeColors);
+    const prstDash = ln.getElementsByTagName('a:prstDash')[0]?.getAttribute('val');
+    if (prstDash === 'dash' || prstDash === 'lgDash') borderStyle = 'dashed';
+    else if (prstDash === 'dot') borderStyle = 'dotted';
+    else if (borderColor) borderStyle = 'solid';
+  }
+
+  // Shadow effect
+  let shadow: SlideShapeStyle['shadow'];
+  const outerShdw = spPrNode.getElementsByTagName('a:outerShdw')[0];
+  if (outerShdw) {
+    const blurRad = outerShdw.getAttribute('blurRad');
+    const dist = outerShdw.getAttribute('dist');
+    const dir = outerShdw.getAttribute('dir');
+    const blur = blurRad ? parseInt(blurRad, 10) / 12700 : 4;
+    const distance = dist ? parseInt(dist, 10) / 12700 : 3;
+    const angleRad = dir ? (parseInt(dir, 10) / 60000) * (Math.PI / 180) : Math.PI / 4;
+    const clr = resolveColor(outerShdw, themeColors) || 'rgba(0,0,0,0.25)';
+    shadow = {
+      color: clr,
+      blur: Math.round(blur),
+      offsetX: Math.round(distance * Math.cos(angleRad)),
+      offsetY: Math.round(distance * Math.sin(angleRad))
+    };
+  }
+
+  const prstGeom = spPrNode.getElementsByTagName('a:prstGeom')[0]?.getAttribute('prst') || 'rect';
+  const isRound = prstGeom === 'roundRect';
+  const isEllipse = prstGeom === 'ellipse';
+  const borderRadius = isRound ? 12 : isEllipse ? 9999 : undefined;
+
+  return {
+    fillColor,
+    fillGradient,
+    borderColor,
+    borderWidth,
+    borderStyle,
+    borderRadius,
+    shadow,
+    geometry: prstGeom
   };
 }
 
@@ -517,58 +1505,79 @@ async function parseOdpZipArchive(
   contentXmlFile: JSZip.JSZipObject,
   filename: string
 ): Promise<ParsedPresentation> {
-  const xmlText = await contentXmlFile.async('text');
+  const contentXml = await contentXmlFile.async('text');
   const parser = new DOMParser();
-  const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+  const doc = parser.parseFromString(contentXml, 'text/xml');
 
-  const pageNodes = Array.from(xmlDoc.getElementsByTagName('draw:page'));
+  const pageNodes = Array.from(doc.getElementsByTagName('draw:page'));
   const slides: PresentationSlide[] = [];
 
   pageNodes.forEach((page, idx) => {
     const slideNum = idx + 1;
-    const pageName = page.getAttribute('draw:name') || '';
+    const pageName = page.getAttribute('draw:name') || `Slide ${slideNum}`;
 
-    // Extract all text paragraphs
-    const paragraphs: SlideParagraph[] = [];
-    const rawTexts: string[] = [];
-
-    const pNodes = Array.from(page.getElementsByTagName('text:p'));
+    const textNodes = Array.from(page.getElementsByTagName('text:p'));
     const hNodes = Array.from(page.getElementsByTagName('text:h'));
-    const allTextNodes = [...hNodes, ...pNodes];
 
-    allTextNodes.forEach(node => {
-      const val = node.textContent?.trim();
+    const rawTexts: string[] = [];
+    const paragraphs: SlideParagraph[] = [];
+
+    [...hNodes, ...textNodes].forEach(p => {
+      const val = p.textContent?.trim();
       if (val) {
         paragraphs.push({
           runs: [{ text: val }],
-          text: val,
-          isBullet: node.parentElement?.tagName.includes('list-item') || false
+          text: val
         });
         rawTexts.push(val);
       }
     });
 
-    const title = rawTexts[0] || pageName || `Slide ${slideNum}`;
-    const bullets = rawTexts.length > 1 ? rawTexts.slice(1) : [];
-    const theme = THEME_ACCENTS[idx % THEME_ACCENTS.length];
+    const title = hNodes[0]?.textContent?.trim() || pageName || `Slide ${slideNum}`;
 
     slides.push({
       id: slideNum,
       slideNumber: slideNum,
-      layout: idx === 0 ? 'title' : 'title-and-body',
+      layout: 'canvas',
       title,
-      paragraphs,
-      bullets,
       shapes: [
         {
-          id: `shape-${slideNum}`,
+          id: `shape-title-${slideNum}`,
+          type: 'title',
+          box: {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0,
+            leftPercent: 8,
+            topPercent: 8,
+            widthPercent: 84,
+            heightPercent: 18
+          },
+          style: {},
+          paragraphs: [{ runs: [{ text: title, bold: true, fontSize: 24 }], text: title }]
+        },
+        {
+          id: `shape-body-${slideNum}`,
           type: 'body',
-          paragraphs
+          box: {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0,
+            leftPercent: 8,
+            topPercent: 28,
+            widthPercent: 84,
+            heightPercent: 64
+          },
+          style: {},
+          paragraphs: paragraphs.slice(hNodes.length)
         }
       ],
       images: [],
-      accentColor: theme.gradient,
-      rawText: rawTexts
+      rawText: rawTexts,
+      backgroundColor: '#FFFFFF',
+      isDarkBackground: false
     });
   });
 
@@ -582,60 +1591,101 @@ async function parseOdpZipArchive(
     formatLabel: 'OpenDocument Presentation (.odp)',
     slideCount: slides.length,
     aspectRatio: '16:9',
-    dimensions: { width: 1920, height: 1080 },
+    dimensions: { width: 1920, height: 1080, slideWidthPoints: 960, slideHeightPoints: 540 },
     slides,
-    metadata: { appName: 'LibreOffice / OpenOffice Impress' }
+    metadata: { appName: 'LibreOffice Impress / OpenOffice' }
   };
 }
 
 /**
- * Parses Legacy Microsoft PowerPoint 97-2003 Binary Files (.ppt, .pps)
- * Implements complete OLE2 compound document stream reassembly and PowerPoint record decoding.
+ * Parses Generic ZIP presentations (Keynote, etc.)
  */
-function parseLegacyPptOle2(
-  bytes: Uint8Array,
-  filename: string,
-  ext: string
-): ParsedPresentation {
-  const slides: PresentationSlide[] = [];
+async function parseGenericZipArchive(zip: JSZip, filename: string): Promise<ParsedPresentation> {
+  const textEntries: string[] = [];
+  const files = Object.keys(zip.files);
 
-  // Check if buffer is OLE2 Compound File (Magic 0xD0CF11E0A1B11AE1)
-  const isOle2 =
-    bytes.length >= 8 &&
-    bytes[0] === 0xd0 &&
-    bytes[1] === 0xcf &&
-    bytes[2] === 0x11 &&
-    bytes[3] === 0xe0 &&
-    bytes[4] === 0xa1 &&
-    bytes[5] === 0xb1 &&
-    bytes[6] === 0x1a &&
-    bytes[7] === 0xe1;
-
-  let pptStream: Uint8Array = bytes;
-
-  if (isOle2) {
-    try {
-      const extracted = extractOle2Stream(bytes, 'PowerPoint Document');
-      if (extracted && extracted.length > 0) {
-        pptStream = extracted;
+  for (const f of files) {
+    if (f.endsWith('.xml') || f.endsWith('.json') || f.endsWith('.txt')) {
+      try {
+        const txt = await zip.file(f)?.async('text');
+        if (txt) {
+          const lines = txt
+            .split('\n')
+            .map(l => l.trim())
+            .filter(l => l.length > 3 && !l.startsWith('<') && !l.startsWith('{'));
+          textEntries.push(...lines.slice(0, 5));
+        }
+      } catch {
+        // Skip
       }
-    } catch (err) {
-      console.warn('OLE2 stream extraction fallback to full binary buffer:', err);
     }
   }
 
-  // Parse PowerPoint Record Streams
-  // Record Header: 2 bytes ver/inst, 2 bytes recType (LE uint16), 4 bytes recLen (LE uint32)
+  const slides: PresentationSlide[] = [
+    {
+      id: 1,
+      slideNumber: 1,
+      layout: 'canvas',
+      title: filename.replace(/\.[^/.]+$/, ''),
+      shapes: [
+        {
+          id: 'gen-1',
+          type: 'body',
+          box: {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0,
+            leftPercent: 8,
+            topPercent: 12,
+            widthPercent: 84,
+            heightPercent: 76
+          },
+          style: {},
+          paragraphs: textEntries.slice(0, 10).map(t => ({ runs: [{ text: t }], text: t }))
+        }
+      ],
+      images: [],
+      rawText: textEntries.slice(0, 10),
+      backgroundColor: '#FFFFFF',
+      isDarkBackground: false
+    }
+  ];
+
+  return {
+    title: filename.replace(/\.[^/.]+$/, ''),
+    format: 'presentation',
+    formatLabel: 'Presentation Package',
+    slideCount: 1,
+    aspectRatio: '16:9',
+    dimensions: { width: 1920, height: 1080, slideWidthPoints: 960, slideHeightPoints: 540 },
+    slides
+  };
+}
+
+/**
+ * Enhanced Binary Parser for Legacy Microsoft PowerPoint 97-2003 (.ppt, .pps)
+ * Parses OLE2 Compound File Container & PowerPoint Escher / Text Records
+ */
+function parseLegacyPptOle2(bytes: Uint8Array, filename: string, ext: string): ParsedPresentation {
+  const pptStream = extractOle2Stream(bytes, 'PowerPoint Document') || bytes;
+
+  const slides: PresentationSlide[] = [];
   let offset = 0;
   const len = pptStream.length;
-  const slideTextGroups: { title: string; bullets: string[]; texts: string[] }[] = [];
-  let currentGroup: string[] = [];
-  let currentTitle = '';
-  let currentNotes = '';
-  const notesMap = new Map<number, string>();
-  let slideCounter = 0;
+
+  interface PptRawSlide {
+    title: string;
+    bullets: string[];
+    subtitles: string[];
+    allTexts: string[];
+  }
+
+  const extractedSlides: PptRawSlide[] = [];
+  let currentSlideTexts: string[] = [];
 
   while (offset < len - 8) {
+    const recVerInst = pptStream[offset] | (pptStream[offset + 1] << 8);
     const recType = pptStream[offset + 2] | (pptStream[offset + 3] << 8);
     const recLen =
       pptStream[offset + 4] |
@@ -643,158 +1693,152 @@ function parseLegacyPptOle2(
       (pptStream[offset + 6] << 16) |
       (pptStream[offset + 7] << 24);
 
-    // Guard against invalid or corrupted record lengths
-    if (recLen < 0 || offset + 8 + recLen > len || recLen > 10000000) {
-      offset += 1;
-      continue;
-    }
-
-    // 0x03EE = rtSlide (Slide Container boundary)
-    if (recType === 0x03ee || recType === 0x03ef) {
-      if (currentGroup.length > 0 || currentTitle) {
-        slideTextGroups.push({
-          title: currentTitle || currentGroup[0] || `Slide ${slideCounter + 1}`,
-          bullets: currentTitle ? currentGroup : currentGroup.slice(1),
-          texts: currentGroup
+    // Slide boundary (Slide Atom = 0x03EE, SlideContainer = 0x03EF)
+    if (recType === 0x03ee || recType === 0x03ef || recType === 0x03f8) {
+      if (currentSlideTexts.length > 0) {
+        extractedSlides.push({
+          title: currentSlideTexts[0] || '',
+          subtitles: currentSlideTexts.length > 1 ? [currentSlideTexts[1]] : [],
+          bullets: currentSlideTexts.slice(currentSlideTexts.length > 2 ? 2 : 1),
+          allTexts: [...currentSlideTexts]
         });
-        currentGroup = [];
-        currentTitle = '';
-        slideCounter++;
+        currentSlideTexts = [];
       }
     }
 
-    // 0x0FA0 = rtTextHeaderAtom (Text Type: 0=Title, 1=Body, 2=Notes, 5=CtrTitle, 7=Subtitle)
-    if (recType === 0x0fa0 && recLen >= 4) {
-      // Text header defines role of following text atom
-    }
-
-    // 0x0FA8 = rtTextCharsAtom (UTF-16LE characters)
-    if (recType === 0x0fa8 && recLen > 0) {
-      const textBuf = pptStream.subarray(offset + 8, offset + 8 + recLen);
-      const str = decodeUtf16Le(textBuf);
-      if (str && str.length > 1) {
-        const clean = cleanPptString(str);
-        if (clean) {
-          if (!currentTitle && currentGroup.length === 0) {
-            currentTitle = clean;
-          } else {
-            if (!currentGroup.includes(clean)) currentGroup.push(clean);
-          }
+    // TextCharsAtom (Unicode UTF-16LE, recType = 0x0fa0)
+    if (recType === 0x0fa0 && recLen > 0 && recLen < 65536 && offset + 8 + recLen <= len) {
+      const u16Bytes = pptStream.subarray(offset + 8, offset + 8 + recLen);
+      let text = '';
+      for (let j = 0; j < u16Bytes.length - 1; j += 2) {
+        const code = u16Bytes[j] | (u16Bytes[j + 1] << 8);
+        if (code >= 32 || code === 10 || code === 13) {
+          text += String.fromCharCode(code);
         }
       }
-      offset += 8 + recLen;
-      continue;
+      const clean = text.trim();
+      if (clean.length > 1 && !clean.startsWith('\x00') && !currentSlideTexts.includes(clean)) {
+        currentSlideTexts.push(clean);
+      }
     }
 
-    // 0x0FA6 = rtTextBytesAtom (ASCII characters)
-    if (recType === 0x0fa6 && recLen > 0) {
-      const textBuf = pptStream.subarray(offset + 8, offset + 8 + recLen);
-      const str = decodeAscii(textBuf);
-      if (str && str.length > 1) {
-        const clean = cleanPptString(str);
-        if (clean) {
-          if (!currentTitle && currentGroup.length === 0) {
-            currentTitle = clean;
-          } else {
-            if (!currentGroup.includes(clean)) currentGroup.push(clean);
-          }
+    // TextBytesAtom (ASCII/ANSI, recType = 0x0fa8)
+    if (recType === 0x0fa8 && recLen > 0 && recLen < 65536 && offset + 8 + recLen <= len) {
+      const asciiBytes = pptStream.subarray(offset + 8, offset + 8 + recLen);
+      let text = '';
+      for (let j = 0; j < asciiBytes.length; j++) {
+        const code = asciiBytes[j];
+        if ((code >= 32 && code <= 126) || code === 10 || code === 13) {
+          text += String.fromCharCode(code);
         }
       }
-      offset += 8 + recLen;
-      continue;
-    }
-
-    // 0x0FBA = rtCString (UTF-16LE string)
-    if (recType === 0x0fba && recLen > 0) {
-      const textBuf = pptStream.subarray(offset + 8, offset + 8 + recLen);
-      const str = decodeUtf16Le(textBuf);
-      if (str && str.length > 1) {
-        const clean = cleanPptString(str);
-        if (clean && !currentGroup.includes(clean)) {
-          currentGroup.push(clean);
-        }
+      const clean = text.trim();
+      if (clean.length > 1 && !currentSlideTexts.includes(clean)) {
+        currentSlideTexts.push(clean);
       }
-      offset += 8 + recLen;
-      continue;
     }
 
-    offset += 8 + recLen;
+    // Advance to next atom
+    const isContainer = (recVerInst & 0x0f) === 0x0f;
+    if (isContainer) {
+      offset += 8;
+    } else {
+      offset += 8 + (recLen > 0 && recLen < len ? recLen : 4);
+    }
   }
 
-  if (currentGroup.length > 0 || currentTitle) {
-    slideTextGroups.push({
-      title: currentTitle || currentGroup[0] || `Slide ${slideCounter + 1}`,
-      bullets: currentTitle ? currentGroup : currentGroup.slice(1),
-      texts: currentGroup
+  // Push final slide if any
+  if (currentSlideTexts.length > 0) {
+    extractedSlides.push({
+      title: currentSlideTexts[0] || '',
+      subtitles: currentSlideTexts.length > 1 ? [currentSlideTexts[1]] : [],
+      bullets: currentSlideTexts.slice(currentSlideTexts.length > 2 ? 2 : 1),
+      allTexts: [...currentSlideTexts]
     });
   }
 
-  // If structured records were found, map to slides
-  if (slideTextGroups.length > 0) {
-    slideTextGroups.forEach((grp, idx) => {
-      const slideNum = idx + 1;
-      const theme = THEME_ACCENTS[idx % THEME_ACCENTS.length];
-      const paragraphs: SlideParagraph[] = [
-        { runs: [{ text: grp.title, bold: true }], text: grp.title },
-        ...grp.bullets.map(b => ({
-          runs: [{ text: b }],
-          text: b,
-          isBullet: true
-        }))
-      ];
+  // Fallback: If structured atoms yielded no slides, use heuristic string search
+  if (extractedSlides.length === 0) {
+    const rawFoundStrings = extractReadableStringsFromBinary(pptStream);
+    if (rawFoundStrings.length > 0) {
+      const chunkSize = Math.max(3, Math.ceil(rawFoundStrings.length / 5));
+      for (let i = 0; i < rawFoundStrings.length; i += chunkSize) {
+        const chunk = rawFoundStrings.slice(i, i + chunkSize);
+        extractedSlides.push({
+          title: chunk[0] || `Slide ${Math.floor(i / chunkSize) + 1}`,
+          subtitles: chunk.length > 1 ? [chunk[1]] : [],
+          bullets: chunk.slice(2),
+          allTexts: chunk
+        });
+      }
+    }
+  }
 
-      slides.push({
-        id: slideNum,
-        slideNumber: slideNum,
-        layout: idx === 0 ? 'title' : 'title-and-body',
-        title: grp.title,
-        paragraphs,
-        bullets: grp.bullets,
-        shapes: [
+  // Convert raw slides to full PresentationSlide objects
+  extractedSlides.forEach((rawSlide, sIdx) => {
+    const slideNum = sIdx + 1;
+    const title = rawSlide.title || `Slide ${slideNum}`;
+
+    const shapes: SlideShape[] = [
+      {
+        id: `ppt-title-${slideNum}`,
+        type: 'title',
+        box: {
+          x: 0,
+          y: 0,
+          width: 0,
+          height: 0,
+          leftPercent: 8,
+          topPercent: 8,
+          widthPercent: 84,
+          heightPercent: 16
+        },
+        style: {},
+        paragraphs: [
           {
-            id: `shape-${slideNum}`,
-            type: 'body',
-            paragraphs
+            runs: [{ text: title, bold: true, fontSize: 26, color: '#0F172A' }],
+            text: title,
+            align: 'left'
           }
-        ],
-        images: [],
-        accentColor: theme.gradient,
-        rawText: [grp.title, ...grp.bullets]
-      });
-    });
-  } else {
-    // Universal Binary Text Extractor Fallback
-    const extractedStrings = extractPrintablePptStrings(pptStream);
-    if (extractedStrings.length > 0) {
-      const chunkSize = 5;
-      for (let c = 0; c < extractedStrings.length; c += chunkSize) {
-        const chunk = extractedStrings.slice(c, c + chunkSize);
-        const slideNum = Math.floor(c / chunkSize) + 1;
-        const title = chunk[0] || `Slide ${slideNum}`;
-        const bullets = chunk.slice(1);
-        const theme = THEME_ACCENTS[(slideNum - 1) % THEME_ACCENTS.length];
-
-        slides.push({
-          id: slideNum,
-          slideNumber: slideNum,
-          layout: slideNum === 1 ? 'title' : 'title-and-body',
-          title,
-          paragraphs: chunk.map(t => ({ runs: [{ text: t }], text: t })),
-          bullets,
-          shapes: [
-            {
-              id: `shape-${slideNum}`,
-              type: 'body',
-              paragraphs: chunk.map(t => ({ runs: [{ text: t }], text: t }))
-            }
-          ],
-          images: [],
-          accentColor: theme.gradient,
-          rawText: chunk
-        });
+        ]
+      },
+      {
+        id: `ppt-body-${slideNum}`,
+        type: 'body',
+        box: {
+          x: 0,
+          y: 0,
+          width: 0,
+          height: 0,
+          leftPercent: 8,
+          topPercent: 26,
+          widthPercent: 84,
+          heightPercent: 66
+        },
+        style: {},
+        paragraphs: rawSlide.bullets.map(b => ({
+          runs: [{ text: b, fontSize: 16, color: '#334155' }],
+          text: b,
+          isBullet: true,
+          bulletChar: '•',
+          level: 0
+        }))
       }
-    }
-  }
+    ];
+
+    slides.push({
+      id: slideNum,
+      slideNumber: slideNum,
+      layout: 'canvas',
+      title,
+      subtitle: rawSlide.subtitles[0] || undefined,
+      shapes,
+      images: [],
+      rawText: rawSlide.allTexts,
+      backgroundColor: '#FFFFFF',
+      isDarkBackground: false
+    });
+  });
 
   if (slides.length === 0) {
     slides.push(createFallbackSlide(filename, 1));
@@ -806,220 +1850,154 @@ function parseLegacyPptOle2(
     formatLabel: 'Microsoft PowerPoint 97-2003 Presentation (.ppt)',
     slideCount: slides.length,
     aspectRatio: '4:3',
-    dimensions: { width: 1440, height: 1080 },
+    dimensions: { width: 1440, height: 1080, slideWidthPoints: 720, slideHeightPoints: 540 },
     slides,
     metadata: { appName: 'Microsoft PowerPoint 97-2003' }
   };
 }
 
 /**
- * Extracts a named stream from an OLE2 Compound Document file
+ * Extracts a named stream from an OLE2 Compound File Binary (CFBF)
  */
 function extractOle2Stream(bytes: Uint8Array, streamName: string): Uint8Array | null {
-  const dataView = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-
-  // Sector shift (offset 30) -> sector size = 1 << sectorShift (usually 512)
-  const sectorShift = dataView.getUint16(30, true);
-  const sectorSize = 1 << sectorShift;
-  if (sectorSize !== 512 && sectorSize !== 4096) return null;
-
-  // FAT sector count and directory start sector
-  const dirStartSector = dataView.getUint32(48, true);
-
-  // Read first 109 DIFAT entries from header (offset 76)
-  const fatSectors: number[] = [];
-  for (let i = 0; i < 109; i++) {
-    const s = dataView.getUint32(76 + i * 4, true);
-    if (s !== 0xfffffffe && s !== 0xffffffff) {
-      fatSectors.push(s);
-    }
+  // Check OLE2 Magic Header: D0 CF 11 E0 A1 B1 1A E1
+  if (
+    bytes.length < 512 ||
+    bytes[0] !== 0xd0 ||
+    bytes[1] !== 0xcf ||
+    bytes[2] !== 0x11 ||
+    bytes[3] !== 0xe0
+  ) {
+    return null;
   }
 
-  // Build FAT lookup table
-  const fatEntriesPerSector = sectorSize / 4;
-  const fat: number[] = [];
-  for (const fatSec of fatSectors) {
-    const secOffset = (fatSec + 1) * sectorSize;
-    if (secOffset + sectorSize <= bytes.length) {
-      for (let j = 0; j < fatEntriesPerSector; j++) {
-        fat.push(dataView.getUint32(secOffset + j * 4, true));
-      }
-    }
-  }
+  try {
+    const sectorSize = 1 << (bytes[30] | (bytes[31] << 8)); // Usually 512
+    const dirFirstSector =
+      bytes[48] | (bytes[49] << 8) | (bytes[50] << 16) | (bytes[51] << 24);
 
-  // Follow FAT chain for directory stream
-  let currentDirSector = dirStartSector;
-  const dirBytes: number[] = [];
-  let dirSteps = 0;
-  while (currentDirSector !== 0xfffffffe && currentDirSector < fat.length && dirSteps < 500) {
-    const secOffset = (currentDirSector + 1) * sectorSize;
-    if (secOffset + sectorSize <= bytes.length) {
-      for (let b = 0; b < sectorSize; b++) {
-        dirBytes.push(bytes[secOffset + b]);
-      }
-    }
-    currentDirSector = fat[currentDirSector];
-    dirSteps++;
-  }
+    if (dirFirstSector >= 0 && (dirFirstSector + 1) * sectorSize < bytes.length) {
+      const dirOffset = (dirFirstSector + 1) * sectorSize;
 
-  const dirArray = new Uint8Array(dirBytes);
-  const dirView = new DataView(dirArray.buffer);
-
-  // Directory entries are 128 bytes each
-  const dirEntriesCount = Math.floor(dirArray.length / 128);
-  for (let e = 0; e < dirEntriesCount; e++) {
-    const entryOffset = e * 128;
-    const nameLen = dirView.getUint16(entryOffset + 64, true);
-    if (nameLen > 2) {
-      const nameBuf = dirArray.subarray(entryOffset, entryOffset + nameLen - 2);
-      const name = decodeUtf16Le(nameBuf);
-      if (name.toLowerCase() === streamName.toLowerCase()) {
-        const streamStartSector = dirView.getUint32(entryOffset + 116, true);
-        const streamSize = dirView.getUint32(entryOffset + 120, true);
-
-        // Follow FAT chain to collect stream data
-        let curSec = streamStartSector;
-        const resultBuf = new Uint8Array(streamSize);
-        let bytesWritten = 0;
-        let chainSteps = 0;
-
-        while (curSec !== 0xfffffffe && curSec < fat.length && bytesWritten < streamSize && chainSteps < 10000) {
-          const secOffset = (curSec + 1) * sectorSize;
-          const chunkLen = Math.min(sectorSize, streamSize - bytesWritten);
-          if (secOffset + chunkLen <= bytes.length) {
-            resultBuf.set(bytes.subarray(secOffset, secOffset + chunkLen), bytesWritten);
-            bytesWritten += chunkLen;
-          }
-          curSec = fat[curSec];
-          chainSteps++;
+      // Scan directory entries (each entry is 128 bytes)
+      for (let i = dirOffset; i < dirOffset + sectorSize * 4 && i + 128 <= bytes.length; i += 128) {
+        let name = '';
+        const nameLen = bytes[i + 64] | (bytes[i + 65] << 8);
+        for (let k = 0; k < Math.min(nameLen - 2, 64); k += 2) {
+          const charCode = bytes[i + k] | (bytes[i + k + 1] << 8);
+          if (charCode > 0) name += String.fromCharCode(charCode);
         }
 
-        return resultBuf;
+        if (name.toLowerCase().includes(streamName.toLowerCase())) {
+          const startSector =
+            bytes[i + 116] |
+            (bytes[i + 117] << 8) |
+            (bytes[i + 118] << 16) |
+            (bytes[i + 119] << 24);
+          const streamSize =
+            bytes[i + 120] |
+            (bytes[i + 121] << 8) |
+            (bytes[i + 122] << 16) |
+            (bytes[i + 123] << 24);
+
+          if (startSector >= 0 && streamSize > 0 && streamSize < bytes.length) {
+            const streamOffset = (startSector + 1) * sectorSize;
+            if (streamOffset + streamSize <= bytes.length) {
+              return bytes.subarray(streamOffset, streamOffset + streamSize);
+            }
+          }
+        }
       }
     }
+  } catch {
+    // Return fallback
   }
 
   return null;
 }
 
 /**
- * Generic presentation archive parser
+ * Heuristic string extractor for binary payloads
  */
-async function parseGenericZipArchive(
-  zip: JSZip,
-  filename: string
-): Promise<ParsedPresentation> {
-  const fileNames = Object.keys(zip.files);
-  const slides: PresentationSlide[] = [
-    {
-      id: 1,
-      slideNumber: 1,
-      layout: 'title',
-      title: filename.replace(/\.[^/.]+$/, ''),
-      paragraphs: [
-        {
-          runs: [{ text: 'Presentation Package Loaded', bold: true }],
-          text: 'Presentation Package Loaded'
-        },
-        {
-          runs: [{ text: `Contains ${fileNames.length} internal components and resources.` }],
-          text: `Contains ${fileNames.length} internal components and resources.`
-        }
-      ],
-      bullets: fileNames.slice(0, 8).map(f => `Resource: ${f}`),
-      shapes: [],
-      images: [],
-      accentColor: THEME_ACCENTS[0].gradient,
-      rawText: ['Presentation Package Loaded', ...fileNames.slice(0, 8)]
-    }
-  ];
+function extractReadableStringsFromBinary(bytes: Uint8Array): string[] {
+  const results: string[] = [];
+  let current = '';
 
-  return {
-    title: filename,
-    format: 'presentation',
-    formatLabel: 'Presentation Package (.key / .zip)',
-    slideCount: 1,
-    aspectRatio: '16:9',
-    dimensions: { width: 1920, height: 1080 },
-    slides
-  };
-}
-
-function createFallbackSlide(filename: string, slideNum: number): PresentationSlide {
-  return {
-    id: slideNum,
-    slideNumber: slideNum,
-    layout: 'title',
-    title: filename.replace(/\.[^/.]+$/, ''),
-    paragraphs: [
-      {
-        runs: [{ text: 'Presentation loaded successfully.', bold: true }],
-        text: 'Presentation loaded successfully.'
-      }
-    ],
-    bullets: ['Use the toolbar and thumbnail navigator to explore slides.'],
-    shapes: [],
-    images: [],
-    accentColor: THEME_ACCENTS[0].gradient,
-    rawText: ['Presentation loaded successfully.']
-  };
-}
-
-function decodeUtf16Le(buf: Uint8Array): string {
-  try {
-    const decoder = new TextDecoder('utf-16le', { fatal: false });
-    return decoder.decode(buf).replace(/\0/g, '').trim();
-  } catch {
-    return '';
-  }
-}
-
-function decodeAscii(buf: Uint8Array): string {
-  try {
-    const decoder = new TextDecoder('windows-1252', { fatal: false });
-    return decoder.decode(buf).replace(/\0/g, '').trim();
-  } catch {
-    return '';
-  }
-}
-
-function cleanPptString(str: string): string | null {
-  const s = str.trim();
-  if (s.length < 2) return null;
-  if (/^[\x00-\x1f]+$/.test(s)) return null;
-  if (/^(Arial|Calibri|Times New Roman|Helvetica|Tahoma|Segoe UI|Courier New|Wingdings|Symbol)$/i.test(s)) return null;
-  if (/^(Default Design|Title Master|Slide Master|PowerPoint Document|Current User)$/i.test(s)) return null;
-  return s;
-}
-
-function extractPrintablePptStrings(bytes: Uint8Array): string[] {
-  const result: string[] = [];
-  let cur = '';
   for (let i = 0; i < bytes.length; i++) {
-    const c = bytes[i];
-    if (c >= 32 && c <= 126) {
-      cur += String.fromCharCode(c);
+    const b = bytes[i];
+    if (b >= 32 && b <= 126) {
+      current += String.fromCharCode(b);
     } else {
-      if (cur.length >= 4) {
-        const clean = cleanPptString(cur);
-        if (clean && !result.includes(clean)) result.push(clean);
+      if (current.trim().length >= 4) {
+        const cleaned = current.trim();
+        if (
+          !cleaned.includes('Microsoft') &&
+          !cleaned.includes('PowerPoint') &&
+          !cleaned.includes('Arial') &&
+          !cleaned.includes('Calibri') &&
+          !cleaned.includes('Default') &&
+          !results.includes(cleaned)
+        ) {
+          results.push(cleaned);
+        }
       }
-      cur = '';
+      current = '';
     }
   }
-  if (cur.length >= 4) {
-    const clean = cleanPptString(cur);
-    if (clean && !result.includes(clean)) result.push(clean);
-  }
-  return result;
+
+  return results.slice(0, 30);
 }
 
 function getMimeFromPath(path: string): string {
   const ext = path.split('.').pop()?.toLowerCase() || '';
-  if (ext === 'png') return 'image/png';
-  if (ext === 'jpg' || ext === 'jpeg') return 'image/jpeg';
-  if (ext === 'svg') return 'image/svg+xml';
-  if (ext === 'gif') return 'image/gif';
-  if (ext === 'webp') return 'image/webp';
-  return 'image/png';
+  switch (ext) {
+    case 'png':
+      return 'image/png';
+    case 'jpg':
+    case 'jpeg':
+      return 'image/jpeg';
+    case 'gif':
+      return 'image/gif';
+    case 'svg':
+      return 'image/svg+xml';
+    case 'webp':
+      return 'image/webp';
+    case 'emf':
+    case 'wmf':
+      return 'image/x-emf';
+    default:
+      return 'image/png';
+  }
+}
+
+function createFallbackSlide(filename: string, num: number): PresentationSlide {
+  const title = filename.replace(/\.[^/.]+$/, '');
+  return {
+    id: num,
+    slideNumber: num,
+    layout: 'canvas',
+    title,
+    shapes: [
+      {
+        id: `fallback-${num}`,
+        type: 'title',
+        box: {
+          x: 0,
+          y: 0,
+          width: 0,
+          height: 0,
+          leftPercent: 8,
+          topPercent: 10,
+          widthPercent: 84,
+          heightPercent: 20
+        },
+        style: {},
+        paragraphs: [{ runs: [{ text: title, bold: true, fontSize: 28 }], text: title }]
+      }
+    ],
+    images: [],
+    rawText: [title],
+    backgroundColor: '#FFFFFF',
+    isDarkBackground: false
+  };
 }

@@ -8,7 +8,7 @@ import * as XLSX from 'xlsx';
 import JSZip from 'jszip';
 import { getSampleStandardPdfBuffer, getSampleEncryptedPdfBuffer } from './samplePdfData';
 import { generateSampleDbfBuffer, generateSampleMdbBuffer, generateSampleSqliteBuffer } from './sampleDbData';
-import { generateSampleVhdBuffer, generateSampleTarGzBuffer, generateSampleIsoBuffer, generateSampleZipBufferSync } from './sampleArchiveData';
+import { generateSampleVhdBuffer, generateSampleTarGzBuffer, generateSampleIsoBuffer, generateSampleZipBufferSync, generateSamplePptxBufferSync } from './sampleArchiveData';
 
 export const SAMPLE_MARKDOWN = `# 🚀 OmniView File Studio Overview
 
@@ -862,59 +862,17 @@ export function getSampleTabFiles(): TabFile[] {
   };
 
   // Generate Sample PowerPoint / PPTX Presentation
-  const pptZip = new JSZip();
-  pptZip.file(
-    'ppt/presentation.xml',
-    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:presentation xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"></p:presentation>`
-  );
-  pptZip.file(
-    'ppt/slides/slide1.xml',
-    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
-  <p:cSld><p:spTree>
-    <p:sp><p:txBody><a:p><a:t>OmniView Universal Presentation</a:t></a:p></p:txBody></p:sp>
-    <p:sp><p:txBody>
-      <a:p><a:t>High-Performance In-Memory File Studio</a:t></a:p>
-      <a:p><a:t>Supports PPTX, PPT, ODP, and Keynote presentation formats.</a:t></a:p>
-      <a:p><a:t>Developed by Suhail Akhtar (suhail.top)</a:t></a:p>
-    </p:txBody></p:sp>
-  </p:spTree></p:cSld>
-</p:sld>`
-  );
-  pptZip.file(
-    'ppt/slides/slide2.xml',
-    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
-  <p:cSld><p:spTree>
-    <p:sp><p:txBody><a:p><a:t>Presentation Features & Keyboard Shortcuts</a:t></a:p></p:txBody></p:sp>
-    <p:sp><p:txBody>
-      <a:p><a:t>Navigate slides with Arrow Left / Right or Space bar.</a:t></a:p>
-      <a:p><a:t>Switch between Slide View, Grid Sorter, and Text Outline.</a:t></a:p>
-      <a:p><a:t>Search across all slide titles, bullets, and presenter notes.</a:t></a:p>
-      <a:p><a:t>100% Client-side execution with zero latency and zero data transfer.</a:t></a:p>
-    </p:txBody></p:sp>
-  </p:spTree></p:cSld>
-</p:sld>`
-  );
-
-  let pptBuf: ArrayBuffer = new Uint8Array(100).buffer;
-  try {
-    // Generate synchronously or with fallback
-    pptZip.generateAsync({ type: 'uint8array' }).then(u8 => {
-      pptBuf = u8.buffer;
-    });
-  } catch {
-    // Fallback
-  }
+  const pptBuf = generateSamplePptxBufferSync();
 
   const samplePpt: TabFile = {
     id: 'sample-pptx',
     name: 'Quarterly_Strategy_Keynote.pptx',
-    size: 48500,
+    size: pptBuf.byteLength,
     type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     lastModified: now - 1000,
     extension: 'pptx',
     category: 'pptx',
+    arrayBuffer: pptBuf,
     textContent: `# OmniView Universal Presentation Engine\nNext-Generation In-Browser Slide Studio\n\n---\n\n## Architecture & Core Features\n- 100% Client-side in-memory rendering with zero server uploads\n- Universal support for PPTX, legacy PPT (97-2003), and OpenDocument ODP\n- Interactive Thumbnail Sidebar Navigator with auto-scroll and quick jump\n- Fullscreen Presenter Mode with keyboard navigation and timer\n\n---\n\n## Keyboard Shortcuts & Navigation\n- Right Arrow / Space / PageDown: Next slide\n- Left Arrow / PageUp: Previous slide\n- Press F: Enter / Exit Fullscreen Slideshow\n- Press N: Toggle Speaker Notes Drawer\n- Home / End: First / Last slide in presentation\n\n---\n\n## Multi-View Sorter & Outlines\n- Standard Slide View with widescreen 16:9 canvas\n- Grid Sorter to visually organize and scan all slides\n- Outline Reader mode with one-click full deck markdown copy\n- High-DPI typography and responsive layout scaling`,
     liveSyncActive: false,
     syncStatus: 'synced',
