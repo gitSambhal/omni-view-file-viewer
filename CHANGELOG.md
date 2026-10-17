@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.4.1] - 2026-10-17
+
+### Fixed
+- **Landing Page UI & Box Clipping Resolution**:
+  - Replaced problematic `justify-center` on scrollable container with `justify-start` and `my-auto` centering in `DropZone.tsx`, completely eliminating top-edge and bottom-edge clipping on laptop displays.
+  - Optimized vertical padding and card spacing so the entire hero drop zone, popular formats grid, and scratchpad shortcuts fit within standard viewports with smooth downward scrolling when needed.
+
+### Changed
+- **SEO & Social Metadata Synchronization**:
+  - Updated `<title>`, `<meta name="description">`, OpenGraph, Twitter cards, and Schema.org JSON-LD structured data in `index.html` to reflect the latest Dedicated Media Studio (arrow key navigation & lightbox) and pixel-perfect PowerPoint slide engine.
+  - Synchronized `metadata.json` and `formatSeoData.ts` registries.
+  - Maintained mandatory developer attribution for **Suhail Akhtar** ([suhail.top](https://suhail.top)).
+
+## [4.4.0] - 2026-10-17
+
+### Added
+- **Dedicated Media Gallery & Lightbox Studio Viewer**:
+  - **Arrow Key Media Navigation (`←` / `→`)**: Instant keyboard shortcuts and floating chevron overlays to cycle through all opened media files (images, videos, and audio tracks) seamlessly across workspace tabs without opening multiple browser tabs.
+  - **Fullscreen Lightbox Studio Mode**: Cinema backdrop stage (`MediaGalleryViewer.tsx`) supporting interactive image zoom/pan/rotate, custom video playback controls with fit/fill options, and audio waveform visualizer.
+  - **Interactive Filmstrip Carousel**: Collapsible bottom thumbnail bar with live previews for images, video frames, and audio badges for quick one-click jumping between media items.
+  - **Gallery Grid View**: Toggle between Cinema Lightbox Stage and a multi-column thumbnail grid gallery to inspect all session media files at a glance.
+  - **Automated Slideshow Engine**: Customizable auto-advance timer (3s, 5s, 10s) with a visual progress bar for hands-free media playback.
+  - **Command Palette Integration**: Searchable `Open Fullscreen Media Lightbox Studio` command in Cmd+K palette.
+  - **Developer Attribution**: Maintained for **Suhail Akhtar** ([suhail.top](https://suhail.top)).
+
 ## [4.3.9] - 2026-10-06
 
 ### Fixed

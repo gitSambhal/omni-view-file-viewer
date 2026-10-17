@@ -54,6 +54,7 @@ import { BinaryInspectorViewer } from './components/viewers/BinaryInspectorViewe
 import { FontViewer } from './components/viewers/FontViewer';
 import { CertificateViewer } from './components/viewers/CertificateViewer';
 import { HtmlPreviewViewer } from './components/viewers/HtmlPreviewViewer';
+import { MediaGalleryViewer } from './components/viewers/MediaGalleryViewer';
 import { useFormatSeo } from './hooks/useFormatSeo';
 
 export default function App() {
@@ -284,6 +285,34 @@ export default function App() {
   }, [isPasteModalOpen, isUrlModalOpen, isNpmTesterOpen]);
 
   const activeTab = activeTabId === 'welcome' ? null : tabs.find(t => t.id === activeTabId) || null;
+
+  const [isGalleryLightboxOpen, setIsGalleryLightboxOpen] = useState<boolean>(false);
+
+  const isMediaCategory = useCallback((cat: FileCategory) => ['image', 'video', 'audio'].includes(cat), []);
+
+  const mediaTabs = useMemo(() => {
+    return tabs.filter(t => isMediaCategory(t.activeReader || t.category));
+  }, [tabs, isMediaCategory]);
+
+  const currentMediaIndex = useMemo(() => {
+    if (!activeTab || !isMediaCategory(activeTab.activeReader || activeTab.category)) return -1;
+    return mediaTabs.findIndex(t => t.id === activeTab.id);
+  }, [mediaTabs, activeTab, isMediaCategory]);
+
+  const handleNavigateMedia = useCallback((direction: 'prev' | 'next') => {
+    if (mediaTabs.length === 0) return;
+    let nextIndex = 0;
+    if (currentMediaIndex !== -1) {
+      if (direction === 'prev') {
+        nextIndex = (currentMediaIndex - 1 + mediaTabs.length) % mediaTabs.length;
+      } else {
+        nextIndex = (currentMediaIndex + 1) % mediaTabs.length;
+      }
+    }
+    if (mediaTabs[nextIndex]) {
+      setActiveTabId(mediaTabs[nextIndex].id);
+    }
+  }, [mediaTabs, currentMediaIndex]);
 
   // Dynamic Head SEO for Active Files & Deep Links
   const urlFormatParam = useMemo(() => {
@@ -1239,6 +1268,8 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
                   onZoomOut={() => setZoomLevel(prev => Math.max(50, prev - 10))}
                   onResetZoom={() => setZoomLevel(100)}
                   onSetZoom={setZoomLevel}
+                  onOpenGalleryMode={() => setIsGalleryLightboxOpen(true)}
+                  mediaCount={mediaTabs.length}
                 />
 
                 {/* Viewer Render Stage */}
@@ -1343,6 +1374,10 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
                     textContent={activeTab.textContent}
                     filename={activeTab.name}
                     size={activeTab.size}
+                    allMediaTabs={mediaTabs}
+                    currentMediaIndex={currentMediaIndex}
+                    onNavigateMedia={handleNavigateMedia}
+                    onOpenGalleryMode={() => setIsGalleryLightboxOpen(true)}
                   />
                 );
               }
@@ -1355,6 +1390,10 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
                     fileRaw={activeTab.fileRaw}
                     filename={activeTab.name}
                     isAudio={currentCategory === 'audio'}
+                    allMediaTabs={mediaTabs}
+                    currentMediaIndex={currentMediaIndex}
+                    onNavigateMedia={handleNavigateMedia}
+                    onOpenGalleryMode={() => setIsGalleryLightboxOpen(true)}
                   />
                 );
               }
@@ -1498,6 +1537,8 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
         onLoadSampleFiles={handleLoadSampleFiles}
         onOpenHexForCurrentTab={handleToggleHexView}
         onNewScratchpad={handleNewScratchpad}
+        onOpenGalleryMode={() => setIsGalleryLightboxOpen(true)}
+        onNavigateMedia={handleNavigateMedia}
         theme={theme}
         onToggleTheme={toggleTheme}
       />
@@ -1557,6 +1598,19 @@ Created with **OmniView Studio** — 100% offline in-browser previewer.
         onClose={() => setIsNpmTesterOpen(false)}
         onInsertImport={handleInsertImportStatement}
         onOpenAsNewTab={handleLoadSampleSnippet}
+      />
+
+      {/* Dedicated Media Lightbox & Gallery Studio Modal */}
+      <MediaGalleryViewer
+        mediaFiles={mediaTabs}
+        currentIndex={currentMediaIndex >= 0 ? currentMediaIndex : 0}
+        isOpen={isGalleryLightboxOpen}
+        onClose={() => setIsGalleryLightboxOpen(false)}
+        onSelectIndex={(index) => {
+          if (mediaTabs[index]) setActiveTabId(mediaTabs[index].id);
+        }}
+        onNavigate={handleNavigateMedia}
+        onDownloadFile={handleDownloadTabFile}
       />
 
       {/* Non-blocking Toasts */}

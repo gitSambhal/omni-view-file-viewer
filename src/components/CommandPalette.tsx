@@ -50,6 +50,8 @@ export interface CommandPaletteProps {
   onLoadSampleFiles: () => void;
   onOpenHexForCurrentTab: () => void;
   onNewScratchpad: (type: 'ts' | 'python' | 'sql' | 'markdown' | 'html' | 'json') => void;
+  onOpenGalleryMode?: () => void;
+  onNavigateMedia?: (direction: 'prev' | 'next') => void;
   theme: Theme;
   onToggleTheme: () => void;
 }
@@ -81,6 +83,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   onLoadSampleFiles,
   onOpenHexForCurrentTab,
   onNewScratchpad,
+  onOpenGalleryMode,
+  onNavigateMedia,
   theme,
   onToggleTheme
 }) => {
@@ -190,6 +194,17 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
     // 3. Tools & Modals
     list.push(
+      {
+        id: 'tool-media-gallery',
+        title: 'Open Fullscreen Media Lightbox Studio',
+        description: 'View images, video, and audio in a dedicated lightbox with arrow key navigation',
+        category: 'Tools & Utilities',
+        icon: <Sparkles className="w-4 h-4 text-pink-500" />,
+        action: () => {
+          if (onOpenGalleryMode) onOpenGalleryMode();
+          onClose();
+        }
+      },
       {
         id: 'tool-open-file',
         title: 'Open Local File...',

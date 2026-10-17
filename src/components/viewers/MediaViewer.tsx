@@ -36,9 +36,12 @@ import {
   Check,
   X,
   ExternalLink,
-  RefreshCw
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { inspectMediaBuffer, MediaInspectionResult } from '../../services/mediaInspector';
+import { TabFile } from '../../types/file';
 
 interface MediaViewerProps {
   objectUrl?: string;
@@ -47,6 +50,10 @@ interface MediaViewerProps {
   fileRaw?: File;
   filename: string;
   isAudio: boolean;
+  allMediaTabs?: TabFile[];
+  currentMediaIndex?: number;
+  onNavigateMedia?: (direction: 'prev' | 'next') => void;
+  onOpenGalleryMode?: () => void;
 }
 
 type FitMode = 'contain' | 'cover' | 'fill';
@@ -57,7 +64,11 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
   arrayBuffer,
   fileRaw,
   filename,
-  isAudio
+  isAudio,
+  allMediaTabs = [],
+  currentMediaIndex = -1,
+  onNavigateMedia,
+  onOpenGalleryMode
 }) => {
   const [mediaSrc, setMediaSrc] = useState<string>('');
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -898,9 +909,41 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
                 <span className="text-xs text-slate-300 font-mono font-medium truncate max-w-xs sm:max-w-sm drop-shadow">
                   {filename}
                 </span>
+
+                {allMediaTabs.length > 1 && onNavigateMedia && (
+                  <div className="flex items-center gap-1 bg-black/60 px-2.5 py-0.5 rounded-full border border-purple-500/30 text-xs text-purple-300">
+                    <button
+                      onClick={() => onNavigateMedia('prev')}
+                      className="p-1 hover:bg-white/10 rounded cursor-pointer"
+                      title="Previous Media File (←)"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="font-mono text-[11px] font-bold px-1">
+                      {currentMediaIndex + 1} / {allMediaTabs.length}
+                    </span>
+                    <button
+                      onClick={() => onNavigateMedia('next')}
+                      className="p-1 hover:bg-white/10 rounded cursor-pointer"
+                      title="Next Media File (→)"
+                    >
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center gap-2">
+                {onOpenGalleryMode && (
+                  <button
+                    onClick={onOpenGalleryMode}
+                    className="flex items-center gap-1 px-2.5 py-1 bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 rounded-lg border border-purple-500/40 text-xs font-mono transition-colors cursor-pointer"
+                    title="Open Fullscreen Lightbox Media Gallery"
+                  >
+                    <Maximize2 className="w-3.5 h-3.5 text-purple-300" />
+                    <span className="hidden sm:inline">Media Studio</span>
+                  </button>
+                )}
                 {/* Codec & Stream Info Inspector */}
                 <button
                   onClick={() => setIsInspectorOpen(true)}

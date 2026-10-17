@@ -378,17 +378,21 @@ export const FORMAT_SEO_REGISTRY: Record<string, FormatSeoRecord> = {
     id: 'image',
     extension: '.png',
     aliases: ['png', 'jpg', 'jpeg', 'webp', 'svg', 'gif', 'bmp', 'ico', 'image/png', 'image/jpeg', 'image/svg+xml'],
-    name: 'High-Resolution Images & Vectors (.png / .jpg / .svg)',
+    name: 'High-Resolution Images & Photos (.png / .jpg / .svg)',
     category: 'Media & Video',
     mimeType: 'image/png',
-    title: 'High-Resolution Image Inspector & EXIF Viewer | OmniView',
-    metaDescription: 'Inspect raster and vector images (.png, .jpg, .webp, .svg, .gif) with deep pixel zoom, transparent checkerboard background, EXIF metadata extraction, and color picker.',
-    ogTitle: 'OmniView - High-Res Image Inspector & EXIF Reader',
-    ogDescription: 'Pixel-level image viewer with zoom, pan, EXIF metadata, SVG source code inspection, and RGB color sampler.',
-    keywords: ['image viewer', 'exif viewer online', 'svg inspector', 'pixel zoom tool', 'offline image viewer'],
-    capabilities: ['Deep Pixel Zoom & Pan', 'EXIF Camera & GPS Metadata', 'SVG Code & Preview Switcher', 'Transparent Alpha Checkerboard', 'Dimension & Aspect Ratio Stats'],
+    title: 'Dedicated Image Viewer & Arrow Lightbox Studio | OmniView',
+    metaDescription: 'Inspect photos with deep zoom, pan, 90° rotation, and arrow key navigation (← →). Dedicated fullscreen lightbox with filmstrip carousel and slideshow. 100% offline.',
+    ogTitle: 'OmniView - Dedicated Image Viewer & Lightbox Studio',
+    ogDescription: 'Pixel-level image viewer with arrow key navigation, fullscreen lightbox studio, filmstrip carousel, zoom, pan, and EXIF metadata.',
+    keywords: ['image viewer', 'arrow key photo viewer', 'image lightbox studio', 'offline photo viewer', 'filmstrip image viewer', 'exif viewer online', 'pixel zoom tool'],
+    capabilities: ['Arrow Key Navigation (← →)', 'Fullscreen Cinema Lightbox Studio', 'Collapsible Filmstrip Carousel', 'Deep Pixel Zoom & Pan', 'Auto-Slideshow Timer', 'EXIF Metadata Inspector', 'Transparent Alpha Checkerboard'],
     schemaCategory: 'DesignApplication',
     faqs: [
+      {
+        question: 'Can I flip through multiple opened images with arrow keys?',
+        answer: 'Yes! OmniView features a dedicated media viewer with instant Left/Right arrow key navigation (← / →), floating stage controls, and a bottom filmstrip carousel.'
+      },
       {
         question: 'Can I view EXIF metadata without uploading my photos?',
         answer: 'Yes! OmniView parses EXIF headers (camera model, shutter speed, ISO, GPS coordinates) 100% locally in your browser.'
@@ -399,21 +403,25 @@ export const FORMAT_SEO_REGISTRY: Record<string, FormatSeoRecord> = {
   media: {
     id: 'media',
     extension: '.mp4',
-    aliases: ['mp4', 'webm', 'mp3', 'wav', 'ogg', 'flac', 'm4a', 'video/mp4', 'audio/mpeg'],
-    name: 'Audio & Video Player (.mp4 / .mp3 / .wav)',
+    aliases: ['mp4', 'webm', 'mkv', 'mp3', 'wav', 'ogg', 'flac', 'm4a', 'video/mp4', 'audio/mpeg'],
+    name: 'Audio & Video Cinema Studio (.mp4 / .mp3 / .wav)',
     category: 'Media & Video',
     mimeType: 'video/mp4',
-    title: 'In-Browser Audio Waveform & Video Frame Stepper | OmniView',
-    metaDescription: 'Play audio and video files (.mp4, .webm, .mp3, .wav, .flac) with audio waveform visualization, precision frame-by-frame stepping, and playback speed controls. 100% offline.',
-    ogTitle: 'OmniView - In-Browser Audio Waveform & Video Stepper',
-    ogDescription: 'Play media files locally with precision frame stepping, audio waveforms, volume boost, and playback speed control.',
-    keywords: ['video player in browser', 'audio waveform visualizer', 'frame by frame video player', 'offline media player', 'private video viewer'],
-    capabilities: ['Real-time Audio Waveform Visualizer', 'Precision Video Frame Stepper', '0.25x to 4x Playback Speed', 'Keyboard Scrubbing (Arrow keys)', 'Zero Network Buffering'],
+    title: 'Dedicated Media Player & Video Cinema Studio | OmniView',
+    metaDescription: 'Play video and audio files with seamless arrow key navigation (← →), real-time audio waveform visualizer, custom scrubbers, speed controls, and theater fit. 100% offline.',
+    ogTitle: 'OmniView - Dedicated Media Player & Cinema Studio',
+    ogDescription: 'Play video and audio files locally with arrow key navigation, custom scrubbers, audio waveforms, filmstrip thumbnails, and cinema playback.',
+    keywords: ['media viewer', 'arrow key video player', 'audio waveform visualizer', 'cinema video player', 'offline media player', 'private video viewer'],
+    capabilities: ['Arrow Key Navigation (← →)', 'Dedicated Fullscreen Cinema Player', 'Audio Waveform Visualizer', 'Filmstrip Carousel for Media Files', 'Theater Fit & Fill Modes', '0.5x to 2x Playback Speed', 'Zero Network Buffering'],
     schemaCategory: 'MultimediaApplication',
     faqs: [
       {
         question: 'Can I play private video and audio files without uploading them?',
         answer: 'Yes! Files are played directly from local blob URLs in your browser using hardware-accelerated HTML5 video and Web Audio APIs.'
+      },
+      {
+        question: 'How do I cycle between multiple video or audio tracks?',
+        answer: 'Use the Left and Right arrow keys or the filmstrip carousel to switch instantly between all open media files in your workspace.'
       }
     ]
   },

@@ -40,6 +40,8 @@ interface WorkspaceToolbarProps {
   onZoomOut?: () => void;
   onResetZoom?: () => void;
   onSetZoom?: (zoom: number) => void;
+  onOpenGalleryMode?: () => void;
+  mediaCount?: number;
 }
 
 export const WorkspaceToolbar: React.FC<WorkspaceToolbarProps> = ({
@@ -55,9 +57,13 @@ export const WorkspaceToolbar: React.FC<WorkspaceToolbarProps> = ({
   onZoomIn,
   onZoomOut,
   onResetZoom,
-  onSetZoom
+  onSetZoom,
+  onOpenGalleryMode,
+  mediaCount = 0
 }) => {
   const [copied, setCopied] = useState(false);
+
+  const isMediaFile = ['image', 'video', 'audio'].includes(activeTab.activeReader || activeTab.category);
 
   const handleCopy = () => {
     if (onCopyContent) {
@@ -107,6 +113,17 @@ export const WorkspaceToolbar: React.FC<WorkspaceToolbarProps> = ({
           <Binary className="w-3.5 h-3.5" />
           <span>Hex</span>
         </button>
+
+        {isMediaFile && onOpenGalleryMode && (
+          <button
+            onClick={onOpenGalleryMode}
+            className="flex items-center gap-1 px-2 h-6 rounded text-xs font-semibold bg-pink-500/10 hover:bg-pink-500/20 text-pink-600 dark:text-pink-400 border border-pink-500/20 transition-colors cursor-pointer shrink-0"
+            title="Open Fullscreen Media Lightbox Studio (Arrow Key Navigation)"
+          >
+            <Maximize2 className="w-3.5 h-3.5" />
+            <span>Media Studio {mediaCount > 1 ? `(${mediaCount})` : ''}</span>
+          </button>
+        )}
 
         <div className="h-3.5 w-px bg-border mx-0.5 shrink-0" />
 

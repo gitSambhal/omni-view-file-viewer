@@ -1,6 +1,6 @@
 {
   "name": "OmniView File Viewer",
-  "description": "100% offline in-browser file preview studio supporting 150+ file types: PDFs, Word, Excel, PPTX, Virtual Hard Disks (VHD/ISO), Archives, Databases, Code, Media, Fonts & Hex.",
+  "description": "100% offline in-memory file viewer & media studio supporting 150+ formats: PDF, Word, Excel, PPTX, Images, Video, Audio with arrow navigation, Code & Disks.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

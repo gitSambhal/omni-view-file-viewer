@@ -107,7 +107,7 @@ export const Footer: React.FC<FooterProps> = ({
           className="h-5 px-1.5 text-[10px] font-mono text-muted-foreground hover:text-foreground rounded border-border cursor-pointer shadow-2xs"
           title="Release Notes & Changelog"
         >
-          v4.3.1
+          v4.4.1
         </Button>
       </div>
     </footer>

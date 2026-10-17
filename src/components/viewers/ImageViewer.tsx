@@ -14,9 +14,13 @@ import {
   Sliders,
   Info,
   Download,
-  Move
+  Move,
+  ChevronLeft,
+  ChevronRight,
+  Maximize2
 } from 'lucide-react';
 import { formatFileSize } from '../../services/fileDetector';
+import { TabFile } from '../../types/file';
 
 interface ImageViewerProps {
   objectUrl?: string;
@@ -25,6 +29,10 @@ interface ImageViewerProps {
   textContent?: string;
   filename: string;
   size: number;
+  allMediaTabs?: TabFile[];
+  currentMediaIndex?: number;
+  onNavigateMedia?: (direction: 'prev' | 'next') => void;
+  onOpenGalleryMode?: () => void;
 }
 
 export const ImageViewer: React.FC<ImageViewerProps> = ({
@@ -33,7 +41,11 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
   arrayBuffer,
   textContent,
   filename,
-  size
+  size,
+  allMediaTabs = [],
+  currentMediaIndex = -1,
+  onNavigateMedia,
+  onOpenGalleryMode
 }) => {
   const [imgSrc, setImgSrc] = useState<string>('');
   const [zoom, setZoom] = useState<number>(100);
@@ -67,6 +79,32 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
       return () => URL.revokeObjectURL(url);
     }
   }, [objectUrl, dataUrl, textContent, arrayBuffer]);
+
+  // Keyboard navigation listener (Arrow keys)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
+      if (e.key === 'ArrowLeft' && onNavigateMedia) {
+        e.preventDefault();
+        onNavigateMedia('prev');
+      } else if (e.key === 'ArrowRight' && onNavigateMedia) {
+        e.preventDefault();
+        onNavigateMedia('next');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onNavigateMedia]);
 
   // Handle Mouse Wheel Zooming
   const handleWheel = (e: React.WheelEvent) => {
@@ -109,10 +147,12 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
     setPan({ x: 0, y: 0 });
   };
 
+  const hasMultipleMedia = allMediaTabs.length > 1;
+
   return (
     <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 bg-slate-900 dark:bg-slate-950 text-slate-100 overflow-hidden select-none transition-colors">
       {/* Image Header Controls */}
-      <div className="flex flex-wrap items-center justify-between p-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 gap-2 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between p-2.5 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 gap-2 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 text-xs font-semibold text-pink-600 dark:text-pink-400 bg-pink-500/10 px-2.5 py-1 rounded border border-pink-500/20">
             <ImageIcon className="w-3.5 h-3.5" />
@@ -123,9 +163,44 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
               {dimensions.width} × {dimensions.height} px
             </span>
           )}
+
+          {/* Quick Arrow Key Navigation Pill if multiple media files exist */}
+          {hasMultipleMedia && onNavigateMedia && (
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-lg border border-slate-300 dark:border-slate-700 text-xs">
+              <button
+                onClick={() => onNavigateMedia('prev')}
+                className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded cursor-pointer"
+                title="Previous Media File (← Arrow Left)"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+              <span className="font-mono text-[11px] font-semibold text-slate-700 dark:text-slate-300 px-1">
+                {currentMediaIndex + 1} / {allMediaTabs.length}
+              </span>
+              <button
+                onClick={() => onNavigateMedia('next')}
+                className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded cursor-pointer"
+                title="Next Media File (→ Arrow Right)"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Launch Lightbox Gallery Mode */}
+          {onOpenGalleryMode && (
+            <button
+              onClick={onOpenGalleryMode}
+              className="flex items-center gap-1.5 px-2.5 py-1 bg-pink-600/10 hover:bg-pink-600/20 text-pink-600 dark:text-pink-400 border border-pink-500/30 rounded text-xs font-medium cursor-pointer transition-colors"
+              title="Open Dedicated Fullscreen Media Lightbox Studio"
+            >
+              <Maximize2 className="w-3.5 h-3.5" />
+              <span>Media Studio</span>
+            </button>
+          )}
+
           {/* Zoom controls */}
           <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-300 dark:border-slate-700 p-0.5">
             <button
@@ -214,6 +289,17 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
 
       {/* Main Image Interactive Stage */}
       <div className="flex-1 min-h-0 min-w-0 flex overflow-hidden relative">
+        {/* Left Floating Arrow Button */}
+        {hasMultipleMedia && onNavigateMedia && (
+          <button
+            onClick={() => onNavigateMedia('prev')}
+            className="absolute left-3 top-1/2 -translate-y-1/2 z-30 p-2.5 rounded-full bg-slate-900/80 hover:bg-pink-600 text-slate-200 hover:text-white border border-slate-700 shadow-xl transition-all transform hover:scale-110 cursor-pointer"
+            title="Previous Media File (← Arrow Left)"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+        )}
+
         <div
           ref={stageRef}
           onWheel={handleWheel}
@@ -250,15 +336,33 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
             <div className="text-slate-500 text-xs">Loading image asset...</div>
           )}
 
-          {/* Mouse Wheel Zoom Guide overlay badge */}
+          {/* Mouse Wheel Zoom & Keyboard Navigation Guide */}
           <div className="absolute bottom-3 left-3 bg-[#1C1C1E] text-neutral-300 text-[11px] font-mono px-3 py-1.5 rounded-full border border-neutral-800 shadow-md flex items-center gap-1.5 pointer-events-none">
-            <Move className="w-3 h-3 text-pink-400" /> Scroll wheel to Zoom · Click & Drag to Pan
+            <Move className="w-3 h-3 text-pink-400" />
+            <span>Scroll Wheel Zoom • Drag Pan</span>
+            {hasMultipleMedia && (
+              <>
+                <span className="text-neutral-600">•</span>
+                <span className="text-pink-400 font-bold">← / → Arrow Keys</span>
+              </>
+            )}
           </div>
         </div>
 
+        {/* Right Floating Arrow Button */}
+        {hasMultipleMedia && onNavigateMedia && (
+          <button
+            onClick={() => onNavigateMedia('next')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 z-30 p-2.5 rounded-full bg-slate-900/80 hover:bg-pink-600 text-slate-200 hover:text-white border border-slate-700 shadow-xl transition-all transform hover:scale-110 cursor-pointer"
+            title="Next Media File (→ Arrow Right)"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        )}
+
         {/* Metadata Inspector Sidebar */}
         {showMetadata && (
-          <div className="w-64 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 p-4 space-y-4 overflow-auto font-mono text-xs text-slate-700 dark:text-slate-300 shadow-xl">
+          <div className="w-64 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 p-4 space-y-4 overflow-auto font-mono text-xs text-slate-700 dark:text-slate-300 shadow-xl shrink-0">
             <h4 className="font-bold text-pink-600 dark:text-pink-400 flex items-center gap-2">
               <Info className="w-4 h-4" /> Image Metadata
             </h4>

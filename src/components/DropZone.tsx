@@ -24,7 +24,8 @@ import {
   ShieldCheck,
   Layers,
   ArrowRight,
-  CheckCircle2
+  CheckCircle2,
+  Tv
 } from 'lucide-react';
 import { Button } from './ui/button';
 
@@ -79,7 +80,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
     }
   };
 
-  // The Curated Most Popular Format Categories
+  // The Curated Most Popular Format Categories with Latest Engine Badges
   const POPULAR_FORMAT_GROUPS = [
     {
       id: 'pdf-docs',
@@ -102,7 +103,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
     {
       id: 'presentations',
       title: 'Presentations',
-      badge: 'PowerPoint · ODP',
+      badge: 'Master Slides · PPTX',
       icon: Presentation,
       iconColor: 'text-amber-500 dark:text-amber-400',
       bgColor: 'bg-amber-500/10 border-amber-500/20',
@@ -111,16 +112,16 @@ export const DropZone: React.FC<DropZoneProps> = ({
     {
       id: 'images',
       title: 'Images & Photos',
-      badge: 'PNG · JPG · SVG',
+      badge: 'Deep Zoom · EXIF',
       icon: ImageIcon,
-      iconColor: 'text-blue-500 dark:text-blue-400',
-      bgColor: 'bg-blue-500/10 border-blue-500/20',
+      iconColor: 'text-pink-500 dark:text-pink-400',
+      bgColor: 'bg-pink-500/10 border-pink-500/20',
       formats: ['.png', '.jpg', '.webp', '.svg', '.gif', '.psd']
     },
     {
       id: 'media',
-      title: 'Audio & Video',
-      badge: 'MP4 · MP3 · WAV',
+      title: 'Media Studio',
+      badge: 'Arrow Nav (← →)',
       icon: Film,
       iconColor: 'text-purple-500 dark:text-purple-400',
       bgColor: 'bg-purple-500/10 border-purple-500/20',
@@ -129,11 +130,11 @@ export const DropZone: React.FC<DropZoneProps> = ({
     {
       id: 'code-archives',
       title: 'Code & Archives',
-      badge: 'ZIP · Code · JSON',
+      badge: 'VHD Mount · Code',
       icon: Archive,
       iconColor: 'text-cyan-500 dark:text-cyan-400',
       bgColor: 'bg-cyan-500/10 border-cyan-500/20',
-      formats: ['.zip', '.rar', '.7z', '.ts', '.py', '.json']
+      formats: ['.zip', '.vhd', '.iso', '.ts', '.py', '.json']
     }
   ];
 
@@ -142,7 +143,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`flex-1 flex flex-col items-center justify-center p-4 sm:p-8 md:p-12 transition-colors duration-200 overflow-y-auto ${
+      className={`flex-1 w-full h-full flex flex-col items-center justify-start p-3 sm:p-5 md:p-6 transition-colors duration-200 overflow-y-auto custom-scrollbar ${
         isDragging ? 'bg-primary/5' : 'bg-background'
       }`}
     >
@@ -155,7 +156,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
         aria-label="Upload files"
       />
 
-      <div className="w-full max-w-3xl flex flex-col items-center text-center space-y-6">
+      <div className="w-full max-w-3xl flex flex-col items-center text-center my-auto py-2 sm:py-3 space-y-4">
         {/* Main Hero Drop Target */}
         <div
           onClick={() => {
@@ -165,27 +166,33 @@ export const DropZone: React.FC<DropZoneProps> = ({
               onOpenFilePicker();
             }
           }}
-          className={`w-full p-8 sm:p-12 flex flex-col items-center justify-center rounded-3xl cursor-pointer transition-all duration-200 border-2 select-none ${
+          className={`w-full px-5 py-6 sm:px-8 sm:py-7 flex flex-col items-center justify-center rounded-3xl cursor-pointer transition-all duration-200 border-2 select-none relative overflow-hidden group ${
             isDragging
               ? 'border-primary bg-primary/10 scale-[1.01]'
               : 'border-dashed border-border hover:border-primary/50 hover:bg-muted/40 bg-card shadow-sm'
           }`}
         >
-          <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4 transition-transform group-hover:scale-105 shadow-xs">
-            <Upload className="w-7 h-7" />
+          {/* Subtle Feature Badge */}
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium bg-pink-500/10 text-pink-600 dark:text-pink-400 border border-pink-500/20 mb-2.5 group-hover:border-pink-500/30 transition-colors">
+            <Sparkles className="w-3.5 h-3.5 text-pink-500 shrink-0" />
+            <span>Dedicated Media Viewer (← → Arrow Keys) & Pixel-Perfect PPTX</span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+          <div className="w-11 h-11 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-2.5 transition-transform group-hover:scale-105 shadow-xs">
+            <Upload className="w-5 h-5" />
+          </div>
+
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
             Drop your files here to view
           </h1>
 
-          <p className="text-xs sm:text-sm text-muted-foreground mt-2 max-w-lg leading-relaxed">
-            Fast, 100% private in-memory viewer for PDF, Office docs, spreadsheets, presentations, images, audio, video, code, and archives.
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 max-w-lg leading-relaxed">
+            Fast, 100% private in-memory viewer for PDF, Office docs, presentations, images, audio, video, code, and archives.
           </p>
 
           {/* Primary Action Buttons */}
           <div
-            className="mt-6 flex flex-wrap items-center justify-center gap-2.5"
+            className="mt-4 sm:mt-5 flex flex-wrap items-center justify-center gap-2"
             onClick={e => e.stopPropagation()}
           >
             <Button
@@ -194,9 +201,9 @@ export const DropZone: React.FC<DropZoneProps> = ({
                 if (fileInputRef.current) fileInputRef.current.click();
                 else onOpenFilePicker();
               }}
-              className="gap-2 px-4 h-9 text-xs font-medium cursor-pointer shadow-xs"
+              className="gap-2 px-4 h-8.5 text-xs font-medium cursor-pointer shadow-xs"
             >
-              <FolderOpen className="w-4 h-4" />
+              <FolderOpen className="w-3.5 h-3.5" />
               <span>Browse Files</span>
               <kbd className="hidden sm:inline-flex items-center px-1 text-[9px] font-mono text-primary-foreground/90 bg-black/20 rounded">
                 ⌘O
@@ -207,9 +214,9 @@ export const DropZone: React.FC<DropZoneProps> = ({
               variant="outline"
               size="sm"
               onClick={onLoadSamples}
-              className="gap-1.5 px-4 h-9 text-xs font-medium cursor-pointer border-border hover:text-primary hover:border-primary/40 transition-colors"
+              className="gap-1.5 px-3.5 h-8.5 text-xs font-medium cursor-pointer border-border hover:text-primary hover:border-primary/40 transition-colors"
             >
-              <Sparkles className="w-4 h-4 text-primary" />
+              <Sparkles className="w-3.5 h-3.5 text-primary" />
               <span>Try Sample Files</span>
             </Button>
 
@@ -218,10 +225,10 @@ export const DropZone: React.FC<DropZoneProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={onOpenPasteModal}
-                className="gap-1.5 px-3.5 h-9 text-xs font-medium cursor-pointer border-border hover:text-emerald-600 transition-colors"
+                className="gap-1.5 px-3 h-8.5 text-xs font-medium cursor-pointer border-border hover:text-emerald-600 transition-colors"
                 title="Paste text from clipboard"
               >
-                <ClipboardPaste className="w-4 h-4 text-emerald-500" />
+                <ClipboardPaste className="w-3.5 h-3.5 text-emerald-500" />
                 <span className="hidden sm:inline">Paste</span>
               </Button>
             )}
@@ -231,10 +238,10 @@ export const DropZone: React.FC<DropZoneProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={onOpenUrlModal}
-                className="gap-1.5 px-3.5 h-9 text-xs font-medium cursor-pointer border-border hover:text-cyan-600 transition-colors"
+                className="gap-1.5 px-3 h-8.5 text-xs font-medium cursor-pointer border-border hover:text-cyan-600 transition-colors"
                 title="Fetch file from URL"
               >
-                <Link2 className="w-4 h-4 text-cyan-500" />
+                <Link2 className="w-3.5 h-3.5 text-cyan-500" />
                 <span className="hidden sm:inline">URL</span>
               </Button>
             )}
@@ -242,7 +249,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
         </div>
 
         {/* Most Popular Formats Showcase */}
-        <div className="w-full space-y-3">
+        <div className="w-full space-y-2.5">
           <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
             <span className="font-semibold text-foreground uppercase tracking-wider text-[11px]">
               Popular File Formats
@@ -259,7 +266,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
             )}
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5">
             {POPULAR_FORMAT_GROUPS.map(group => {
               const Icon = group.icon;
               return (
@@ -269,11 +276,11 @@ export const DropZone: React.FC<DropZoneProps> = ({
                     if (fileInputRef.current) fileInputRef.current.click();
                     else onOpenFilePicker();
                   }}
-                  className="flex flex-col p-3.5 rounded-xl border border-border/80 bg-card hover:bg-muted/40 hover:border-primary/40 text-left transition-all cursor-pointer group shadow-2xs"
+                  className="flex flex-col p-3 rounded-xl border border-border/80 bg-card hover:bg-muted/40 hover:border-primary/40 text-left transition-all cursor-pointer group shadow-2xs"
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className={`p-2 rounded-lg ${group.bgColor} ${group.iconColor}`}>
-                      <Icon className="w-4 h-4" />
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className={`p-1.5 rounded-lg ${group.bgColor} ${group.iconColor}`}>
+                      <Icon className="w-3.5 h-3.5" />
                     </div>
                     <span className="text-[10px] font-medium text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded">
                       {group.badge}
@@ -284,7 +291,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
                     {group.title}
                   </h3>
 
-                  <div className="mt-1.5 flex flex-wrap gap-1">
+                  <div className="mt-1 flex flex-wrap gap-1">
                     {group.formats.map(fmt => (
                       <span
                         key={fmt}
@@ -302,7 +309,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
 
         {/* Quick Blank Scratchpads */}
         {onNewScratchpad && (
-          <div className="w-full space-y-2 pt-1">
+          <div className="w-full space-y-2 pt-0.5">
             <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
               <span className="font-medium text-muted-foreground text-[11px]">
                 Or start with a blank scratchpad
@@ -312,7 +319,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <button
                 onClick={() => onNewScratchpad('markdown')}
-                className="flex items-center gap-2 p-2.5 rounded-lg border border-border/70 bg-card/60 hover:bg-muted/50 hover:border-primary/40 text-left transition-colors cursor-pointer group"
+                className="flex items-center gap-2 p-2 rounded-lg border border-border/70 bg-card/60 hover:bg-muted/50 hover:border-primary/40 text-left transition-colors cursor-pointer group"
               >
                 <FileText className="w-3.5 h-3.5 text-blue-500 shrink-0" />
                 <div className="min-w-0">
@@ -325,7 +332,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
 
               <button
                 onClick={() => onNewScratchpad('python')}
-                className="flex items-center gap-2 p-2.5 rounded-lg border border-border/70 bg-card/60 hover:bg-muted/50 hover:border-emerald-500/40 text-left transition-colors cursor-pointer group"
+                className="flex items-center gap-2 p-2 rounded-lg border border-border/70 bg-card/60 hover:bg-muted/50 hover:border-emerald-500/40 text-left transition-colors cursor-pointer group"
               >
                 <Terminal className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                 <div className="min-w-0">
@@ -338,7 +345,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
 
               <button
                 onClick={() => onNewScratchpad('sql')}
-                className="flex items-center gap-2 p-2.5 rounded-lg border border-border/70 bg-card/60 hover:bg-muted/50 hover:border-purple-500/40 text-left transition-colors cursor-pointer group"
+                className="flex items-center gap-2 p-2 rounded-lg border border-border/70 bg-card/60 hover:bg-muted/50 hover:border-purple-500/40 text-left transition-colors cursor-pointer group"
               >
                 <Database className="w-3.5 h-3.5 text-purple-500 shrink-0" />
                 <div className="min-w-0">
@@ -351,7 +358,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
 
               <button
                 onClick={() => onNewScratchpad('ts')}
-                className="flex items-center gap-2 p-2.5 rounded-lg border border-border/70 bg-card/60 hover:bg-muted/50 hover:border-cyan-500/40 text-left transition-colors cursor-pointer group"
+                className="flex items-center gap-2 p-2 rounded-lg border border-border/70 bg-card/60 hover:bg-muted/50 hover:border-cyan-500/40 text-left transition-colors cursor-pointer group"
               >
                 <Code2 className="w-3.5 h-3.5 text-cyan-500 shrink-0" />
                 <div className="min-w-0">
@@ -366,7 +373,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
         )}
 
         {/* Quiet Privacy & Local Guarantee */}
-        <div className="inline-flex items-center gap-2 text-[11px] text-muted-foreground pt-1">
+        <div className="inline-flex items-center gap-2 text-[11px] text-muted-foreground pt-0.5">
           <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
           <span>100% In-Memory & Client-Side · No files are ever uploaded or transmitted</span>
         </div>
